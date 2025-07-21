@@ -426,7 +426,7 @@ func printMetrics(metrics *Metrics, ratePtr *int64, final bool) {
 	if !final {
 		fmt.Print("\033[H\033[2J") // очистка экрана и курсор в левый верхний угол
 	}
-	fmt.Println("\033[1;36m  2GC CloudBridge QUICK testing\033[0m")
+	fmt.Println("\033[1;36m  2GC CloudBridge QUICK testing Client\033[0m")
 
 	green := color.New(color.FgGreen).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()

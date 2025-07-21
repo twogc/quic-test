@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -62,11 +63,15 @@ func main() {
 	// Обработка сигналов для graceful shutdown
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
+
+	_, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func(cancelFunc context.CancelFunc) {
 		<-sigs
 		fmt.Println("\nПолучен сигнал завершения, завершаем работу...")
-		os.Exit(0)
-	}()
+		cancelFunc() // Корректное завершение
+	}(cancel)
 
 	switch cfg.Mode {
 	case "server":
