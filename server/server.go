@@ -143,6 +143,8 @@ func printServerMetrics(metrics *serverMetrics) {
 	defer metrics.mu.Unlock()
 
 	fmt.Print("\033[H\033[2J")
+	fmt.Println("\033[1;36m  2GC CloudBridge QUICK testing\033[0m")
+
 	green := color.New(color.FgGreen).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()
 	blue := color.New(color.FgBlue).SprintFunc()

@@ -31,6 +31,9 @@ func main() {
 	pattern := flag.String("pattern", "random", "Шаблон данных: random | zeroes | increment")
 	noTLS := flag.Bool("no-tls", false, "Отключить TLS (для тестов)")
 	prometheus := flag.Bool("prometheus", false, "Экспортировать метрики Prometheus на /metrics")
+	emulateLoss := flag.Float64("emulate-loss", 0, "Вероятность потери пакета (0..1)")
+	emulateLatency := flag.Duration("emulate-latency", 0, "Дополнительная задержка перед отправкой пакета (например, 20ms)")
+	emulateDup := flag.Float64("emulate-dup", 0, "Вероятность дублирования пакета (0..1)")
 	flag.Parse()
 
 	cfg := internal.TestConfig{
@@ -48,6 +51,9 @@ func main() {
 		Pattern:      *pattern,
 		NoTLS:        *noTLS,
 		Prometheus:   *prometheus,
+		EmulateLoss:    *emulateLoss,
+		EmulateLatency: *emulateLatency,
+		EmulateDup:     *emulateDup,
 	}
 
 	fmt.Printf("mode=%s, addr=%s, connections=%d, streams=%d, duration=%s, packet-size=%d, rate=%d, report=%s, report-format=%s, cert=%s, key=%s, pattern=%s, no-tls=%v, prometheus=%v\n",

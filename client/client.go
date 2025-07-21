@@ -157,7 +157,7 @@ func Run(cfg internal.TestConfig) {
 			case <-ctx.Done():
 				return
 			case <-time.After(2 * time.Second):
-				printMetrics(metrics, &rate)
+				printMetrics(metrics, &rate, false)
 			}
 		}
 	}()
@@ -173,6 +173,9 @@ func Run(cfg internal.TestConfig) {
 
 	wg.Wait()
 
+	// Финальный красивый вывод
+	printMetrics(metrics, &rate, true)
+
 	err := internal.SaveReport(cfg, metrics)
 	if err != nil {
 		fmt.Println("Ошибка сохранения отчёта:", err)
@@ -182,7 +185,7 @@ func Run(cfg internal.TestConfig) {
 func clientConnection(ctx context.Context, cfg internal.TestConfig, metrics *Metrics, connID int, ratePtr *int64) {
 	var tlsConf *tls.Config
 	if cfg.NoTLS {
-		tlsConf = &tls.Config{InsecureSkipVerify: true}
+		tlsConf = &tls.Config{InsecureSkipVerify: true, NextProtos: []string{"quic-test"}}
 	} else if cfg.CertPath != "" && cfg.KeyPath != "" {
 		cert, err := tls.LoadX509KeyPair(cfg.CertPath, cfg.KeyPath)
 		if err != nil {
@@ -196,10 +199,10 @@ func clientConnection(ctx context.Context, cfg internal.TestConfig, metrics *Met
 			fmt.Println("Ошибка загрузки сертификата:", err)
 			return
 		}
-		tlsConf = &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+		tlsConf = &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true, NextProtos: []string{"quic-test"}}
 	} else {
 		// Можно добавить генерацию self-signed cert
-		tlsConf = &tls.Config{InsecureSkipVerify: true}
+		tlsConf = &tls.Config{InsecureSkipVerify: true, NextProtos: []string{"quic-test"}}
 	}
 
 	handshakeStart := time.Now()
@@ -258,6 +261,13 @@ func clientStream(ctx context.Context, session quic.Connection, cfg internal.Tes
 		return
 	}
 	defer stream.Close()
+
+	// Инициализация map для ошибок
+	metrics.mu.Lock()
+	if metrics.ErrorTypeCounts == nil {
+		metrics.ErrorTypeCounts = map[string]int{}
+	}
+	metrics.mu.Unlock()
 
 	packetSize := cfg.PacketSize
 	pattern := cfg.Pattern
@@ -409,11 +419,15 @@ func calcJitter(latencies []float64) float64 {
 	return (sum / float64(len(latencies)))
 }
 
-func printMetrics(metrics *Metrics, ratePtr *int64) {
+func printMetrics(metrics *Metrics, ratePtr *int64, final bool) {
 	metrics.mu.Lock()
 	defer metrics.mu.Unlock()
 
-	fmt.Print("\033[H\033[2J")
+	if !final {
+		fmt.Print("\033[H\033[2J") // очистка экрана и курсор в левый верхний угол
+	}
+	fmt.Println("\033[1;36m  2GC CloudBridge QUICK testing\033[0m")
+
 	green := color.New(color.FgGreen).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()
 	blue := color.New(color.FgBlue).SprintFunc()
@@ -467,7 +481,7 @@ func printMetrics(metrics *Metrics, ratePtr *int64) {
 	fmt.Printf("Jitter: %.2f ms\n", jitter)
 
 	if len(metrics.Latencies) > 0 {
-		fmt.Println(yellow(asciigraph.Plot(metrics.Latencies, asciigraph.Height(8), asciigraph.Caption("Latency ms"))))
+		fmt.Println(yellow(asciigraph.Plot(metrics.Latencies, asciigraph.Height(8), asciigraph.Width(60), asciigraph.Caption("Latency ms"))))
 	}
 }
 
