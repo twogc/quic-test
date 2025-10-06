@@ -14,37 +14,37 @@ import (
 type AdvancedPrometheusExporter struct {
 	// Основные метрики
 	metrics *metrics.PrometheusMetrics
-	
+
 	// Дополнительные метрики сервера
 	serverMetrics *ServerMetrics
-	
+
 	// Счетчики по типам запросов
 	requestTypeCounters *prometheus.CounterVec
-	
+
 	// Гистограммы по обработке запросов
 	requestProcessingHistograms *prometheus.HistogramVec
-	
+
 	// Метрики по соединениям
 	connectionMetrics *prometheus.GaugeVec
-	
+
 	// Метрики по потокам
 	streamMetrics *prometheus.GaugeVec
-	
+
 	// Метрики по обработке данных
 	dataProcessingMetrics *prometheus.CounterVec
-	
+
 	mu sync.RWMutex
 }
 
 // ServerMetrics содержит метрики сервера
 type ServerMetrics struct {
-	ServerAddr      string
-	MaxConnections  int
+	ServerAddr         string
+	MaxConnections     int
 	CurrentConnections int
-	CurrentStreams  int
-	StartTime       time.Time
-	LastUpdate      time.Time
-	Uptime          time.Duration
+	CurrentStreams     int
+	StartTime          time.Time
+	LastUpdate         time.Time
+	Uptime             time.Duration
 }
 
 // NewAdvancedPrometheusExporter создает новый экспортер метрик для сервера
@@ -83,7 +83,7 @@ func NewAdvancedPrometheusExporter(serverAddr string) *AdvancedPrometheusExporte
 func (ape *AdvancedPrometheusExporter) UpdateServerInfo(maxConnections int) {
 	ape.mu.Lock()
 	defer ape.mu.Unlock()
-	
+
 	ape.serverMetrics.MaxConnections = maxConnections
 	ape.serverMetrics.LastUpdate = time.Now()
 	ape.serverMetrics.Uptime = time.Since(ape.serverMetrics.StartTime)
@@ -93,7 +93,7 @@ func (ape *AdvancedPrometheusExporter) UpdateServerInfo(maxConnections int) {
 func (ape *AdvancedPrometheusExporter) RecordRequestProcessing(requestType, connectionID string, duration time.Duration, result string) {
 	// Записываем в основные метрики
 	ape.metrics.RecordScenarioDuration(requestType, connectionID, result, duration)
-	
+
 	// Записываем в специфичные для сервера метрики
 	ape.requestTypeCounters.WithLabelValues(requestType, connectionID, "", result).Inc()
 	ape.requestProcessingHistograms.WithLabelValues(requestType, connectionID, result).Observe(duration.Seconds())
@@ -255,7 +255,7 @@ func (ape *AdvancedPrometheusExporter) RecordNetworkLatency(networkProfile, conn
 func (ape *AdvancedPrometheusExporter) GetServerMetrics() *ServerMetrics {
 	ape.mu.RLock()
 	defer ape.mu.RUnlock()
-	
+
 	return &ServerMetrics{
 		ServerAddr:         ape.serverMetrics.ServerAddr,
 		MaxConnections:     ape.serverMetrics.MaxConnections,

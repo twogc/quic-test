@@ -11,40 +11,40 @@ import (
 // PrometheusMetrics содержит все метрики Prometheus для QUIC тестирования
 type PrometheusMetrics struct {
 	// Счетчики
-	ConnectionsTotal     prometheus.Counter
-	StreamsTotal         prometheus.Counter
-	BytesSentTotal       prometheus.Counter
-	BytesReceivedTotal   prometheus.Counter
-	ErrorsTotal          prometheus.Counter
-	RetransmitsTotal     prometheus.Counter
-	HandshakesTotal      prometheus.Counter
-	ZeroRTTTotal         prometheus.Counter
-	OneRTTTotal          prometheus.Counter
+	ConnectionsTotal        prometheus.Counter
+	StreamsTotal            prometheus.Counter
+	BytesSentTotal          prometheus.Counter
+	BytesReceivedTotal      prometheus.Counter
+	ErrorsTotal             prometheus.Counter
+	RetransmitsTotal        prometheus.Counter
+	HandshakesTotal         prometheus.Counter
+	ZeroRTTTotal            prometheus.Counter
+	OneRTTTotal             prometheus.Counter
 	SessionResumptionsTotal prometheus.Counter
 
 	// Гистограммы с адекватными бакетами
-	LatencyHistogram     prometheus.Histogram
-	JitterHistogram      prometheus.Histogram
-	ThroughputHistogram  prometheus.Histogram
+	LatencyHistogram       prometheus.Histogram
+	JitterHistogram        prometheus.Histogram
+	ThroughputHistogram    prometheus.Histogram
 	HandshakeTimeHistogram prometheus.Histogram
-	RTTHistogram         prometheus.Histogram
+	RTTHistogram           prometheus.Histogram
 
 	// Gauges
-	ActiveConnections    prometheus.Gauge
-	ActiveStreams        prometheus.Gauge
-	CurrentThroughput    prometheus.Gauge
-	CurrentLatency       prometheus.Gauge
-	PacketLossRate       prometheus.Gauge
-	ConnectionDuration   prometheus.Gauge
+	ActiveConnections  prometheus.Gauge
+	ActiveStreams      prometheus.Gauge
+	CurrentThroughput  prometheus.Gauge
+	CurrentLatency     prometheus.Gauge
+	PacketLossRate     prometheus.Gauge
+	ConnectionDuration prometheus.Gauge
 
 	// Счетчики по сценариям
-	ScenarioCounters     *prometheus.CounterVec
-	ErrorCounters        *prometheus.CounterVec
-	ProtocolCounters     *prometheus.CounterVec
+	ScenarioCounters *prometheus.CounterVec
+	ErrorCounters    *prometheus.CounterVec
+	ProtocolCounters *prometheus.CounterVec
 
 	// Гистограммы по сценариям
-	ScenarioHistograms   *prometheus.HistogramVec
-	NetworkHistograms    *prometheus.HistogramVec
+	ScenarioHistograms *prometheus.HistogramVec
+	NetworkHistograms  *prometheus.HistogramVec
 
 	mu sync.RWMutex
 }
@@ -57,7 +57,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 // NewPrometheusMetricsWithRegistry создает новый экземпляр метрик с указанным registry
 func NewPrometheusMetricsWithRegistry(registry prometheus.Registerer) *PrometheusMetrics {
 	factory := promauto.With(registry)
-	
+
 	return &PrometheusMetrics{
 		// Счетчики
 		ConnectionsTotal: factory.NewCounter(prometheus.CounterOpts{

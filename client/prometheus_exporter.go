@@ -14,22 +14,22 @@ import (
 type AdvancedPrometheusExporter struct {
 	// Основные метрики
 	metrics *metrics.PrometheusMetrics
-	
+
 	// Дополнительные метрики клиента
 	clientMetrics *ClientMetrics
-	
+
 	// Счетчики по типам тестов
 	testTypeCounters *prometheus.CounterVec
-	
+
 	// Гистограммы по типам данных
 	dataPatternHistograms *prometheus.HistogramVec
-	
+
 	// Метрики по соединениям
 	connectionMetrics *prometheus.GaugeVec
-	
+
 	// Метрики по потокам
 	streamMetrics *prometheus.GaugeVec
-	
+
 	mu sync.RWMutex
 }
 
@@ -74,7 +74,7 @@ func NewAdvancedPrometheusExporter() *AdvancedPrometheusExporter {
 func (ape *AdvancedPrometheusExporter) UpdateTestType(testType, dataPattern string) {
 	ape.mu.Lock()
 	defer ape.mu.Unlock()
-	
+
 	ape.clientMetrics.TestType = testType
 	ape.clientMetrics.DataPattern = dataPattern
 	ape.clientMetrics.LastUpdate = time.Now()
@@ -86,10 +86,10 @@ func (ape *AdvancedPrometheusExporter) RecordTestExecution(connectionID string, 
 	testType := ape.clientMetrics.TestType
 	dataPattern := ape.clientMetrics.DataPattern
 	ape.mu.RUnlock()
-	
+
 	// Записываем в основные метрики
 	ape.metrics.RecordScenarioDuration(testType, connectionID, result, duration)
-	
+
 	// Записываем в специфичные для клиента метрики
 	ape.testTypeCounters.WithLabelValues(testType, dataPattern, connectionID).Inc()
 	ape.dataPatternHistograms.WithLabelValues(dataPattern, connectionID, result).Observe(duration.Seconds())
@@ -246,7 +246,7 @@ func (ape *AdvancedPrometheusExporter) RecordNetworkLatency(networkProfile, conn
 func (ape *AdvancedPrometheusExporter) GetClientMetrics() *ClientMetrics {
 	ape.mu.RLock()
 	defer ape.mu.RUnlock()
-	
+
 	return &ClientMetrics{
 		TestType:        ape.clientMetrics.TestType,
 		DataPattern:     ape.clientMetrics.DataPattern,
