@@ -5,6 +5,11 @@
 
 [![Смотреть демо-видео](https://customer-aedqzjrbponeadcg.cloudflarestream.com/d31af3803090bcb58597de9fe685a746/thumbnails/thumbnail.jpg)](https://customer-aedqzjrbponeadcg.cloudflarestream.com/d31af3803090bcb58597de9fe685a746/watch)
 
+[![CI/CD Pipeline](https://github.com/cloudbridge-relay-installer/quic-test/workflows/QUIC%20Test%20Pipeline/badge.svg)](https://github.com/cloudbridge-relay-installer/quic-test/actions)
+[![Security](https://github.com/cloudbridge-relay-installer/quic-test/workflows/CodeQL%20Security%20Analysis/badge.svg)](https://github.com/cloudbridge-relay-installer/quic-test/security)
+[![Go Version](https://img.shields.io/badge/Go-1.21-blue.svg)](https://golang.org/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
+
 ## Запуск
 
 ### Сервер
@@ -68,6 +73,28 @@ go run main.go --mode=client --addr=127.0.0.1:9000 --connections=2 --streams=4 -
 
 ## Примеры отчётов
 - Markdown, CSV, JSON — содержат параметры теста, агрегированные метрики, временные ряды, ASCII-графики, ошибки.
+
+## 🚀 Автоматические релизы
+
+QUIC Test использует автоматическую систему релизов через GitHub Actions.
+
+### Быстрое обновление версии
+```bash
+# Обновить версию до v1.2.3
+./scripts/update-version.sh v1.2.3
+
+# Зафиксировать и отправить
+git add tag.txt && git commit -m "chore: bump version to v1.2.3"
+git push origin main
+```
+
+GitHub Actions автоматически:
+- ✅ Создаст Git тег
+- ✅ Соберет бинарники для всех платформ (Linux, Windows, macOS)
+- ✅ Создаст GitHub Release
+- ✅ Опубликует Docker образы
+
+📋 **Подробнее**: [RELEASES.md](RELEASES.md)
 
 ## Зависимости
 - [quic-go](https://github.com/lucas-clemente/quic-go)
