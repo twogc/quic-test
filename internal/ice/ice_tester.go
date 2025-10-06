@@ -47,62 +47,62 @@ type ICEConfig struct {
 	TurnPassword string `json:"turn_password"`
 
 	// Таймауты
-	GatheringTimeout time.Duration `json:"gathering_timeout"`
+	GatheringTimeout  time.Duration `json:"gathering_timeout"`
 	ConnectionTimeout time.Duration `json:"connection_timeout"`
 
 	// Параметры тестирования
-	TestDuration time.Duration `json:"test_duration"`
-	ConcurrentTests int `json:"concurrent_tests"`
+	TestDuration    time.Duration `json:"test_duration"`
+	ConcurrentTests int           `json:"concurrent_tests"`
 }
 
 // ICEMetrics метрики ICE тестирования
 type ICEMetrics struct {
 	// STUN метрики
-	StunRequests     int64 `json:"stun_requests"`
-	StunResponses    int64 `json:"stun_responses"`
-	StunLatency      time.Duration `json:"stun_latency"`
+	StunRequests  int64         `json:"stun_requests"`
+	StunResponses int64         `json:"stun_responses"`
+	StunLatency   time.Duration `json:"stun_latency"`
 
 	// TURN метрики
-	TurnAllocations  int64 `json:"turn_allocations"`
-	TurnSuccesses    int64 `json:"turn_successes"`
-	TurnFailures     int64 `json:"turn_failures"`
-	TurnLatency      time.Duration `json:"turn_latency"`
+	TurnAllocations int64         `json:"turn_allocations"`
+	TurnSuccesses   int64         `json:"turn_successes"`
+	TurnFailures    int64         `json:"turn_failures"`
+	TurnLatency     time.Duration `json:"turn_latency"`
 
 	// ICE кандидаты
-	CandidatesGathered int64 `json:"candidates_gathered"`
-	HostCandidates     int64 `json:"host_candidates"`
+	CandidatesGathered        int64 `json:"candidates_gathered"`
+	HostCandidates            int64 `json:"host_candidates"`
 	ServerReflexiveCandidates int64 `json:"server_reflexive_candidates"`
-	RelayCandidates    int64 `json:"relay_candidates"`
+	RelayCandidates           int64 `json:"relay_candidates"`
 
 	// ICE соединения
-	ConnectionsAttempted int64 `json:"connections_attempted"`
-	ConnectionsSuccessful int64 `json:"connections_successful"`
-	ConnectionsFailed   int64 `json:"connections_failed"`
-	ConnectionLatency   time.Duration `json:"connection_latency"`
+	ConnectionsAttempted  int64         `json:"connections_attempted"`
+	ConnectionsSuccessful int64         `json:"connections_successful"`
+	ConnectionsFailed     int64         `json:"connections_failed"`
+	ConnectionLatency     time.Duration `json:"connection_latency"`
 
 	// Общие метрики
-	TotalTests        int64 `json:"total_tests"`
-	SuccessfulTests   int64 `json:"successful_tests"`
-	FailedTests       int64 `json:"failed_tests"`
-	SuccessRate       float64 `json:"success_rate"`
+	TotalTests      int64   `json:"total_tests"`
+	SuccessfulTests int64   `json:"successful_tests"`
+	FailedTests     int64   `json:"failed_tests"`
+	SuccessRate     float64 `json:"success_rate"`
 }
 
 // ICEStats статистика тестирования
 type ICEStats struct {
-	StartTime    time.Time `json:"start_time"`
-	EndTime      time.Time `json:"end_time"`
-	Duration     time.Duration `json:"duration"`
-	TestsRun     int `json:"tests_run"`
-	TestsPassed  int `json:"tests_passed"`
-	TestsFailed  int `json:"tests_failed"`
-	SuccessRate  float64 `json:"success_rate"`
+	StartTime   time.Time     `json:"start_time"`
+	EndTime     time.Time     `json:"end_time"`
+	Duration    time.Duration `json:"duration"`
+	TestsRun    int           `json:"tests_run"`
+	TestsPassed int           `json:"tests_passed"`
+	TestsFailed int           `json:"tests_failed"`
+	SuccessRate float64       `json:"success_rate"`
 }
 
 // NewICETester создает новый ICE тестер
 func NewICETester(logger *zap.Logger, config *ICEConfig) *ICETester {
 	return &ICETester{
-		logger: logger,
-		config: config,
+		logger:  logger,
+		config:  config,
 		metrics: &ICEMetrics{},
 		stats:   &ICEStats{},
 	}
@@ -302,9 +302,9 @@ func (it *ICETester) testSTUN(ctx context.Context) error {
 
 	for _, server := range it.config.StunServers {
 		it.logger.Info("Testing STUN server", zap.String("server", server))
-		
+
 		start := time.Now()
-		
+
 		// Создаем STUN клиент
 		conn, err := net.Dial("udp", server)
 		if err != nil {
@@ -319,7 +319,7 @@ func (it *ICETester) testSTUN(ctx context.Context) error {
 
 		// Создаем STUN Binding Request
 		request := stun.MustBuild(stun.TransactionID, stun.BindingRequest)
-		
+
 		// Отправляем запрос
 		_, err = conn.Write(request.Raw)
 		if err != nil {
@@ -357,9 +357,9 @@ func (it *ICETester) testTURN(ctx context.Context) error {
 
 	for _, server := range it.config.TurnServers {
 		it.logger.Info("Testing TURN server", zap.String("server", server))
-		
+
 		start := time.Now()
-		
+
 		// Создаем TURN клиент
 		conn, err := net.Dial("udp", server)
 		if err != nil {
@@ -378,7 +378,7 @@ func (it *ICETester) testTURN(ctx context.Context) error {
 			stun.NewType(stun.MethodAllocate, stun.ClassRequest),
 			stun.Username(it.config.TurnUsername),
 		)
-		
+
 		// Отправляем запрос
 		_, err = conn.Write(request.Raw)
 		if err != nil {
@@ -447,9 +447,9 @@ func (it *ICETester) testICEConnections(ctx context.Context) error {
 
 	// В реальной реализации здесь было бы тестирование с удаленным peer
 	// Для тестирования имитируем создание соединения
-	
+
 	it.metrics.ConnectionsAttempted++
-	
+
 	// Имитируем успешное соединение
 	time.Sleep(100 * time.Millisecond)
 	it.metrics.ConnectionsSuccessful++
@@ -469,17 +469,17 @@ func (it *ICETester) testNATTraversal(ctx context.Context) error {
 	// Тестируем различные сценарии NAT
 	scenarios := []string{
 		"Full Cone NAT",
-		"Restricted Cone NAT", 
+		"Restricted Cone NAT",
 		"Port Restricted Cone NAT",
 		"Symmetric NAT",
 	}
 
 	for _, scenario := range scenarios {
 		it.logger.Info("Testing NAT scenario", zap.String("scenario", scenario))
-		
+
 		// Имитируем тестирование NAT traversal
 		time.Sleep(50 * time.Millisecond)
-		
+
 		it.logger.Info("NAT traversal test completed", zap.String("scenario", scenario))
 	}
 

@@ -49,58 +49,58 @@ type MASQUEConfig struct {
 	TestTimeout    time.Duration `json:"test_timeout"`
 
 	// Параметры тестирования
-	ConcurrentTests int `json:"concurrent_tests"`
+	ConcurrentTests int           `json:"concurrent_tests"`
 	TestDuration    time.Duration `json:"test_duration"`
 }
 
 // MASQUEMetrics метрики MASQUE тестирования
 type MASQUEMetrics struct {
 	// CONNECT-UDP метрики
-	ConnectUDPRequests    int64 `json:"connect_udp_requests"`
-	ConnectUDPSuccesses   int64 `json:"connect_udp_successes"`
-	ConnectUDPFailures    int64 `json:"connect_udp_failures"`
-	ConnectUDPLatency     time.Duration `json:"connect_udp_latency"`
+	ConnectUDPRequests  int64         `json:"connect_udp_requests"`
+	ConnectUDPSuccesses int64         `json:"connect_udp_successes"`
+	ConnectUDPFailures  int64         `json:"connect_udp_failures"`
+	ConnectUDPLatency   time.Duration `json:"connect_udp_latency"`
 
 	// CONNECT-IP метрики
-	ConnectIPRequests     int64 `json:"connect_ip_requests"`
-	ConnectIPSuccesses    int64 `json:"connect_ip_successes"`
-	ConnectIPFailures     int64 `json:"connect_ip_failures"`
-	ConnectIPLatency      time.Duration `json:"connect_ip_latency"`
+	ConnectIPRequests  int64         `json:"connect_ip_requests"`
+	ConnectIPSuccesses int64         `json:"connect_ip_successes"`
+	ConnectIPFailures  int64         `json:"connect_ip_failures"`
+	ConnectIPLatency   time.Duration `json:"connect_ip_latency"`
 
 	// HTTP Datagrams метрики
-	DatagramsSent         int64 `json:"datagrams_sent"`
-	DatagramsReceived     int64 `json:"datagrams_received"`
-	DatagramLossRate      float64 `json:"datagram_loss_rate"`
+	DatagramsSent     int64   `json:"datagrams_sent"`
+	DatagramsReceived int64   `json:"datagrams_received"`
+	DatagramLossRate  float64 `json:"datagram_loss_rate"`
 
 	// Capsule метрики
-	CapsulesSent          int64 `json:"capsules_sent"`
-	CapsulesReceived      int64 `json:"capsules_received"`
-	CapsuleFallbackCount  int64 `json:"capsule_fallback_count"`
+	CapsulesSent         int64 `json:"capsules_sent"`
+	CapsulesReceived     int64 `json:"capsules_received"`
+	CapsuleFallbackCount int64 `json:"capsule_fallback_count"`
 
 	// Общие метрики
-	TotalConnections      int64 `json:"total_connections"`
-	ActiveConnections     int64 `json:"active_connections"`
-	FailedConnections     int64 `json:"failed_connections"`
-	AverageLatency        time.Duration `json:"average_latency"`
-	Throughput            float64 `json:"throughput_mbps"`
+	TotalConnections  int64         `json:"total_connections"`
+	ActiveConnections int64         `json:"active_connections"`
+	FailedConnections int64         `json:"failed_connections"`
+	AverageLatency    time.Duration `json:"average_latency"`
+	Throughput        float64       `json:"throughput_mbps"`
 }
 
 // MASQUEStats статистика тестирования
 type MASQUEStats struct {
-	StartTime    time.Time `json:"start_time"`
-	EndTime      time.Time `json:"end_time"`
-	Duration     time.Duration `json:"duration"`
-	TestsRun     int `json:"tests_run"`
-	TestsPassed  int `json:"tests_passed"`
-	TestsFailed  int `json:"tests_failed"`
-	SuccessRate  float64 `json:"success_rate"`
+	StartTime   time.Time     `json:"start_time"`
+	EndTime     time.Time     `json:"end_time"`
+	Duration    time.Duration `json:"duration"`
+	TestsRun    int           `json:"tests_run"`
+	TestsPassed int           `json:"tests_passed"`
+	TestsFailed int           `json:"tests_failed"`
+	SuccessRate float64       `json:"success_rate"`
 }
 
 // NewMASQUETester создает новый MASQUE тестер
 func NewMASQUETester(logger *zap.Logger, config *MASQUEConfig) *MASQUETester {
 	return &MASQUETester{
-		logger: logger,
-		config: config,
+		logger:  logger,
+		config:  config,
 		metrics: &MASQUEMetrics{},
 		stats:   &MASQUEStats{},
 	}
@@ -215,7 +215,7 @@ func (mt *MASQUETester) testConnectUDP(ctx context.Context) error {
 
 	for _, target := range mt.config.UDPTargets {
 		mt.logger.Info("Testing CONNECT-UDP to target", zap.String("target", target))
-		
+
 		// Создаем CONNECT-UDP соединение
 		conn, err := mt.connectUDPTester.Connect(ctx, target)
 		if err != nil {
@@ -232,7 +232,9 @@ func (mt *MASQUETester) testConnectUDP(ctx context.Context) error {
 		}
 
 		// Закрываем соединение
-		conn.Close()
+		if err := conn.Close(); err != nil {
+			mt.logger.Warn("Failed to close CONNECT-UDP connection", zap.Error(err))
+		}
 	}
 
 	return nil
@@ -244,7 +246,7 @@ func (mt *MASQUETester) testConnectIP(ctx context.Context) error {
 
 	for _, target := range mt.config.IPTargets {
 		mt.logger.Info("Testing CONNECT-IP to target", zap.String("target", target))
-		
+
 		// Создаем CONNECT-IP соединение
 		conn, err := mt.connectIPTester.Connect(ctx, target)
 		if err != nil {
@@ -261,7 +263,9 @@ func (mt *MASQUETester) testConnectIP(ctx context.Context) error {
 		}
 
 		// Закрываем соединение
-		conn.Close()
+		if err := conn.Close(); err != nil {
+			mt.logger.Warn("Failed to close CONNECT-IP connection", zap.Error(err))
+		}
 	}
 
 	return nil
@@ -273,7 +277,7 @@ func (mt *MASQUETester) testHTTPDatagrams(ctx context.Context) error {
 
 	// Создаем тестовые данные
 	testData := []byte("Hello, MASQUE HTTP Datagrams!")
-	
+
 	// Тестируем отправку и получение datagrams
 	sent, received, err := mt.capsuleTester.TestDatagrams(ctx, testData)
 	if err != nil {
@@ -355,7 +359,7 @@ func (mt *MASQUETester) testDataTransfer(conn net.Conn, protocol, target string)
 
 	// Тестовые данные
 	testData := []byte("Hello, MASQUE!")
-	
+
 	// Отправляем данные
 	start := time.Now()
 	_, err := conn.Write(testData)

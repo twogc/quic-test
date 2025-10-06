@@ -68,7 +68,9 @@ func (cudc *ConnectUDPConnection) Write(data []byte) (int, error) {
 // Read получает UDP datagram через CONNECT-UDP соединение
 func (cudc *ConnectUDPConnection) Read(data []byte) (int, error) {
 	// Для тестирования читаем из UDP соединения
-	cudc.udpConn.SetReadDeadline(time.Now().Add(5 * time.Second))
+	if err := cudc.udpConn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		cudc.logger.Warn("Failed to set read deadline for UDP", zap.Error(err))
+	}
 	return cudc.udpConn.Read(data)
 }
 
@@ -112,7 +114,11 @@ func (cudt *ConnectUDPTester) TestConnectUDP(ctx context.Context, target string)
 	if err != nil {
 		return fmt.Errorf("failed to create CONNECT-UDP connection: %v", err)
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			cudt.logger.Warn("Failed to close CONNECT-UDP connection", zap.Error(err))
+		}
+	}()
 
 	// Отправляем тестовые данные
 	testData := []byte("Hello MASQUE CONNECT-UDP!")

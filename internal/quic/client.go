@@ -92,12 +92,16 @@ func (qc *QUICClient) Disconnect() error {
 	qc.cancel()
 
 	if qc.conn != nil {
-		(*qc.conn).CloseWithError(0, "client disconnect")
+		if err := (*qc.conn).CloseWithError(0, "client disconnect"); err != nil {
+			qc.logger.Warn("Failed to close QUIC connection", zap.Error(err))
+		}
 	}
 
 	// Закрываем все потоки
 	for _, stream := range qc.streams {
-		stream.Close()
+		if err := stream.Close(); err != nil {
+			qc.logger.Warn("Failed to close QUIC stream", zap.Error(err))
+		}
 	}
 
 	qc.isConnected = false
@@ -146,7 +150,9 @@ func (qc *QUICClient) SendData(data []byte) error {
 		qc.mu.Lock()
 		delete(qc.streams, stream.StreamID())
 		qc.mu.Unlock()
-		stream.Close()
+		if err := stream.Close(); err != nil {
+			qc.logger.Warn("Failed to close QUIC stream on error", zap.Error(err))
+		}
 		return fmt.Errorf("failed to send data: %v", err)
 	}
 
@@ -228,7 +234,9 @@ func (qc *QUICClient) handleStream(stream quic.Stream) {
 		delete(qc.streams, stream.StreamID())
 		qc.mu.Unlock()
 
-		stream.Close()
+		if err := stream.Close(); err != nil {
+			qc.logger.Warn("Failed to close QUIC stream in handler", zap.Error(err))
+		}
 		qc.logger.Debug("Stream closed", zap.Uint64("stream_id", uint64(stream.StreamID())))
 	}()
 

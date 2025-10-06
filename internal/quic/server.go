@@ -107,12 +107,16 @@ func (qs *QUICServer) Stop() error {
 	qs.cancel()
 
 	if qs.listener != nil {
-		qs.listener.Close()
+		if err := qs.listener.Close(); err != nil {
+			qs.logger.Warn("Failed to close QUIC listener", zap.Error(err))
+		}
 	}
 
 	// Закрываем все соединения
 	for _, conn := range qs.connections {
-		(*conn).CloseWithError(0, "server shutdown")
+		if err := (*conn).CloseWithError(0, "server shutdown"); err != nil {
+			qs.logger.Warn("Failed to close QUIC connection", zap.Error(err))
+		}
 	}
 
 	qs.isRunning = false
