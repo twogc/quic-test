@@ -2,13 +2,39 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
+func main() {
+	// Парсинг флагов
+	addr := flag.String("addr", ":9990", "Адрес для веб-интерфейса")
+	flag.Parse()
+
+	fmt.Println("\033[1;36m==============================\033[0m")
+	fmt.Println("\033[1;36m  2GC CloudBridge Dashboard\033[0m")
+	fmt.Println("\033[1;36m==============================\033[0m")
+
+	// Обработка сигналов для graceful shutdown
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigs
+		fmt.Println("\nПолучен сигнал завершения, остановка дашборда...")
+		os.Exit(0)
+	}()
+
+	startDashboard(*addr)
+}
+
 // startDashboard запускает веб-интерфейс
-func startDashboard() {
+func startDashboard(addr string) {
 	fmt.Println("🚀 Starting QUIC Testing Dashboard on http://localhost:9990")
 	fmt.Println("📊 Open your browser and navigate to http://localhost:9990")
 	fmt.Println("🛑 Press Ctrl+C to stop the server")
@@ -74,6 +100,7 @@ func startDashboard() {
 	})
 
 	// Запускаем сервер
-	log.Fatal(http.ListenAndServe(":9990", nil))
+	fmt.Printf("🚀 Dashboard запущен на http://localhost%s\n", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 

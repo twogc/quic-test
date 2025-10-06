@@ -23,4 +23,11 @@ type TestConfig struct {
 	EmulateLoss    float64        // вероятность потери пакета (0..1)
 	EmulateLatency time.Duration  // дополнительная задержка
 	EmulateDup     float64        // вероятность дублирования пакета (0..1)
+
+	// --- Профилирование и мониторинг ---
+	PprofAddr string // Адрес для pprof (например, :6060)
+
+	// --- SLA проверки ---
+	SlaRttP95 time.Duration // SLA: максимальный RTT p95
+	SlaLoss   float64      // SLA: максимальная потеря пакетов
 } 
