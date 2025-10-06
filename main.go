@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"quck-test/client"
-	"quck-test/internal"
-	"quck-test/server"
+	"quic-test/client"
+	"quic-test/internal"
+	"quic-test/server"
 )
 
 func main() {

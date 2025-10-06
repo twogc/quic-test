@@ -1,4 +1,4 @@
-module quck-test
+module quic-test
 
 go 1.24
 

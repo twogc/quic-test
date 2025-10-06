@@ -1,4 +1,4 @@
-# 2GC CloudBridge QUICK testing - Docker Compose
+# 2GC CloudBridge QUIC testing - Docker Compose
 # Полное развертывание: сервер + клиент + дашборд + мониторинг
 
 version: '3.8'
@@ -9,7 +9,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: quck-test-server
+    container_name: quic-test-server
     command: ["./quic-server", "--addr=:9000", "--prometheus", "--pprof-addr=:6060"]
     ports:
       - "9000:9000"   # QUIC сервер
@@ -34,7 +34,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: quck-test-client
+    container_name: quic-test-client
     command: ["./quic-client", "--addr=quic-server:9000", "--connections=2", "--streams=4", "--rate=100", "--prometheus", "--duration=60s"]
     ports:
       - "2112:2112"   # Prometheus метрики клиента
@@ -53,7 +53,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dashboard
-    container_name: quck-test-dashboard
+    container_name: quic-test-dashboard
     command: ["./dashboard", "--addr=:9990"]
     ports:
       - "9990:9990"   # Веб-дашборд
@@ -72,7 +72,7 @@ services:
   # Prometheus для сбора метрик
   prometheus:
     image: prom/prometheus:latest
-    container_name: quck-test-prometheus
+    container_name: quic-test-prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -95,7 +95,7 @@ services:
   # Grafana для визуализации
   grafana:
     image: grafana/grafana:latest
-    container_name: quck-test-grafana
+    container_name: quic-test-grafana
     ports:
       - "3000:3000"
     volumes:
@@ -114,7 +114,7 @@ services:
   # Jaeger для трейсинга (опционально)
   jaeger:
     image: jaegertracing/all-in-one:latest
-    container_name: quck-test-jaeger
+    container_name: quic-test-jaeger
     ports:
       - "16686:16686"   # Jaeger UI
       - "14268:14268"   # Jaeger collector
@@ -127,7 +127,7 @@ services:
 networks:
   quck-network:
     driver: bridge
-    name: quck-test-network
+    name: quic-test-network
 
 volumes:
   prometheus-data:
@@ -140,7 +140,7 @@ volumes:
   # Nginx для балансировки нагрузки (опционально)
   nginx:
     image: nginx:alpine
-    container_name: quck-test-nginx
+    container_name: quic-test-nginx
     ports:
       - "80:80"
       - "443:443"
@@ -158,7 +158,7 @@ volumes:
   # Redis для кэширования (опционально)
   redis:
     image: redis:alpine
-    container_name: quck-test-redis
+    container_name: quic-test-redis
     ports:
       - "6379:6379"
     volumes:

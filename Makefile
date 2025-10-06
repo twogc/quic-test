@@ -1,15 +1,15 @@
-# 2GC CloudBridge QUICK testing - Makefile
+# 2GC CloudBridge QUIC testing - Makefile
 # Автоматизация сборки, тестирования и развертывания
 
 .PHONY: help build clean test run-dashboard run-server run-client run-test docker-build docker-run lint fmt vet
 
 # Переменные
-BINARY_NAME=quck-test
+BINARY_NAME=quic-test
 DASHBOARD_BINARY=dashboard
 CLIENT_BINARY=quic-client
 SERVER_BINARY=quic-server
 BUILD_DIR=build
-DOCKER_IMAGE=quck-test
+DOCKER_IMAGE=quic-test
 DOCKER_TAG=latest
 
 # Цвета для вывода
@@ -19,7 +19,7 @@ RED=\033[0;31m
 NC=\033[0m # No Color
 
 help: ## Показать справку
-	@echo "$(GREEN)2GC CloudBridge QUICK testing$(NC)"
+	@echo "$(GREEN)2GC CloudBridge QUIC testing$(NC)"
 	@echo "$(YELLOW)Доступные команды:$(NC)"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(GREEN)%-15s$(NC) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 

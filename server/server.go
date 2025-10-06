@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"quck-test/internal"
+	"quic-test/internal"
 
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"

@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"quck-test/internal"
-	// "quck-test/internal/report" // удалить
+	"quic-test/internal"
+	// "quic-test/internal/report" // удалить
 
 	"crypto/tls"
 	"errors"

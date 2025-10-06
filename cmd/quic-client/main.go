@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"quck-test/client"
-	"quck-test/internal"
+	"quic-test/client"
+	"quic-test/internal"
 )
 
 func main() {
@@ -46,20 +46,20 @@ func main() {
 	}
 
 	cfg := internal.TestConfig{
-		Mode:         "client",
-		Addr:         *addr,
-		Streams:      *streams,
-		Connections:  *connections,
-		Duration:     *duration,
-		PacketSize:   *packetSize,
-		Rate:         *rate,
-		ReportPath:   *reportPath,
-		ReportFormat: *reportFormat,
-		CertPath:     *certPath,
-		KeyPath:      *keyPath,
-		Pattern:      *pattern,
-		NoTLS:        *noTLS,
-		Prometheus:   *prometheus,
+		Mode:           "client",
+		Addr:           *addr,
+		Streams:        *streams,
+		Connections:    *connections,
+		Duration:       *duration,
+		PacketSize:     *packetSize,
+		Rate:           *rate,
+		ReportPath:     *reportPath,
+		ReportFormat:   *reportFormat,
+		CertPath:       *certPath,
+		KeyPath:        *keyPath,
+		Pattern:        *pattern,
+		NoTLS:          *noTLS,
+		Prometheus:     *prometheus,
 		EmulateLoss:    *emulateLoss,
 		EmulateLatency: *emulateLatency,
 		EmulateDup:     *emulateDup,
@@ -68,7 +68,7 @@ func main() {
 		SlaLoss:        *slaLoss,
 	}
 
-	fmt.Printf("Подключение к %s с %d соединениями, %d потоков на соединение\n", 
+	fmt.Printf("Подключение к %s с %d соединениями, %d потоков на соединение\n",
 		cfg.Addr, cfg.Connections, cfg.Streams)
 
 	// Обработка сигналов для graceful shutdown

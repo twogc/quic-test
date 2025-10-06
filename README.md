@@ -1,5 +1,5 @@
 
-# 2GC CloudBridge QUICK testing
+# 2GC CloudBridge QUIC testing
 
 Нагрузочный тестер и анализатор для QUIC + TLS 1.3
 

@@ -1,7 +1,7 @@
-# 2GC CloudBridge QUICK testing - GoReleaser конфигурация
+# 2GC CloudBridge QUIC testing - GoReleaser конфигурация
 # Автоматическая сборка релизов для всех платформ
 
-project_name: quck-test
+project_name: quic-test
 before:
   hooks:
     - go mod tidy
@@ -9,8 +9,8 @@ before:
 
 builds:
   # Основной бинарник
-  - id: quck-test
-    binary: quck-test
+  - id: quic-test
+    binary: quic-test
     main: .
     goos:
       - linux
@@ -97,8 +97,8 @@ builds:
       - osusergo
 
 archives:
-  - id: quck-test
-    name_template: "quck-test_{{.Os}}_{{.Arch}}_v{{.Version}}"
+  - id: quic-test
+    name_template: "quic-test_{{.Os}}_{{.Arch}}_v{{.Version}}"
     format: tar.gz
     format_overrides:
       - goos: windows
@@ -151,7 +151,7 @@ archives:
 
   # Полный пакет со всеми компонентами
   - id: full
-    name_template: "quck-test-full_{{.Os}}_{{.Arch}}_v{{.Version}}"
+    name_template: "quic-test-full_{{.Os}}_{{.Arch}}_v{{.Version}}"
     format: tar.gz
     format_overrides:
       - goos: windows
@@ -192,10 +192,10 @@ release:
   prerelease: auto
   name_template: "v{{.Version}}"
   header: |
-    ## 🚀 2GC CloudBridge QUICK testing v{{.Version}}
+    ## 🚀 2GC CloudBridge QUIC testing v{{.Version}}
     
     ### 📦 Что включено:
-    - **quck-test**: Основной бинарник для тестирования
+    - **quic-test**: Основной бинарник для тестирования
     - **dashboard**: Веб-интерфейс для мониторинга
     - **quic-client**: QUIC клиент
     - **quic-server**: QUIC сервер
@@ -220,8 +220,8 @@ release:
     ### Быстрый старт:
     ```bash
     # Скачать и распаковать
-    tar -xzf quck-test-full_linux_amd64_v{{.Version}}.tar.gz
-    cd quck-test-full_linux_amd64_v{{.Version}}
+    tar -xzf quic-test-full_linux_amd64_v{{.Version}}.tar.gz
+    cd quic-test-full_linux_amd64_v{{.Version}}
     
     # Запуск сервера
     ./quic-server --addr=:9000 --prometheus
@@ -250,11 +250,11 @@ release:
 
 dockers:
   - image_templates:
-      - "quck-test:{{ .Version }}"
-      - "quck-test:latest"
+      - "quic-test:{{ .Version }}"
+      - "quic-test:latest"
     dockerfile: Dockerfile
     build_flag_templates:
-      - "--label=org.opencontainers.image.title=2GC CloudBridge QUICK testing"
+      - "--label=org.opencontainers.image.title=2GC CloudBridge QUIC testing"
       - "--label=org.opencontainers.image.description=QUIC performance testing tool"
       - "--label=org.opencontainers.image.url=https://github.com/cloudbridge-relay-installer/quck-test"
       - "--label=org.opencontainers.image.source=https://github.com/cloudbridge-relay-installer/quck-test"
@@ -264,8 +264,8 @@ dockers:
       - "--label=org.opencontainers.image.licenses=Apache-2.0"
 
   - image_templates:
-      - "quck-test-dashboard:{{ .Version }}"
-      - "quck-test-dashboard:latest"
+      - "quic-test-dashboard:{{ .Version }}"
+      - "quic-test-dashboard:latest"
     dockerfile: Dockerfile.dashboard
     build_flag_templates:
       - "--label=org.opencontainers.image.title=2GC CloudBridge Dashboard"

@@ -103,4 +103,3 @@ func startDashboard(addr string) {
 	fmt.Printf("🚀 Dashboard запущен на http://localhost%s\n", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
-

@@ -1,4 +1,4 @@
-# 2GC CloudBridge QUICK testing - Multi-stage Dockerfile
+# 2GC CloudBridge QUIC testing - Multi-stage Dockerfile
 # Сборка всех компонентов в одном образе
 
 # Этап 1: Сборка
@@ -27,8 +27,8 @@ FROM alpine:3.20
 RUN apk add --no-cache ca-certificates tzdata
 
 # Создание пользователя для безопасности
-RUN addgroup -g 1001 -S quck && \
-    adduser -u 1001 -S quck -G quck
+RUN addgroup -g 1001 -S quic && \
+    adduser -u 1001 -S quic -G quic
 
 # Установка рабочей директории
 WORKDIR /app
@@ -45,8 +45,8 @@ COPY --from=builder /app/README.md ./
 COPY --from=builder /app/LICENSE ./
 
 # Установка прав доступа
-RUN chown -R quck:quck /app
-USER quck
+RUN chown -R quic:quic /app
+USER quic
 
 # Открытие портов
 EXPOSE 9000 9990 2112 2113 6060
@@ -71,4 +71,4 @@ LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.vendor="2GC CloudBridge"
 
 # Команда по умолчанию
-CMD ["./quck-test", "--mode=test", "--connections=2", "--streams=4", "--rate=100", "--prometheus"]
+CMD ["./quic-test", "--mode=test", "--connections=2", "--streams=4", "--rate=100", "--prometheus"]
