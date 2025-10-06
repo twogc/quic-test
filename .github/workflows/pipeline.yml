@@ -128,7 +128,7 @@ jobs:
           govulncheck ./... || echo "Vulnerabilities found but continuing"
 
       - name: Run gosec
-        uses: securego/gosec@v2.22.0
+        uses: securego/gosec@v2.22.9
         continue-on-error: true
         with:
           args: '-fmt sarif -out gosec.sarif -timeout 5m ./...'
