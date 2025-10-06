@@ -57,5 +57,7 @@ func runMASQUETesting(logger *zap.Logger, masqueServer, masqueTargets string) {
 		zap.Duration("average_latency", metrics.AverageLatency))
 
 	// Останавливаем тестер
-	tester.Stop()
+	if err := tester.Stop(); err != nil {
+		logger.Error("Failed to stop MASQUE tester", zap.Error(err))
+	}
 }

@@ -97,5 +97,7 @@ func runEnhancedTesting(logger *zap.Logger, masqueServer, masqueTargets, iceStun
 		zap.Duration("test_duration", metrics.TestDuration))
 
 	// Останавливаем тестер
-	tester.Stop()
+	if err := tester.Stop(); err != nil {
+		logger.Error("Failed to stop enhanced tester", zap.Error(err))
+	}
 }

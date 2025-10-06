@@ -72,5 +72,7 @@ func runICETesting(logger *zap.Logger, stunServers, turnServers, turnUser, turnP
 		zap.Int64("connections_successful", metrics.ConnectionsSuccessful))
 
 	// Останавливаем тестер
-	tester.Stop()
+	if err := tester.Stop(); err != nil {
+		logger.Error("Failed to stop ICE tester", zap.Error(err))
+	}
 }

@@ -151,7 +151,9 @@ func (it *ICETester) Stop() error {
 
 	// Закрываем ICE agent
 	if it.agent != nil {
-		it.agent.Close()
+		if err := it.agent.Close(); err != nil {
+			it.logger.Warn("Failed to close ICE agent", zap.Error(err))
+		}
 	}
 
 	return nil
@@ -309,7 +311,11 @@ func (it *ICETester) testSTUN(ctx context.Context) error {
 			it.logger.Error("Failed to connect to STUN server", zap.String("server", server), zap.Error(err))
 			continue
 		}
-		defer conn.Close()
+		defer func() {
+			if err := conn.Close(); err != nil {
+				it.logger.Warn("Failed to close STUN connection", zap.Error(err))
+			}
+		}()
 
 		// Создаем STUN Binding Request
 		request := stun.MustBuild(stun.TransactionID, stun.BindingRequest)
@@ -325,7 +331,9 @@ func (it *ICETester) testSTUN(ctx context.Context) error {
 
 		// Читаем ответ
 		response := make([]byte, 1024)
-		conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+		if err := conn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+			it.logger.Warn("Failed to set read deadline for STUN", zap.Error(err))
+		}
 		_, err = conn.Read(response)
 		if err != nil {
 			it.logger.Error("Failed to receive STUN response", zap.String("server", server), zap.Error(err))
@@ -358,7 +366,11 @@ func (it *ICETester) testTURN(ctx context.Context) error {
 			it.logger.Error("Failed to connect to TURN server", zap.String("server", server), zap.Error(err))
 			continue
 		}
-		defer conn.Close()
+		defer func() {
+			if err := conn.Close(); err != nil {
+				it.logger.Warn("Failed to close TURN connection", zap.Error(err))
+			}
+		}()
 
 		// Создаем TURN Allocation Request
 		request := stun.MustBuild(
@@ -379,7 +391,9 @@ func (it *ICETester) testTURN(ctx context.Context) error {
 
 		// Читаем ответ
 		response := make([]byte, 1024)
-		conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+		if err := conn.SetReadDeadline(time.Now().Add(10 * time.Second)); err != nil {
+			it.logger.Warn("Failed to set read deadline for TURN", zap.Error(err))
+		}
 		_, err = conn.Read(response)
 		if err != nil {
 			it.logger.Error("Failed to receive TURN response", zap.String("server", server), zap.Error(err))

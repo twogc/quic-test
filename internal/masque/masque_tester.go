@@ -3,6 +3,7 @@ package masque
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"sync"
 	"time"
@@ -149,13 +150,19 @@ func (mt *MASQUETester) Stop() error {
 
 	// Останавливаем компоненты
 	if mt.connectUDPTester != nil {
-		mt.connectUDPTester.Stop()
+		if err := mt.connectUDPTester.Stop(); err != nil {
+			log.Printf("Warning: failed to stop ConnectUDPTester: %v", err)
+		}
 	}
 	if mt.connectIPTester != nil {
-		mt.connectIPTester.Stop()
+		if err := mt.connectIPTester.Stop(); err != nil {
+			log.Printf("Warning: failed to stop ConnectIPTester: %v", err)
+		}
 	}
 	if mt.capsuleTester != nil {
-		mt.capsuleTester.Stop()
+		if err := mt.capsuleTester.Stop(); err != nil {
+			log.Printf("Warning: failed to stop CapsuleTester: %v", err)
+		}
 	}
 
 	return nil
