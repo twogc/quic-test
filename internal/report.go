@@ -36,7 +36,7 @@ func SaveReport(cfg TestConfig, metrics any) error {
 	}
 
 	if format != "csv" {
-		err = os.WriteFile(filename, data, 0644)
+		err = os.WriteFile(filename, data, 0600) // Более безопасные права доступа
 	}
 	if err != nil {
 		return fmt.Errorf("ошибка сохранения отчёта: %w", err)

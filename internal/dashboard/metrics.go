@@ -220,6 +220,11 @@ func secureInt63n(n int64) int64 {
 		// Fallback to time-based seed if crypto/rand fails
 		return time.Now().UnixNano() % n
 	}
-	return int64(binary.BigEndian.Uint64(b)) % n
+	// Используем модуль для получения положительного значения
+	val := int64(binary.BigEndian.Uint64(b))
+	if val < 0 {
+		val = -val
+	}
+	return val % n
 }
 

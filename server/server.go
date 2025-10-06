@@ -127,21 +127,33 @@ func handleStream(stream quic.Stream, metrics *serverMetrics) {
 
 func makeTLSConfig(cfg internal.TestConfig) *tls.Config {
 	if cfg.NoTLS {
-		return &tls.Config{InsecureSkipVerify: true, NextProtos: []string{"quic-test"}}
+		return &tls.Config{
+			InsecureSkipVerify: true, 
+			NextProtos:         []string{"quic-test"},
+			MinVersion:          tls.VersionTLS12, // Минимальная безопасная версия TLS
+		}
 	}
 	if cfg.CertPath != "" && cfg.KeyPath != "" {
 		cert, err := tls.LoadX509KeyPair(cfg.CertPath, cfg.KeyPath)
 		if err != nil {
 			log.Fatalf("Ошибка загрузки сертификата: %v", err)
 		}
-		return &tls.Config{Certificates: []tls.Certificate{cert}, NextProtos: []string{"quic-test"}}
+		return &tls.Config{
+			Certificates: []tls.Certificate{cert}, 
+			NextProtos:   []string{"quic-test"},
+			MinVersion:   tls.VersionTLS12, // Минимальная безопасная версия TLS
+		}
 	}
 	certPEM, keyPEM := internal.GenerateSelfSignedTLS()
 	cert, err := tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {
 		log.Fatalf("Ошибка генерации self-signed сертификата: %v", err)
 	}
-	return &tls.Config{Certificates: []tls.Certificate{cert}, NextProtos: []string{"quic-test"}}
+	return &tls.Config{
+		Certificates: []tls.Certificate{cert}, 
+		NextProtos:   []string{"quic-test"},
+		MinVersion:   tls.VersionTLS12, // Минимальная безопасная версия TLS
+	}
 }
 
 func printServerMetrics(metrics *serverMetrics) {
