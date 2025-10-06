@@ -3,6 +3,7 @@ package masque
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"time"
 
@@ -69,7 +70,7 @@ func (cudc *ConnectUDPConnection) Write(data []byte) (int, error) {
 func (cudc *ConnectUDPConnection) Read(data []byte) (int, error) {
 	// Для тестирования читаем из UDP соединения
 	if err := cudc.udpConn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
-		cudc.logger.Warn("Failed to set read deadline for UDP", zap.Error(err))
+		log.Printf("Warning: failed to set read deadline for UDP: %v", err)
 	}
 	return cudc.udpConn.Read(data)
 }
