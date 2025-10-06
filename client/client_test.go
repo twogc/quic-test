@@ -41,7 +41,7 @@ func TestCalcPercentiles(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p50, p95, p99 := calcPercentiles(tt.data)
-			
+
 			if p50 != tt.expected.p50 {
 				t.Errorf("calcPercentiles() p50 = %v, want %v", p50, tt.expected.p50)
 			}
@@ -70,7 +70,7 @@ func TestTimePoint(t *testing.T) {
 		Time:  1.5,
 		Value: 42.0,
 	}
-	
+
 	if tp.Time != 1.5 {
 		t.Errorf("TimePoint.Time = %v, want %v", tp.Time, 1.5)
 	}

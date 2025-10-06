@@ -49,7 +49,7 @@ func SaveReport(cfg TestConfig, metrics any) error {
 
 func makeReportJSON(cfg TestConfig, metrics any) any {
 	return map[string]any{
-		"params": cfg,
+		"params":  cfg,
 		"metrics": metrics,
 	}
 }
@@ -244,4 +244,4 @@ func avgLatency(latencies []float64) float64 {
 		sum += l
 	}
 	return sum / float64(len(latencies))
-} 
+}

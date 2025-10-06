@@ -90,13 +90,13 @@ func TestTestConfig_Validate(t *testing.T) {
 
 func TestTestConfig_DefaultValues(t *testing.T) {
 	config := TestConfig{}
-	
+
 	// Проверяем, что пустая конфигурация невалидна
 	err := config.Validate()
 	if err == nil {
 		t.Error("Empty config should be invalid")
 	}
-	
+
 	// Проверяем, что можем создать валидную конфигурацию
 	validConfig := TestConfig{
 		Mode:        "test",
@@ -107,7 +107,7 @@ func TestTestConfig_DefaultValues(t *testing.T) {
 		PacketSize:  1024,
 		Rate:        100,
 	}
-	
+
 	err = validConfig.Validate()
 	if err != nil {
 		t.Errorf("Valid config should not have errors: %v", err)
