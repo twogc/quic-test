@@ -553,7 +553,9 @@ func startPrometheusExporter(metrics *Metrics) {
 	prometheus.MustRegister(success, errors, bytesSent, avgLatency, throughput)
 	http.Handle("/metrics", promhttp.Handler())
 	fmt.Println("Prometheus endpoint доступен на :2112/metrics")
-	http.ListenAndServe(":2112", nil)
+	if err := http.ListenAndServe(":2112", nil); err != nil {
+		log.Printf("Failed to start Prometheus server: %v", err)
+	}
 }
 
 // Вспомогательные функции для TLSVersion/CipherSuite
