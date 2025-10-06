@@ -18,10 +18,10 @@ type ConnectUDPTester struct {
 
 // ConnectUDPConnection представляет CONNECT-UDP соединение
 type ConnectUDPConnection struct {
-	udpConn  *net.UDPConn
-	target   string
-	ctx      context.Context
-	cancel   context.CancelFunc
+	udpConn *net.UDPConn
+	target  string
+	ctx     context.Context
+	cancel  context.CancelFunc
 }
 
 // NewConnectUDPTester создает новый CONNECT-UDP тестер
