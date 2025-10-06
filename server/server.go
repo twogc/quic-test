@@ -211,4 +211,4 @@ func startPrometheusExporter(metrics *serverMetrics) {
 	http.Handle("/metrics", promhttp.Handler())
 	fmt.Println("Prometheus endpoint сервера доступен на :2113/metrics")
 	http.ListenAndServe(":2113", nil)
-} 
+}

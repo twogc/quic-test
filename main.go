@@ -38,20 +38,20 @@ func main() {
 	flag.Parse()
 
 	cfg := internal.TestConfig{
-		Mode:         *mode,
-		Addr:         *addr,
-		Streams:      *streams,
-		Connections:  *connections,
-		Duration:     *duration,
-		PacketSize:   *packetSize,
-		Rate:         *rate,
-		ReportPath:   *reportPath,
-		ReportFormat: *reportFormat,
-		CertPath:     *certPath,
-		KeyPath:      *keyPath,
-		Pattern:      *pattern,
-		NoTLS:        *noTLS,
-		Prometheus:   *prometheus,
+		Mode:           *mode,
+		Addr:           *addr,
+		Streams:        *streams,
+		Connections:    *connections,
+		Duration:       *duration,
+		PacketSize:     *packetSize,
+		Rate:           *rate,
+		ReportPath:     *reportPath,
+		ReportFormat:   *reportFormat,
+		CertPath:       *certPath,
+		KeyPath:        *keyPath,
+		Pattern:        *pattern,
+		NoTLS:          *noTLS,
+		Prometheus:     *prometheus,
 		EmulateLoss:    *emulateLoss,
 		EmulateLatency: *emulateLatency,
 		EmulateDup:     *emulateDup,
@@ -87,4 +87,4 @@ func main() {
 		fmt.Println("Неизвестный режим", cfg.Mode)
 		os.Exit(1)
 	}
-} 
+}

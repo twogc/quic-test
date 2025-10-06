@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	"quck-test/internal/dashboard"
-	"quck-test/internal/quic"
+	"quic-test/internal/dashboard"
+	"quic-test/internal/quic"
 
 	"go.uber.org/zap"
 )
@@ -131,7 +131,7 @@ func ShowHelp() {
 	fmt.Println("QUIC Testing Tool - Расширенное тестирование QUIC протокола")
 	fmt.Println()
 	fmt.Println("Использование:")
-	fmt.Println("  quck-test -mode=<режим> [флаги]")
+	fmt.Println("  quic-test -mode=<режим> [флаги]")
 	fmt.Println()
 	fmt.Println("Режимы:")
 	for name, cmd := range Commands {

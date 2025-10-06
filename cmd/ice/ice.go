@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"quck-test/internal/ice"
+	"quic-test/internal/ice"
 
 	"go.uber.org/zap"
 )

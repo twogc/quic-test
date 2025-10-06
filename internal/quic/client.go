@@ -63,7 +63,7 @@ func (qc *QUICClient) Connect() error {
 	// Подключаемся к серверу
 	conn, err := quic.DialAddr(qc.ctx, qc.serverAddr, &tls.Config{
 		InsecureSkipVerify: true,
-		NextProtos:         []string{"quck-test"},
+		NextProtos:         []string{"quic-test"},
 	}, quicConfig)
 	if err != nil {
 		return fmt.Errorf("failed to connect to %s: %v", qc.serverAddr, err)

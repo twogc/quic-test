@@ -68,7 +68,7 @@ func (qs *QUICServer) Start() error {
 
 	tlsConfig := &tls.Config{
 		Certificates:       []tls.Certificate{cert},
-		NextProtos:         []string{"quck-test"},
+		NextProtos:         []string{"quic-test"},
 		InsecureSkipVerify: true,
 	}
 
@@ -241,7 +241,7 @@ func (qs *QUICServer) generateTLSConfig() (*tls.Config, error) {
 
 	return &tls.Config{
 		Certificates:       []tls.Certificate{cert},
-		NextProtos:         []string{"quck-test"},
+		NextProtos:         []string{"quic-test"},
 		InsecureSkipVerify: true,
 	}, nil
 }

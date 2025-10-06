@@ -8,8 +8,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"quck-test/internal/ice"
-	"quck-test/internal/masque"
+	"quic-test/internal/ice"
+	"quic-test/internal/masque"
 )
 
 // EnhancedTester интегрирует MASQUE и ICE тестирование с существующим QUIC тестированием

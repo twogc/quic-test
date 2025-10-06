@@ -34,30 +34,30 @@ type TimePoint struct {
 
 // Metrics хранит метрики теста
 type Metrics struct {
-	mu           sync.Mutex
-	Success      int
-	Errors       int
-	BytesSent    int
-	Latencies    []float64
-	Timestamps   []time.Time
-	Throughput   []float64
+	mu         sync.Mutex
+	Success    int
+	Errors     int
+	BytesSent  int
+	Latencies  []float64
+	Timestamps []time.Time
+	Throughput []float64
 	// Time series for latency and throughput
 	TimeSeriesLatency    []TimePoint
 	TimeSeriesThroughput []TimePoint
 
 	// --- Advanced QUIC/TLS metrics ---
-	PacketLoss           float64           // %
-	Retransmits          int
-	HandshakeTimes       []float64         // ms
-	TLSVersion           string
-	CipherSuite          string
+	PacketLoss             float64 // %
+	Retransmits            int
+	HandshakeTimes         []float64 // ms
+	TLSVersion             string
+	CipherSuite            string
 	SessionResumptionCount int
-	ZeroRTTCount         int
-	OneRTTCount          int
-	OutOfOrderCount      int
-	FlowControlEvents    int
-	KeyUpdateEvents      int
-	ErrorTypeCounts      map[string]int    // error type -> count
+	ZeroRTTCount           int
+	OneRTTCount            int
+	OutOfOrderCount        int
+	FlowControlEvents      int
+	KeyUpdateEvents        int
+	ErrorTypeCounts        map[string]int // error type -> count
 	// Time series for new metrics
 	TimeSeriesPacketLoss    []TimePoint
 	TimeSeriesRetransmits   []TimePoint
@@ -358,7 +358,7 @@ func clientStream(ctx context.Context, session quic.Connection, cfg internal.Tes
 			lastSeq = seq
 			metrics.mu.Lock()
 			metrics.TimeSeriesRetransmits = append(metrics.TimeSeriesRetransmits, TimePoint{Time: time.Since(start).Seconds(), Value: float64(retransmits)})
-			metrics.TimeSeriesPacketLoss = append(metrics.TimeSeriesPacketLoss, TimePoint{Time: time.Since(start).Seconds(), Value: 100 * float64(sentPackets-ackedPackets) / (float64(sentPackets)+1e-9)})
+			metrics.TimeSeriesPacketLoss = append(metrics.TimeSeriesPacketLoss, TimePoint{Time: time.Since(start).Seconds(), Value: 100 * float64(sentPackets-ackedPackets) / (float64(sentPackets) + 1e-9)})
 			metrics.mu.Unlock()
 		}
 		// Пауза между пакетами
@@ -575,4 +575,4 @@ func cipherSuiteString(cs uint16) string {
 const (
 	flowControlErrorCode = 0x3 // FlowControlError
 	keyUpdateErrorCode   = 0xE // KeyUpdateError
-) 
+)
