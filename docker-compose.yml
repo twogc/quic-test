@@ -169,7 +169,3 @@ volumes:
     profiles:
       - redis
 
-volumes:
-  prometheus-data:
-  grafana-data:
-  redis-data:
