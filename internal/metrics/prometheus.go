@@ -51,45 +51,52 @@ type PrometheusMetrics struct {
 
 // NewPrometheusMetrics создает новый экземпляр метрик Prometheus
 func NewPrometheusMetrics() *PrometheusMetrics {
+	return NewPrometheusMetricsWithRegistry(prometheus.DefaultRegisterer)
+}
+
+// NewPrometheusMetricsWithRegistry создает новый экземпляр метрик с указанным registry
+func NewPrometheusMetricsWithRegistry(registry prometheus.Registerer) *PrometheusMetrics {
+	factory := promauto.With(registry)
+	
 	return &PrometheusMetrics{
 		// Счетчики
-		ConnectionsTotal: promauto.NewCounter(prometheus.CounterOpts{
+		ConnectionsTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "quic_connections_total",
 			Help: "Total number of QUIC connections established",
 		}),
-		StreamsTotal: promauto.NewCounter(prometheus.CounterOpts{
+		StreamsTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "quic_streams_total",
 			Help: "Total number of QUIC streams created",
 		}),
-		BytesSentTotal: promauto.NewCounter(prometheus.CounterOpts{
+		BytesSentTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "quic_bytes_sent_total",
 			Help: "Total bytes sent over QUIC connections",
 		}),
-		BytesReceivedTotal: promauto.NewCounter(prometheus.CounterOpts{
+		BytesReceivedTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "quic_bytes_received_total",
 			Help: "Total bytes received over QUIC connections",
 		}),
-		ErrorsTotal: promauto.NewCounter(prometheus.CounterOpts{
+		ErrorsTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "quic_errors_total",
 			Help: "Total number of QUIC errors",
 		}),
-		RetransmitsTotal: promauto.NewCounter(prometheus.CounterOpts{
+		RetransmitsTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "quic_retransmits_total",
 			Help: "Total number of QUIC packet retransmissions",
 		}),
-		HandshakesTotal: promauto.NewCounter(prometheus.CounterOpts{
+		HandshakesTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "quic_handshakes_total",
 			Help: "Total number of QUIC handshakes completed",
 		}),
-		ZeroRTTTotal: promauto.NewCounter(prometheus.CounterOpts{
+		ZeroRTTTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "quic_zero_rtt_total",
 			Help: "Total number of 0-RTT connections",
 		}),
-		OneRTTTotal: promauto.NewCounter(prometheus.CounterOpts{
+		OneRTTTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "quic_one_rtt_total",
 			Help: "Total number of 1-RTT connections",
 		}),
-		SessionResumptionsTotal: promauto.NewCounter(prometheus.CounterOpts{
+		SessionResumptionsTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "quic_session_resumptions_total",
 			Help: "Total number of QUIC session resumptions",
 		}),

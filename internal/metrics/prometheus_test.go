@@ -3,10 +3,18 @@ package metrics
 import (
 	"testing"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
+// newTestMetrics создает метрики для тестов с отдельным registry
+func newTestMetrics() *PrometheusMetrics {
+	registry := prometheus.NewRegistry()
+	return NewPrometheusMetricsWithRegistry(registry)
+}
+
 func TestNewPrometheusMetrics(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	
 	if metrics == nil {
 		t.Fatal("NewPrometheusMetrics returned nil")
@@ -28,7 +36,7 @@ func TestNewPrometheusMetrics(t *testing.T) {
 }
 
 func TestRecordLatency(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	latency := 50 * time.Millisecond
 	
 	// Не должно паниковать
@@ -36,7 +44,7 @@ func TestRecordLatency(t *testing.T) {
 }
 
 func TestRecordJitter(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	jitter := 5 * time.Millisecond
 	
 	// Не должно паниковать
@@ -44,7 +52,7 @@ func TestRecordJitter(t *testing.T) {
 }
 
 func TestRecordThroughput(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	throughput := 1024.0
 	
 	// Не должно паниковать
@@ -52,7 +60,7 @@ func TestRecordThroughput(t *testing.T) {
 }
 
 func TestIncrementConnections(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	
 	// Не должно паниковать
 	metrics.IncrementConnections()
@@ -60,7 +68,7 @@ func TestIncrementConnections(t *testing.T) {
 }
 
 func TestIncrementStreams(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	
 	// Не должно паниковать
 	metrics.IncrementStreams()
@@ -68,7 +76,7 @@ func TestIncrementStreams(t *testing.T) {
 }
 
 func TestAddBytes(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	
 	// Не должно паниковать
 	metrics.AddBytesSent(1024)
@@ -76,7 +84,7 @@ func TestAddBytes(t *testing.T) {
 }
 
 func TestIncrementCounters(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	
 	// Не должно паниковать
 	metrics.IncrementErrors()
@@ -88,7 +96,7 @@ func TestIncrementCounters(t *testing.T) {
 }
 
 func TestSetGauges(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	
 	// Не должно паниковать
 	metrics.SetCurrentThroughput(1024.0)
@@ -98,7 +106,7 @@ func TestSetGauges(t *testing.T) {
 }
 
 func TestRecordEvents(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	
 	// Не должно паниковать
 	metrics.RecordScenarioEvent("test", "conn1", "stream1", "success")
@@ -109,7 +117,7 @@ func TestRecordEvents(t *testing.T) {
 }
 
 func TestRecordHandshakeTime(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	handshakeTime := 200 * time.Millisecond
 	
 	// Не должно паниковать
@@ -117,7 +125,7 @@ func TestRecordHandshakeTime(t *testing.T) {
 }
 
 func TestRecordRTT(t *testing.T) {
-	metrics := NewPrometheusMetrics()
+	metrics := newTestMetrics()
 	rtt := 30 * time.Millisecond
 	
 	// Не должно паниковать
