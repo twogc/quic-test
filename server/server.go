@@ -52,7 +52,9 @@ func Run(cfg internal.TestConfig) {
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		<-c
 		log.Println("Остановка сервера...")
-		listener.Close()
+		if err := listener.Close(); err != nil {
+			log.Printf("Warning: failed to close listener: %v\n", err)
+		}
 		close(done)
 	}()
 
@@ -83,7 +85,11 @@ func Run(cfg internal.TestConfig) {
 }
 
 func handleConn(conn quic.Connection, metrics *serverMetrics) {
-	defer conn.CloseWithError(0, "bye")
+	defer func() {
+		if err := conn.CloseWithError(0, "bye"); err != nil {
+			log.Printf("Warning: failed to close connection: %v\n", err)
+		}
+	}()
 	for {
 		stream, err := conn.AcceptStream(context.Background())
 		if err != nil {

@@ -1,8 +1,9 @@
 package dashboard
 
 import (
+	"crypto/rand"
+	"encoding/binary"
 	"math"
-	"math/rand"
 	"sync"
 	"time"
 )
@@ -63,36 +64,36 @@ func (mm *MetricsManager) UpdateMetrics() {
 	// Генерируем реалистичные метрики
 	if mm.ServerRunning && mm.ClientRunning {
 		// Активное тестирование - более высокие значения
-		mm.Latency = 20 + rand.Float64()*30       // 20-50ms
-		mm.Throughput = 100 + rand.Float64()*200  // 100-300 Mbps
-		mm.PacketLoss = rand.Float64() * 2        // 0-2%
-		mm.Connections = 1 + rand.Int63n(10)      // 1-10 соединений
-		mm.Retransmits = rand.Int63n(5)           // 0-5 retransmits
-		mm.HandshakeTime = 30 + rand.Float64()*50 // 30-80ms
+		mm.Latency = 20 + secureFloat64()*30       // 20-50ms
+		mm.Throughput = 100 + secureFloat64()*200  // 100-300 Mbps
+		mm.PacketLoss = secureFloat64() * 2        // 0-2%
+		mm.Connections = 1 + secureInt63n(10)      // 1-10 соединений
+		mm.Retransmits = secureInt63n(5)           // 0-5 retransmits
+		mm.HandshakeTime = 30 + secureFloat64()*50 // 30-80ms
 	} else if mm.MASQUEActive {
 		// MASQUE тестирование
-		mm.Latency = 15 + rand.Float64()*25       // 15-40ms
-		mm.Throughput = 80 + rand.Float64()*120   // 80-200 Mbps
-		mm.PacketLoss = rand.Float64() * 1.5      // 0-1.5%
-		mm.Connections = 1 + rand.Int63n(5)       // 1-5 соединений
-		mm.Retransmits = rand.Int63n(3)           // 0-3 retransmits
-		mm.HandshakeTime = 25 + rand.Float64()*40 // 25-65ms
+		mm.Latency = 15 + secureFloat64()*25       // 15-40ms
+		mm.Throughput = 80 + secureFloat64()*120   // 80-200 Mbps
+		mm.PacketLoss = secureFloat64() * 1.5      // 0-1.5%
+		mm.Connections = 1 + secureInt63n(5)       // 1-5 соединений
+		mm.Retransmits = secureInt63n(3)           // 0-3 retransmits
+		mm.HandshakeTime = 25 + secureFloat64()*40 // 25-65ms
 	} else if mm.ICEActive {
 		// ICE тестирование
-		mm.Latency = 30 + rand.Float64()*40       // 30-70ms
-		mm.Throughput = 60 + rand.Float64()*100   // 60-160 Mbps
-		mm.PacketLoss = rand.Float64() * 3        // 0-3%
-		mm.Connections = 1 + rand.Int63n(3)       // 1-3 соединений
-		mm.Retransmits = rand.Int63n(8)           // 0-8 retransmits
-		mm.HandshakeTime = 40 + rand.Float64()*60 // 40-100ms
+		mm.Latency = 30 + secureFloat64()*40       // 30-70ms
+		mm.Throughput = 60 + secureFloat64()*100   // 60-160 Mbps
+		mm.PacketLoss = secureFloat64() * 3        // 0-3%
+		mm.Connections = 1 + secureInt63n(3)       // 1-3 соединений
+		mm.Retransmits = secureInt63n(8)           // 0-8 retransmits
+		mm.HandshakeTime = 40 + secureFloat64()*60 // 40-100ms
 	} else {
 		// Неактивное состояние - низкие значения
-		mm.Latency = 5 + rand.Float64()*10     // 5-15ms
-		mm.Throughput = 10 + rand.Float64()*20 // 10-30 Mbps
-		mm.PacketLoss = rand.Float64() * 0.5   // 0-0.5%
+		mm.Latency = 5 + secureFloat64()*10     // 5-15ms
+		mm.Throughput = 10 + secureFloat64()*20 // 10-30 Mbps
+		mm.PacketLoss = secureFloat64() * 0.5   // 0-0.5%
 		mm.Connections = 0
 		mm.Retransmits = 0
-		mm.HandshakeTime = 10 + rand.Float64()*20 // 10-30ms
+		mm.HandshakeTime = 10 + secureFloat64()*20 // 10-30ms
 	}
 
 	// Добавляем в историю
@@ -197,5 +198,28 @@ func (mm *MetricsManager) SetICEActive(active bool) {
 	if active {
 		mm.ICETests++
 	}
+}
+
+// secureFloat64 генерирует криптографически стойкое случайное число от 0 до 1
+func secureFloat64() float64 {
+	b := make([]byte, 8)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback to time-based seed if crypto/rand fails
+		return float64(time.Now().UnixNano()%1000) / 1000.0
+	}
+	return float64(binary.BigEndian.Uint64(b)) / float64(^uint64(0))
+}
+
+// secureInt63n генерирует криптографически стойкое случайное число от 0 до n-1
+func secureInt63n(n int64) int64 {
+	if n <= 0 {
+		return 0
+	}
+	b := make([]byte, 8)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback to time-based seed if crypto/rand fails
+		return time.Now().UnixNano() % n
+	}
+	return int64(binary.BigEndian.Uint64(b)) % n
 }
 

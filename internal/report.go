@@ -64,7 +64,11 @@ func saveCSV(filename string, rows [][]string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Printf("Warning: failed to close file %s: %v\n", filename, err)
+		}
+	}()
 	w := csv.NewWriter(f)
 	defer w.Flush()
 	return w.WriteAll(rows)

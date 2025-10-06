@@ -2,8 +2,9 @@ package client
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/binary"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -234,7 +235,11 @@ func clientConnection(ctx context.Context, cfg internal.TestConfig, metrics *Met
 		metrics.OneRTTCount++
 	}
 	metrics.mu.Unlock()
-	defer session.CloseWithError(0, "client done")
+	defer func() {
+		if err := session.CloseWithError(0, "client done"); err != nil {
+			fmt.Printf("Warning: failed to close session: %v\n", err)
+		}
+	}()
 
 	var wg sync.WaitGroup
 	for s := 0; s < cfg.Streams; s++ {
@@ -260,7 +265,11 @@ func clientStream(ctx context.Context, session quic.Connection, cfg internal.Tes
 		metrics.mu.Unlock()
 		return
 	}
-	defer stream.Close()
+	defer func() {
+		if err := stream.Close(); err != nil {
+			fmt.Printf("Warning: failed to close stream: %v\n", err)
+		}
+	}()
 
 	// Инициализация map для ошибок
 	metrics.mu.Lock()
@@ -289,7 +298,7 @@ func clientStream(ctx context.Context, session quic.Connection, cfg internal.Tes
 			time.Sleep(cfg.EmulateLatency)
 		}
 		// Эмуляция потери пакета
-		if cfg.EmulateLoss > 0 && rand.Float64() < cfg.EmulateLoss {
+		if cfg.EmulateLoss > 0 && secureFloat64() < cfg.EmulateLoss {
 			metrics.mu.Lock()
 			metrics.ErrorTypeCounts["emulated_loss"]++
 			metrics.mu.Unlock()
@@ -305,7 +314,7 @@ func clientStream(ctx context.Context, session quic.Connection, cfg internal.Tes
 		}
 		// Дублирование пакета
 		dupCount := 1
-		if cfg.EmulateDup > 0 && rand.Float64() < cfg.EmulateDup {
+		if cfg.EmulateDup > 0 && secureFloat64() < cfg.EmulateDup {
 			dupCount = 2
 			metrics.mu.Lock()
 			metrics.ErrorTypeCounts["emulated_dup"]++
@@ -569,6 +578,16 @@ func cipherSuiteString(cs uint16) string {
 	default:
 		return fmt.Sprintf("0x%x", cs)
 	}
+}
+
+// secureFloat64 генерирует криптографически стойкое случайное число от 0 до 1
+func secureFloat64() float64 {
+	b := make([]byte, 8)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback to time-based seed if crypto/rand fails
+		return float64(time.Now().UnixNano()%1000) / 1000.0
+	}
+	return float64(binary.BigEndian.Uint64(b)) / float64(^uint64(0))
 }
 
 // Коды ошибок из RFC 9000/QUIC:

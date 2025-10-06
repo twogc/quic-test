@@ -24,8 +24,8 @@ type EnhancedTester struct {
 	config *EnhancedConfig
 
 	// Состояние
-	mu       sync.RWMutex
-	isActive bool
+	mu        sync.RWMutex
+	isActive  bool
 	startTime time.Time
 }
 
@@ -91,7 +91,7 @@ func (et *EnhancedTester) Start(ctx context.Context) error {
 	if et.config.EnableMASQUE {
 		et.logger.Info("Initializing MASQUE testing")
 		et.masqueTester = masque.NewMASQUETester(et.logger, &et.config.MASQUE)
-		
+
 		if err := et.masqueTester.Start(ctx); err != nil {
 			et.logger.Error("Failed to start MASQUE testing", zap.Error(err))
 			return fmt.Errorf("failed to start MASQUE testing: %v", err)
@@ -102,7 +102,7 @@ func (et *EnhancedTester) Start(ctx context.Context) error {
 	if et.config.EnableICE {
 		et.logger.Info("Initializing ICE testing")
 		et.iceTester = ice.NewICETester(et.logger, &et.config.ICE)
-		
+
 		if err := et.iceTester.Start(ctx); err != nil {
 			et.logger.Error("Failed to start ICE testing", zap.Error(err))
 			return fmt.Errorf("failed to start ICE testing: %v", err)
@@ -234,4 +234,3 @@ func (et *EnhancedTester) GetICETester() *ice.ICETester {
 	defer et.mu.RUnlock()
 	return et.iceTester
 }
-
