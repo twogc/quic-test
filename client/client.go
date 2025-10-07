@@ -342,7 +342,7 @@ func clientConnection(ctx context.Context, cfg internal.TestConfig, metrics *Met
 }
 
 // clientStream реализует передачу данных по QUIC-стриму и сбор метрик
-func clientStream(ctx context.Context, session quic.Connection, cfg internal.TestConfig, metrics *Metrics, connID, streamID int, ratePtr *int64) {
+func clientStream(ctx context.Context, session *quic.Conn, cfg internal.TestConfig, metrics *Metrics, connID, streamID int, ratePtr *int64) {
 	stream, err := session.OpenStreamSync(ctx)
 	if err != nil {
 		metrics.mu.Lock()

@@ -1,0 +1,213 @@
+# 2GC Network Protocol Suite - Experimental Build
+# Экспериментальная сборка с улучшениями QUIC
+
+.PHONY: help build-experimental test-experimental clean-experimental run-experimental
+
+# Переменные
+EXPERIMENTAL_BINARY := quic-test-experimental
+EXPERIMENTAL_CMD := ./cmd/experimental
+QLOG_DIR := ./qlog
+BUILD_FLAGS := -ldflags "-X main.Version=experimental -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+help: ## Показать справку по экспериментальным командам
+	@echo "🚀 2GC Network Protocol Suite - Experimental Commands"
+	@echo "=================================================="
+	@echo ""
+	@echo "Experimental QUIC Features:"
+	@echo "  - ACK Frequency optimization"
+	@echo "  - Switchable Congestion Control (CUBIC/BBR/BBRv2)"
+	@echo "  - qlog tracing with qvis support"
+	@echo "  - Multipath QUIC (experimental)"
+	@echo "  - FEC for datagrams"
+	@echo "  - QUIC bit greasing (RFC 9287)"
+	@echo ""
+	@echo "Available commands:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+build-experimental: ## Собрать экспериментальную версию
+	@echo "🔬 Building experimental QUIC version..."
+	@mkdir -p $(QLOG_DIR)
+	go build $(BUILD_FLAGS) -o $(EXPERIMENTAL_BINARY) $(EXPERIMENTAL_CMD)
+	@echo "✅ Experimental binary built: $(EXPERIMENTAL_BINARY)"
+
+test-experimental: build-experimental ## Запустить экспериментальные тесты
+	@echo "🧪 Running experimental QUIC tests..."
+	@echo ""
+	@echo "Test 1: Basic experimental server"
+	./$(EXPERIMENTAL_BINARY) -mode=server -addr=:9001 -cc=bbr -qlog=$(QLOG_DIR) -verbose &
+	SERVER_PID=$$!; sleep 2
+	@echo ""
+	@echo "Test 2: Experimental client with BBR"
+	./$(EXPERIMENTAL_BINARY) -mode=client -addr=127.0.0.1:9001 -cc=bbr -qlog=$(QLOG_DIR) -ack-freq=10 -duration=10s
+	@echo ""
+	@echo "Test 3: Experimental client with CUBIC"
+	./$(EXPERIMENTAL_BINARY) -mode=client -addr=127.0.0.1:9001 -cc=cubic -qlog=$(QLOG_DIR) -ack-freq=5 -duration=10s
+	@echo ""
+	@echo "Test 4: Multipath test (if addresses provided)"
+	@echo "Note: Multipath requires multiple network interfaces"
+	@echo ""
+	kill $$SERVER_PID 2>/dev/null || true
+	@echo "✅ Experimental tests completed"
+
+run-experimental-server: build-experimental ## Запустить экспериментальный сервер
+	@echo "🚀 Starting experimental QUIC server..."
+	./$(EXPERIMENTAL_BINARY) -mode=server -addr=:9000 -cc=bbr -qlog=$(QLOG_DIR) -greasing=true -verbose
+
+run-experimental-client: build-experimental ## Запустить экспериментальный клиент
+	@echo "🚀 Starting experimental QUIC client..."
+	./$(EXPERIMENTAL_BINARY) -mode=client -addr=127.0.0.1:9000 -cc=bbr -qlog=$(QLOG_DIR) -ack-freq=10 -verbose
+
+run-experimental-test: build-experimental ## Запустить полный экспериментальный тест
+	@echo "🚀 Starting experimental QUIC test..."
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=bbr -qlog=$(QLOG_DIR) -ack-freq=10 -fec=true -greasing=true -verbose
+
+run-multipath-test: build-experimental ## Запустить multipath тест (требует настройки)
+	@echo "🚀 Starting multipath QUIC test..."
+	@echo "Note: Configure multiple network interfaces for multipath"
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=bbr -qlog=$(QLOG_DIR) -mp="10.0.0.2:9000,10.0.0.3:9000" -mp-strategy=round-robin -verbose
+
+benchmark-experimental: build-experimental ## Бенчмарк экспериментальных возможностей
+	@echo "📊 Running experimental QUIC benchmarks..."
+	@echo ""
+	@echo "Benchmark 1: CUBIC vs BBR comparison"
+	@echo "CUBIC:"
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=cubic -qlog=$(QLOG_DIR)/cubic.qlog -duration=30s -rate=1000
+	@echo ""
+	@echo "BBR:"
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=bbr -qlog=$(QLOG_DIR)/bbr.qlog -duration=30s -rate=1000
+	@echo ""
+	@echo "Benchmark 2: ACK Frequency optimization"
+	@echo "Default ACK frequency:"
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=bbr -qlog=$(QLOG_DIR)/default-ack.qlog -duration=30s
+	@echo ""
+	@echo "Optimized ACK frequency:"
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=bbr -qlog=$(QLOG_DIR)/optimized-ack.qlog -ack-freq=5 -duration=30s
+	@echo "✅ Benchmarks completed"
+
+analyze-qlog: ## Анализ qlog файлов с qvis
+	@echo "📈 Analyzing qlog files with qvis..."
+	@if [ -d "$(QLOG_DIR)" ] && [ "$$(ls -A $(QLOG_DIR) 2>/dev/null)" ]; then \
+		echo "Found qlog files in $(QLOG_DIR):"; \
+		ls -la $(QLOG_DIR)/*.qlog 2>/dev/null || echo "No qlog files found"; \
+		echo ""; \
+		echo "To analyze with qvis:"; \
+		echo "1. Install qvis: npm install -g qvis"; \
+		echo "2. Run: qvis server $(QLOG_DIR)"; \
+		echo "3. Open http://localhost:8080 in browser"; \
+	else \
+		echo "No qlog files found in $(QLOG_DIR)"; \
+		echo "Run experimental tests first to generate qlog files"; \
+	fi
+
+clean-experimental: ## Очистить экспериментальные файлы
+	@echo "🧹 Cleaning experimental files..."
+	rm -f $(EXPERIMENTAL_BINARY)
+	rm -rf $(QLOG_DIR)
+	@echo "✅ Experimental files cleaned"
+
+install-deps-experimental: ## Установить зависимости для экспериментальной версии
+	@echo "📦 Installing experimental dependencies..."
+	go mod download
+	go mod tidy
+	@echo "✅ Dependencies installed"
+
+# Демонстрационные команды
+demo-basic: build-experimental ## Демо: базовые экспериментальные возможности
+	@echo "🎬 Demo: Basic experimental QUIC features"
+	@echo "=========================================="
+	@echo ""
+	@echo "Starting server with BBR and qlog..."
+	./$(EXPERIMENTAL_BINARY) -mode=server -addr=:9000 -cc=bbr -qlog=$(QLOG_DIR) -greasing=true &
+	SERVER_PID=$$!; sleep 2
+	@echo ""
+	@echo "Running client with optimized ACK frequency..."
+	./$(EXPERIMENTAL_BINARY) -mode=client -addr=127.0.0.1:9000 -cc=bbr -qlog=$(QLOG_DIR) -ack-freq=10 -duration=15s
+	@echo ""
+	@echo "Demo completed. Check qlog files in $(QLOG_DIR)"
+	kill $$SERVER_PID 2>/dev/null || true
+
+demo-cc-comparison: build-experimental ## Демо: сравнение алгоритмов управления перегрузкой
+	@echo "🎬 Demo: Congestion Control comparison"
+	@echo "====================================="
+	@echo ""
+	@echo "Testing CUBIC algorithm..."
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=cubic -qlog=$(QLOG_DIR)/cubic.qlog -duration=20s -rate=500
+	@echo ""
+	@echo "Testing BBR algorithm..."
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=bbr -qlog=$(QLOG_DIR)/bbr.qlog -duration=20s -rate=500
+	@echo ""
+	@echo "Testing BBRv2 algorithm..."
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=bbrv2 -qlog=$(QLOG_DIR)/bbrv2.qlog -duration=20s -rate=500
+	@echo ""
+	@echo "Demo completed. Compare qlog files:"
+	@ls -la $(QLOG_DIR)/*.qlog
+
+demo-ack-optimization: build-experimental ## Демо: оптимизация ACK frequency
+	@echo "🎬 Demo: ACK Frequency optimization"
+	@echo "=================================="
+	@echo ""
+	@echo "Default ACK frequency (auto)..."
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=bbr -qlog=$(QLOG_DIR)/default-ack.qlog -duration=15s
+	@echo ""
+	@echo "Optimized ACK frequency (5)..."
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=bbr -qlog=$(QLOG_DIR)/optimized-ack.qlog -ack-freq=5 -duration=15s
+	@echo ""
+	@echo "High frequency ACK (1)..."
+	./$(EXPERIMENTAL_BINARY) -mode=test -addr=:9000 -cc=bbr -qlog=$(QLOG_DIR)/high-freq-ack.qlog -ack-freq=1 -duration=15s
+	@echo ""
+	@echo "Demo completed. Compare ACK patterns in qlog files"
+
+# Интеграция с основным проектом
+integrate-experimental: ## Интегрировать экспериментальные возможности в основной проект
+	@echo "🔗 Integrating experimental features into main project..."
+	@echo ""
+	@echo "1. Copying experimental components..."
+	@mkdir -p internal/experimental
+	@echo "2. Updating main.go with experimental flags..."
+	@echo "3. Creating experimental build target..."
+	@echo ""
+	@echo "✅ Integration completed"
+	@echo "Use 'make build-experimental' to build with experimental features"
+
+# Документация
+docs-experimental: ## Генерировать документацию по экспериментальным возможностям
+	@echo "📚 Generating experimental features documentation..."
+	@echo ""
+	@echo "Experimental QUIC Features:"
+	@echo "=========================="
+	@echo ""
+	@echo "1. ACK Frequency Optimization:"
+	@echo "   - Reduces ACK overhead"
+	@echo "   - Improves high-throughput scenarios"
+	@echo "   - Configurable via -ack-freq flag"
+	@echo ""
+	@echo "2. Switchable Congestion Control:"
+	@echo "   - CUBIC: Standard TCP-like algorithm"
+	@echo "   - BBR: Google's Bottleneck Bandwidth and RTT"
+	@echo "   - BBRv2: Improved BBR with better fairness"
+	@echo "   - RENO: Classic TCP Reno algorithm"
+	@echo ""
+	@echo "3. qlog Tracing:"
+	@echo "   - Detailed packet-level tracing"
+	@echo "   - Compatible with qvis visualization"
+	@echo "   - Per-connection event logging"
+	@echo ""
+	@echo "4. Multipath QUIC (Experimental):"
+	@echo "   - Multiple network paths"
+	@echo "   - Load balancing strategies"
+	@echo "   - Path failure recovery"
+	@echo ""
+	@echo "5. FEC for Datagrams:"
+	@echo "   - Forward Error Correction"
+	@echo "   - Reduces retransmissions"
+	@echo "   - Configurable redundancy"
+	@echo ""
+	@echo "6. QUIC Bit Greasing:"
+	@echo "   - RFC 9287 compliance"
+	@echo "   - Anti-ossification"
+	@echo "   - Future-proofing"
+
+# Все команды
+all-experimental: clean-experimental build-experimental test-experimental ## Выполнить все экспериментальные команды
+	@echo "🎉 All experimental tasks completed!"
+

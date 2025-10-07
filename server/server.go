@@ -84,7 +84,7 @@ func Run(cfg internal.TestConfig) {
 	}
 }
 
-func handleConn(conn quic.Connection, metrics *serverMetrics) {
+func handleConn(conn *quic.Conn, metrics *serverMetrics) {
 	defer func() {
 		if err := conn.CloseWithError(0, "bye"); err != nil {
 			log.Printf("Warning: failed to close connection: %v\n", err)
@@ -105,7 +105,7 @@ func handleConn(conn quic.Connection, metrics *serverMetrics) {
 	}
 }
 
-func handleStream(stream quic.Stream, metrics *serverMetrics) {
+func handleStream(stream *quic.Stream, metrics *serverMetrics) {
 	buf := make([]byte, 4096)
 	for {
 		n, err := stream.Read(buf)

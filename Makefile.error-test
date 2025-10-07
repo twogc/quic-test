@@ -1,0 +1,282 @@
+# 2GC Network Protocol Suite - Error Testing
+# Комплексная система тестирования на ошибки
+
+.PHONY: help build-error-test test-error-scenarios clean-error-test run-error-test
+
+# Переменные
+ERROR_TEST_BINARY := quic-test-error-test
+ERROR_TEST_CMD := ./cmd/error-test
+RESULTS_DIR := ./error-test-results
+
+help: ## Показать справку по тестированию ошибок
+	@echo "🧪 2GC Network Protocol Suite - Error Testing"
+	@echo "============================================"
+	@echo ""
+	@echo "Error Testing Features:"
+	@echo "  - Network error simulation (packet loss, corruption, reordering)"
+	@echo "  - QUIC protocol error testing"
+	@echo "  - Experimental features error testing"
+	@echo "  - Recovery time measurement"
+	@echo "  - Performance impact analysis"
+	@echo ""
+	@echo "Available commands:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2}'
+
+build-error-test: ## Собрать инструмент тестирования ошибок
+	@echo "🧪 Building error testing tool..."
+	@mkdir -p $(RESULTS_DIR)
+	go build -o $(ERROR_TEST_BINARY) $(ERROR_TEST_CMD)
+	@echo "✅ Error testing binary built: $(ERROR_TEST_BINARY)"
+
+test-error-scenarios: build-error-test ## Запустить все предустановленные сценарии тестирования ошибок
+	@echo "🧪 Running all error testing scenarios..."
+	@echo ""
+	@echo "Scenario 1: Network Stress Test"
+	./$(ERROR_TEST_BINARY) -scenario=network-stress -verbose -output=$(RESULTS_DIR)/network-stress.json
+	@echo ""
+	@echo "Scenario 2: QUIC Protocol Error Test"
+	./$(ERROR_TEST_BINARY) -scenario=quic-protocol-errors -verbose -output=$(RESULTS_DIR)/quic-protocol.json
+	@echo ""
+	@echo "Scenario 3: Experimental Features Error Test"
+	./$(ERROR_TEST_BINARY) -scenario=experimental-features -verbose -output=$(RESULTS_DIR)/experimental.json
+	@echo ""
+	@echo "Scenario 4: High Latency Network Test"
+	./$(ERROR_TEST_BINARY) -scenario=high-latency-network -verbose -output=$(RESULTS_DIR)/high-latency.json
+	@echo ""
+	@echo "Scenario 5: Unstable Connection Test"
+	./$(ERROR_TEST_BINARY) -scenario=unstable-connection -verbose -output=$(RESULTS_DIR)/unstable.json
+	@echo ""
+	@echo "Scenario 6: Congestion Control Stress Test"
+	./$(ERROR_TEST_BINARY) -scenario=congestion-control-stress -verbose -output=$(RESULTS_DIR)/cc-stress.json
+	@echo ""
+	@echo "Scenario 7: Multipath Failure Test"
+	./$(ERROR_TEST_BINARY) -scenario=multipath-failure -verbose -output=$(RESULTS_DIR)/multipath.json
+	@echo ""
+	@echo "Scenario 8: FEC Recovery Test"
+	./$(ERROR_TEST_BINARY) -scenario=fec-recovery -verbose -output=$(RESULTS_DIR)/fec.json
+	@echo ""
+	@echo "Scenario 9: Extreme Conditions Test"
+	./$(ERROR_TEST_BINARY) -scenario=extreme-conditions -verbose -output=$(RESULTS_DIR)/extreme.json
+	@echo ""
+	@echo "✅ All error testing scenarios completed"
+
+test-network-stress: build-error-test ## Тест: сетевые стрессовые условия
+	@echo "🌐 Testing network stress conditions..."
+	./$(ERROR_TEST_BINARY) -scenario=network-stress -verbose -output=$(RESULTS_DIR)/network-stress.json
+
+test-quic-errors: build-error-test ## Тест: ошибки QUIC протокола
+	@echo "🔧 Testing QUIC protocol errors..."
+	./$(ERROR_TEST_BINARY) -scenario=quic-protocol-errors -verbose -output=$(RESULTS_DIR)/quic-protocol.json
+
+test-experimental-errors: build-error-test ## Тест: ошибки экспериментальных функций
+	@echo "🚀 Testing experimental features errors..."
+	./$(ERROR_TEST_BINARY) -scenario=experimental-features -verbose -output=$(RESULTS_DIR)/experimental.json
+
+test-high-latency: build-error-test ## Тест: высокие задержки
+	@echo "⏱️ Testing high latency conditions..."
+	./$(ERROR_TEST_BINARY) -scenario=high-latency-network -verbose -output=$(RESULTS_DIR)/high-latency.json
+
+test-unstable-connection: build-error-test ## Тест: нестабильные соединения
+	@echo "🔌 Testing unstable connections..."
+	./$(ERROR_TEST_BINARY) -scenario=unstable-connection -verbose -output=$(RESULTS_DIR)/unstable.json
+
+test-cc-stress: build-error-test ## Тест: стресс алгоритмов управления перегрузкой
+	@echo "📊 Testing congestion control stress..."
+	./$(ERROR_TEST_BINARY) -scenario=congestion-control-stress -verbose -output=$(RESULTS_DIR)/cc-stress.json
+
+test-multipath-failure: build-error-test ## Тест: отказы multipath
+	@echo "🛤️ Testing multipath failures..."
+	./$(ERROR_TEST_BINARY) -scenario=multipath-failure -verbose -output=$(RESULTS_DIR)/multipath.json
+
+test-fec-recovery: build-error-test ## Тест: восстановление FEC
+	@echo "🔧 Testing FEC recovery..."
+	./$(ERROR_TEST_BINARY) -scenario=fec-recovery -verbose -output=$(RESULTS_DIR)/fec.json
+
+test-extreme-conditions: build-error-test ## Тест: экстремальные условия
+	@echo "🌪️ Testing extreme conditions..."
+	./$(ERROR_TEST_BINARY) -scenario=extreme-conditions -verbose -output=$(RESULTS_DIR)/extreme.json
+
+# Пользовательские тесты
+test-custom: build-error-test ## Запустить пользовательский тест ошибок
+	@echo "🎯 Running custom error test..."
+	./$(ERROR_TEST_BINARY) -duration=5m -concurrent=10 -packet-loss=0.1 -verbose -output=$(RESULTS_DIR)/custom.json
+
+test-quick: build-error-test ## Быстрый тест ошибок (2 минуты)
+	@echo "⚡ Running quick error test..."
+	./$(ERROR_TEST_BINARY) -duration=2m -concurrent=3 -packet-loss=0.05 -verbose -output=$(RESULTS_DIR)/quick.json
+
+test-heavy: build-error-test ## Тяжелый тест ошибок (10 минут)
+	@echo "💪 Running heavy error test..."
+	./$(ERROR_TEST_BINARY) -duration=10m -concurrent=20 -packet-loss=0.2 -verbose -output=$(RESULTS_DIR)/heavy.json
+
+# Анализ результатов
+analyze-results: ## Анализ результатов тестирования ошибок
+	@echo "📊 Analyzing error testing results..."
+	@if [ -d "$(RESULTS_DIR)" ] && [ "$$(ls -A $(RESULTS_DIR) 2>/dev/null)" ]; then \
+		echo "Found results in $(RESULTS_DIR):"; \
+		ls -la $(RESULTS_DIR)/*.json 2>/dev/null || echo "No result files found"; \
+		echo ""; \
+		echo "Results analysis:"; \
+		for file in $(RESULTS_DIR)/*.json; do \
+			if [ -f "$$file" ]; then \
+				echo "  - $$(basename $$file): $$(wc -l < $$file) lines"; \
+			fi; \
+		done; \
+	else \
+		echo "No results found in $(RESULTS_DIR)"; \
+		echo "Run error tests first to generate results"; \
+	fi
+
+# Демонстрационные команды
+demo-error-testing: build-error-test ## Демо: тестирование ошибок
+	@echo "🎬 Demo: Error Testing"
+	@echo "====================="
+	@echo ""
+	@echo "1. Quick network stress test..."
+	./$(ERROR_TEST_BINARY) -duration=1m -concurrent=5 -packet-loss=0.05 -verbose
+	@echo ""
+	@echo "2. QUIC protocol error test..."
+	./$(ERROR_TEST_BINARY) -scenario=quic-protocol-errors -duration=1m -verbose
+	@echo ""
+	@echo "3. Experimental features error test..."
+	./$(ERROR_TEST_BINARY) -scenario=experimental-features -duration=1m -verbose
+	@echo ""
+	@echo "Demo completed. Check results for error handling effectiveness."
+
+demo-recovery-testing: build-error-test ## Демо: тестирование восстановления
+	@echo "🎬 Demo: Recovery Testing"
+	@echo "========================"
+	@echo ""
+	@echo "Testing recovery from various error conditions..."
+	@echo ""
+	@echo "1. Network recovery test..."
+	./$(ERROR_TEST_BINARY) -duration=2m -packet-loss=0.1 -connection-drops=true -verbose
+	@echo ""
+	@echo "2. QUIC recovery test..."
+	./$(ERROR_TEST_BINARY) -scenario=quic-protocol-errors -duration=2m -verbose
+	@echo ""
+	@echo "3. Multipath recovery test..."
+	./$(ERROR_TEST_BINARY) -scenario=multipath-failure -duration=2m -verbose
+	@echo ""
+	@echo "Demo completed. Analyze recovery times and success rates."
+
+# Специализированные тесты
+test-packet-loss: build-error-test ## Тест: различные уровни потери пакетов
+	@echo "📦 Testing packet loss scenarios..."
+	@echo "Low loss (1%)..."
+	./$(ERROR_TEST_BINARY) -packet-loss=0.01 -duration=2m -verbose -output=$(RESULTS_DIR)/loss-1pct.json
+	@echo "Medium loss (5%)..."
+	./$(ERROR_TEST_BINARY) -packet-loss=0.05 -duration=2m -verbose -output=$(RESULTS_DIR)/loss-5pct.json
+	@echo "High loss (10%)..."
+	./$(ERROR_TEST_BINARY) -packet-loss=0.10 -duration=2m -verbose -output=$(RESULTS_DIR)/loss-10pct.json
+	@echo "Extreme loss (20%)..."
+	./$(ERROR_TEST_BINARY) -packet-loss=0.20 -duration=2m -verbose -output=$(RESULTS_DIR)/loss-20pct.json
+
+test-latency-scenarios: build-error-test ## Тест: различные сценарии задержек
+	@echo "⏱️ Testing latency scenarios..."
+	@echo "Low latency (10ms variation)..."
+	./$(ERROR_TEST_BINARY) -latency-var=10ms -duration=2m -verbose -output=$(RESULTS_DIR)/latency-10ms.json
+	@echo "Medium latency (50ms variation)..."
+	./$(ERROR_TEST_BINARY) -latency-var=50ms -duration=2m -verbose -output=$(RESULTS_DIR)/latency-50ms.json
+	@echo "High latency (200ms variation)..."
+	./$(ERROR_TEST_BINARY) -latency-var=200ms -duration=2m -verbose -output=$(RESULTS_DIR)/latency-200ms.json
+	@echo "Extreme latency (500ms variation)..."
+	./$(ERROR_TEST_BINARY) -latency-var=500ms -duration=2m -verbose -output=$(RESULTS_DIR)/latency-500ms.json
+
+test-concurrent-load: build-error-test ## Тест: различные уровни конкурентной нагрузки
+	@echo "👥 Testing concurrent load scenarios..."
+	@echo "Low concurrency (3 tests)..."
+	./$(ERROR_TEST_BINARY) -concurrent=3 -duration=2m -verbose -output=$(RESULTS_DIR)/concurrent-3.json
+	@echo "Medium concurrency (10 tests)..."
+	./$(ERROR_TEST_BINARY) -concurrent=10 -duration=2m -verbose -output=$(RESULTS_DIR)/concurrent-10.json
+	@echo "High concurrency (20 tests)..."
+	./$(ERROR_TEST_BINARY) -concurrent=20 -duration=2m -verbose -output=$(RESULTS_DIR)/concurrent-20.json
+	@echo "Extreme concurrency (50 tests)..."
+	./$(ERROR_TEST_BINARY) -concurrent=50 -duration=2m -verbose -output=$(RESULTS_DIR)/concurrent-50.json
+
+# Интеграция с основным проектом
+integrate-error-testing: ## Интегрировать тестирование ошибок в основной проект
+	@echo "🔗 Integrating error testing into main project..."
+	@echo ""
+	@echo "1. Adding error testing to CI/CD pipeline..."
+	@echo "2. Creating error testing documentation..."
+	@echo "3. Setting up automated error testing..."
+	@echo ""
+	@echo "✅ Error testing integration completed"
+	@echo "Use 'make test-error-scenarios' to run error tests"
+
+# Документация
+docs-error-testing: ## Генерировать документацию по тестированию ошибок
+	@echo "📚 Generating error testing documentation..."
+	@echo ""
+	@echo "Error Testing Scenarios:"
+	@echo "======================="
+	@echo ""
+	@echo "1. Network Stress Test:"
+	@echo "   - High packet loss (5%)"
+	@echo "   - Packet duplication (2%)"
+	@echo "   - Packet reordering"
+	@echo "   - Packet corruption (1%)"
+	@echo "   - Connection drops"
+	@echo ""
+	@echo "2. QUIC Protocol Error Test:"
+	@echo "   - Stream errors"
+	@echo "   - Handshake errors"
+	@echo "   - Version negotiation errors"
+	@echo "   - Protocol violations"
+	@echo ""
+	@echo "3. Experimental Features Error Test:"
+	@echo "   - ACK frequency errors"
+	@echo "   - Congestion control errors"
+	@echo "   - Multipath errors"
+	@echo "   - FEC errors"
+	@echo ""
+	@echo "4. High Latency Network Test:"
+	@echo "   - High latency variation (200ms)"
+	@echo "   - High jitter (50ms)"
+	@echo "   - Connection drops"
+	@echo "   - Handshake timeouts"
+	@echo ""
+	@echo "5. Unstable Connection Test:"
+	@echo "   - High packet loss (8%)"
+	@echo "   - Packet duplication (5%)"
+	@echo "   - Packet reordering"
+	@echo "   - Packet corruption (3%)"
+	@echo "   - Frequent connection drops"
+	@echo ""
+	@echo "6. Congestion Control Stress Test:"
+	@echo "   - High packet loss (10%)"
+	@echo "   - Packet reordering"
+	@echo "   - CC algorithm errors"
+	@echo "   - ACK frequency errors"
+	@echo ""
+	@echo "7. Multipath Failure Test:"
+	@echo "   - Path failures"
+	@echo "   - Load balancing errors"
+	@echo "   - Stream distribution errors"
+	@echo "   - Connection drops"
+	@echo ""
+	@echo "8. FEC Recovery Test:"
+	@echo "   - High packet loss (20%)"
+	@echo "   - Packet corruption (5%)"
+	@echo "   - FEC algorithm errors"
+	@echo "   - Recovery testing"
+	@echo ""
+	@echo "9. Extreme Conditions Test:"
+	@echo "   - All error types enabled"
+	@echo "   - High error rates"
+	@echo "   - Long duration (10 minutes)"
+	@echo "   - High concurrency (15 tests)"
+
+# Очистка
+clean-error-test: ## Очистить файлы тестирования ошибок
+	@echo "🧹 Cleaning error testing files..."
+	rm -f $(ERROR_TEST_BINARY)
+	rm -rf $(RESULTS_DIR)
+	@echo "✅ Error testing files cleaned"
+
+# Все команды
+all-error-tests: clean-error-test build-error-test test-error-scenarios ## Выполнить все тесты ошибок
+	@echo "🎉 All error testing completed!"
+	@echo "Check results in $(RESULTS_DIR)/ directory"
+

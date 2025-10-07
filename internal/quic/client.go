@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/quic-go/quic-go"
+	quic "github.com/quic-go/quic-go"
 	"go.uber.org/zap"
 )
 
@@ -16,12 +16,12 @@ import (
 type QUICClient struct {
 	logger      *zap.Logger
 	serverAddr  string
-	conn        *quic.Connection
+	conn        *quic.Conn
 	ctx         context.Context
 	cancel      context.CancelFunc
 	mu          sync.RWMutex
 	isConnected bool
-	streams     map[quic.StreamID]quic.Stream
+	streams     map[quic.StreamID]*quic.Stream
 }
 
 // QUICClientConfig конфигурация QUIC клиента
@@ -41,7 +41,7 @@ func NewQUICClient(logger *zap.Logger, config *QUICClientConfig) *QUICClient {
 		serverAddr: config.ServerAddr,
 		ctx:        ctx,
 		cancel:     cancel,
-		streams:    make(map[quic.StreamID]quic.Stream),
+		streams:    make(map[quic.StreamID]*quic.Stream),
 	}
 }
 
@@ -69,7 +69,7 @@ func (qc *QUICClient) Connect() error {
 		return fmt.Errorf("failed to connect to %s: %v", qc.serverAddr, err)
 	}
 
-	qc.conn = &conn
+	qc.conn = conn
 	qc.isConnected = true
 
 	qc.logger.Info("QUIC client connected", zap.String("server", qc.serverAddr))
@@ -227,7 +227,7 @@ func (qc *QUICClient) handleStreams() {
 }
 
 // handleStream обрабатывает отдельный поток
-func (qc *QUICClient) handleStream(stream quic.Stream) {
+func (qc *QUICClient) handleStream(stream *quic.Stream) {
 	defer func() {
 		// Удаляем поток из списка
 		qc.mu.Lock()

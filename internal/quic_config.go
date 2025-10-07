@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/quic-go/quic-go"
@@ -12,7 +11,7 @@ import (
 func CreateQUICConfig(cfg TestConfig) *quic.Config {
 	config := &quic.Config{
 		// Включаем все возможные версии QUIC
-		Versions: []quic.VersionNumber{
+		Versions: []quic.Version{
 			quic.Version1,
 			quic.Version2,
 		},
@@ -82,9 +81,9 @@ func CreateServerQUICConfig(cfg TestConfig) *quic.Config {
 	config := CreateQUICConfig(cfg)
 	
 	// Серверные специфичные настройки
-	config.RequireAddressValidation = func(net.Addr) bool {
-		return true // Требуем валидацию адреса для безопасности
-	}
+	// config.RequireAddressValidation = func(net.Addr) bool {
+	//	return true // Требуем валидацию адреса для безопасности
+	// }
 	
 	return config
 }

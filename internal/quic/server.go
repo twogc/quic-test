@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/quic-go/quic-go"
+	quic "github.com/quic-go/quic-go"
 	"go.uber.org/zap"
 )
 
@@ -27,7 +27,7 @@ type QUICServer struct {
 	cancel      context.CancelFunc
 	mu          sync.RWMutex
 	isRunning   bool
-	connections map[string]*quic.Connection
+	connections map[string]*quic.Conn
 }
 
 // QUICServerConfig конфигурация QUIC сервера
@@ -47,7 +47,7 @@ func NewQUICServer(logger *zap.Logger, config *QUICServerConfig) *QUICServer {
 		addr:        config.Addr,
 		ctx:         ctx,
 		cancel:      cancel,
-		connections: make(map[string]*quic.Connection),
+		connections: make(map[string]*quic.Conn),
 	}
 }
 
@@ -158,7 +158,7 @@ func (qs *QUICServer) handleConnections() {
 			// Добавляем соединение в список
 			qs.mu.Lock()
 			connID := fmt.Sprintf("%p", conn)
-			qs.connections[connID] = &conn
+			qs.connections[connID] = conn
 			qs.mu.Unlock()
 
 			qs.logger.Info("New QUIC connection accepted",
@@ -166,13 +166,13 @@ func (qs *QUICServer) handleConnections() {
 				zap.String("remote_addr", conn.RemoteAddr().String()))
 
 			// Обрабатываем соединение
-			go qs.handleConnection(&conn, connID)
+			go qs.handleConnection(conn, connID)
 		}
 	}
 }
 
 // handleConnection обрабатывает отдельное соединение
-func (qs *QUICServer) handleConnection(conn *quic.Connection, connID string) {
+func (qs *QUICServer) handleConnection(conn *quic.Conn, connID string) {
 	defer func() {
 		// Удаляем соединение из списка
 		qs.mu.Lock()
@@ -205,7 +205,7 @@ func (qs *QUICServer) handleConnection(conn *quic.Connection, connID string) {
 }
 
 // handleStream обрабатывает поток данных
-func (qs *QUICServer) handleStream(stream quic.Stream, connID string) {
+func (qs *QUICServer) handleStream(stream *quic.Stream, connID string) {
 	defer stream.Close()
 
 	buffer := make([]byte, 4096)

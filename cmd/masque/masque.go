@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"strings"
 	"time"
 
@@ -60,4 +62,33 @@ func runMASQUETesting(logger *zap.Logger, masqueServer, masqueTargets string) {
 	if err := tester.Stop(); err != nil {
 		logger.Error("Failed to stop MASQUE tester", zap.Error(err))
 	}
+}
+
+func main() {
+	// Парсим аргументы командной строки
+	masqueServer := flag.String("server", "localhost:8443", "MASQUE сервер для тестирования")
+	masqueTargets := flag.String("targets", "8.8.8.8:53,1.1.1.1:53", "Целевые хосты для CONNECT-UDP (через запятую)")
+	verbose := flag.Bool("verbose", false, "Подробный вывод")
+	flag.Parse()
+
+	// Создаем логгер
+	var logger *zap.Logger
+	var err error
+	
+	if *verbose {
+		logger, err = zap.NewDevelopment()
+	} else {
+		logger, err = zap.NewProduction()
+	}
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create logger: %v", err))
+	}
+	defer logger.Sync()
+
+	fmt.Println("🔥 Запуск MASQUE тестирования...")
+	fmt.Printf("🌐 Сервер: %s\n", *masqueServer)
+	fmt.Printf("🎯 Цели: %s\n", *masqueTargets)
+
+	// Запускаем MASQUE тестирование
+	runMASQUETesting(logger, *masqueServer, *masqueTargets)
 }

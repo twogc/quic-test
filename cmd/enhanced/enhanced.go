@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"log"
 	"strings"
 	"time"
 
@@ -11,6 +13,36 @@ import (
 
 	"go.uber.org/zap"
 )
+
+func main() {
+	// Флаги командной строки
+	masqueServer := flag.String("masque-server", "", "MASQUE server URL")
+	masqueTargets := flag.String("masque-targets", "", "MASQUE target hosts (comma-separated)")
+	iceStunServers := flag.String("ice-stun", "", "ICE STUN servers (comma-separated)")
+	iceTurnServers := flag.String("ice-turn", "", "ICE TURN servers (comma-separated)")
+	iceTurnUser := flag.String("ice-turn-user", "", "ICE TURN username")
+	iceTurnPass := flag.String("ice-turn-pass", "", "ICE TURN password")
+	verbose := flag.Bool("verbose", false, "Verbose logging")
+	
+	flag.Parse()
+
+	// Создаем логгер
+	var logger *zap.Logger
+	var err error
+	
+	if *verbose {
+		logger, err = zap.NewDevelopment()
+	} else {
+		logger, err = zap.NewProduction()
+	}
+	if err != nil {
+		log.Fatal("Failed to create logger:", err)
+	}
+	defer logger.Sync()
+
+	// Запускаем расширенное тестирование
+	runEnhancedTesting(logger, *masqueServer, *masqueTargets, *iceStunServers, *iceTurnServers, *iceTurnUser, *iceTurnPass)
+}
 
 // runEnhancedTesting запускает расширенное тестирование
 func runEnhancedTesting(logger *zap.Logger, masqueServer, masqueTargets, iceStunServers, iceTurnServers, iceTurnUser, iceTurnPass string) {

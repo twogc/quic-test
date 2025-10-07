@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"log"
 	"strings"
 	"time"
 
@@ -9,6 +11,34 @@ import (
 
 	"go.uber.org/zap"
 )
+
+func main() {
+	// Флаги командной строки
+	stunServers := flag.String("stun", "", "STUN servers (comma-separated)")
+	turnServers := flag.String("turn", "", "TURN servers (comma-separated)")
+	turnUser := flag.String("turn-user", "", "TURN username")
+	turnPass := flag.String("turn-pass", "", "TURN password")
+	verbose := flag.Bool("verbose", false, "Verbose logging")
+	
+	flag.Parse()
+
+	// Создаем логгер
+	var logger *zap.Logger
+	var err error
+	
+	if *verbose {
+		logger, err = zap.NewDevelopment()
+	} else {
+		logger, err = zap.NewProduction()
+	}
+	if err != nil {
+		log.Fatal("Failed to create logger:", err)
+	}
+	defer logger.Sync()
+
+	// Запускаем ICE тестирование
+	runICETesting(logger, *stunServers, *turnServers, *turnUser, *turnPass)
+}
 
 // runICETesting запускает ICE/STUN/TURN тестирование
 func runICETesting(logger *zap.Logger, stunServers, turnServers, turnUser, turnPass string) {
