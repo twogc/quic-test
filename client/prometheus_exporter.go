@@ -70,6 +70,44 @@ func NewAdvancedPrometheusExporter() *AdvancedPrometheusExporter {
 	}
 }
 
+// NewAdvancedPrometheusExporterWithRegistry создает новый экспортер метрик с указанным registry
+func NewAdvancedPrometheusExporterWithRegistry(registry prometheus.Registerer) *AdvancedPrometheusExporter {
+	testTypeCounters := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "quic_client_test_type_total",
+		Help: "Total tests by type",
+	}, []string{"test_type", "data_pattern", "connection_id"})
+	
+	dataPatternHistograms := prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "quic_client_data_pattern_duration_seconds",
+		Help:    "Data pattern test duration",
+		Buckets: []float64{0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0},
+	}, []string{"data_pattern", "connection_id", "result"})
+	
+	connectionMetrics := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "quic_client_connection_info",
+		Help: "Connection information",
+	}, []string{"connection_id", "remote_addr", "tls_version", "cipher_suite"})
+	
+	streamMetrics := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "quic_client_stream_info",
+		Help: "Stream information",
+	}, []string{"stream_id", "connection_id", "stream_type", "state"})
+	
+	// Регистрируем метрики
+	registry.MustRegister(testTypeCounters, dataPatternHistograms, connectionMetrics, streamMetrics)
+	
+	return &AdvancedPrometheusExporter{
+		metrics: metrics.NewPrometheusMetricsWithRegistry(registry),
+		clientMetrics: &ClientMetrics{
+			StartTime: time.Now(),
+		},
+		testTypeCounters: testTypeCounters,
+		dataPatternHistograms: dataPatternHistograms,
+		connectionMetrics: connectionMetrics,
+		streamMetrics: streamMetrics,
+	}
+}
+
 // UpdateTestType обновляет тип теста
 func (ape *AdvancedPrometheusExporter) UpdateTestType(testType, dataPattern string) {
 	ape.mu.Lock()

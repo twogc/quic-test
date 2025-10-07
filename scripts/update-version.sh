@@ -1,28 +1,29 @@
 #!/bin/bash
-# Скрипт для обновления версии в tag.txt
 
-set -e
+# Скрипт для обновления версии в файле tag.txt
 
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 <version>"
-    echo "Example: $0 v1.2.3"
+    echo "Использование: $0 <версия>"
+    echo "Пример: $0 v1.2.3"
     exit 1
 fi
 
 VERSION=$1
 
-# Проверяем формат версии
-if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo "❌ Invalid version format: $VERSION"
-    echo "Expected format: v1.2.3"
+# Проверяем, что версия начинается с 'v'
+if [[ ! $VERSION =~ ^v ]]; then
+    echo "Версия должна начинаться с 'v' (например: v1.2.3)"
     exit 1
 fi
 
-# Обновляем tag.txt
+# Обновляем файл tag.txt
 echo "$VERSION" > tag.txt
 
-echo "✅ Version updated to $VERSION in tag.txt"
-echo "📋 Next steps:"
-echo "   1. Commit the change: git add tag.txt && git commit -m \"chore: bump version to $VERSION\""
-echo "   2. Push to main: git push origin main"
-echo "   3. GitHub Actions will automatically create tag and release"
+echo "Версия обновлена до: $VERSION"
+echo "Содержимое tag.txt:"
+cat tag.txt
+
+# Проверяем, что версия работает
+echo ""
+echo "Проверка версии:"
+go build . && ./quic-test --version

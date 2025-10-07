@@ -96,6 +96,28 @@ builds:
       - netgo
       - osusergo
 
+  # TUI Dashboard
+  - id: tui
+    binary: tui
+    main: ./cmd/tui
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    tags:
+      - netgo
+      - osusergo
+
 archives:
   - id: quic-test
     name_template: "quic-test_{{.Os}}_{{.Arch}}_v{{.Version}}"
@@ -108,7 +130,7 @@ archives:
       - LICENSE
       - "*.md"
     builds:
-      - quck-test
+      - quic-test
 
   - id: dashboard
     name_template: "dashboard_{{.Os}}_{{.Arch}}_v{{.Version}}"
@@ -149,6 +171,19 @@ archives:
     builds:
       - quic-server
 
+  - id: tui
+    name_template: "tui_{{.Os}}_{{.Arch}}_v{{.Version}}"
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      - "*.md"
+    builds:
+      - tui
+
   # Полный пакет со всеми компонентами
   - id: full
     name_template: "quic-test-full_{{.Os}}_{{.Arch}}_v{{.Version}}"
@@ -164,10 +199,11 @@ archives:
       - docker-compose.yml
       - Dockerfile*
     builds:
-      - quck-test
+      - quic-test
       - dashboard
       - quic-client
       - quic-server
+      - tui
 
 checksum:
   name_template: 'checksums.txt'
@@ -197,6 +233,7 @@ release:
     ### 📦 Что включено:
     - **quic-test**: Основной бинарник для тестирования
     - **dashboard**: Веб-интерфейс для мониторинга
+    - **tui**: TUI дашборд для терминала
     - **quic-client**: QUIC клиент
     - **quic-server**: QUIC сервер
     
@@ -231,6 +268,9 @@ release:
     
     # Запуск дашборда
     ./dashboard --addr=:9990
+    
+    # Запуск TUI дашборда
+    ./tui --demo --fps 10
     ```
     
     ### Docker:

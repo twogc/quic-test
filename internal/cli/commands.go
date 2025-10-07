@@ -7,10 +7,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
+	"quic-test/client"
+	"quic-test/internal"
 	"quic-test/internal/dashboard"
 	"quic-test/internal/quic"
+	"quic-test/server"
 
 	"go.uber.org/zap"
 )
@@ -70,6 +74,7 @@ var Commands = map[string]Command{
 // ParseFlags парсит флаги командной строки
 func ParseFlags() (string, map[string]interface{}) {
 	mode := flag.String("mode", "server", "Режим работы: server, client, test, dashboard, masque, ice, enhanced")
+	version := flag.Bool("version", false, "Показать версию программы")
 
 	// Общие флаги
 	addr := flag.String("addr", "localhost:8443", "Адрес сервера")
@@ -95,6 +100,12 @@ func ParseFlags() (string, map[string]interface{}) {
 	iceTurnPass := flag.String("ice-turn-pass", "", "TURN password")
 
 	flag.Parse()
+
+	// Обработка флага --version
+	if *version {
+		internal.PrintVersion()
+		os.Exit(0)
+	}
 
 	config := map[string]interface{}{
 		"addr":           *addr,
@@ -128,7 +139,13 @@ func CreateLogger() *zap.Logger {
 
 // ShowHelp показывает справку
 func ShowHelp() {
-	fmt.Println("QUIC Testing Tool - Расширенное тестирование QUIC протокола")
+	// Показываем версию
+	version, err := internal.GetVersion()
+	if err == nil {
+		fmt.Printf("QUIC Testing Tool v%s - Расширенное тестирование QUIC протокола\n", version)
+	} else {
+		fmt.Println("QUIC Testing Tool - Расширенное тестирование QUIC протокола")
+	}
 	fmt.Println()
 	fmt.Println("Использование:")
 	fmt.Println("  quic-test -mode=<режим> [флаги]")
@@ -142,24 +159,97 @@ func ShowHelp() {
 	flag.PrintDefaults()
 }
 
+// Вспомогательные функции для парсинга конфигурации
+func getString(config map[string]interface{}, key string) string {
+	if val, ok := config[key].(string); ok {
+		return val
+	}
+	return ""
+}
+
+func getInt(config map[string]interface{}, key string) int {
+	if val, ok := config[key].(int); ok {
+		return val
+	}
+	return 0
+}
+
+func getBool(config map[string]interface{}, key string) bool {
+	if val, ok := config[key].(bool); ok {
+		return val
+	}
+	return false
+}
+
 // runServer запускает сервер
 func runServer(args []string) error {
 	fmt.Println("Запуск в режиме сервера...")
-	// TODO: реализовать запуск сервера
+	
+	// Парсим конфигурацию из аргументов
+	_, config := ParseFlags()
+	
+	// Создаем конфигурацию теста
+	cfg := internal.TestConfig{
+		Mode:         "server",
+		Addr:         getString(config, "addr"),
+		CertPath:     getString(config, "cert"),
+		KeyPath:      getString(config, "key"),
+		Prometheus:   getBool(config, "prometheus"),
+	}
+	
+	// Запускаем сервер
+	server.Run(cfg)
 	return nil
 }
 
 // runClient запускает клиент
 func runClient(args []string) error {
 	fmt.Println("Запуск в режиме клиента...")
-	// TODO: реализовать запуск клиента
+	
+	// Парсим конфигурацию из аргументов
+	_, config := ParseFlags()
+	
+	// Создаем конфигурацию теста
+	cfg := internal.TestConfig{
+		Mode:        "client",
+		Addr:        getString(config, "addr"),
+		Connections: getInt(config, "connections"),
+		Streams:     getInt(config, "streams"),
+		PacketSize:  getInt(config, "packetSize"),
+		Rate:        getInt(config, "rate"),
+		Pattern:     getString(config, "pattern"),
+		Prometheus:  getBool(config, "prometheus"),
+	}
+	
+	// Запускаем клиент
+	client.Run(cfg)
 	return nil
 }
 
 // runTest запускает тестирование
 func runTest(args []string) error {
 	fmt.Println("Запуск в режиме теста (сервер+клиент)...")
-	// TODO: реализовать запуск тестирования
+	
+	// Парсим конфигурацию из аргументов
+	_, config := ParseFlags()
+	
+	// Создаем конфигурацию теста
+	cfg := internal.TestConfig{
+		Mode:        "test",
+		Addr:        getString(config, "addr"),
+		Connections: getInt(config, "connections"),
+		Streams:     getInt(config, "streams"),
+		PacketSize:  getInt(config, "packetSize"),
+		Rate:        getInt(config, "rate"),
+		Pattern:     getString(config, "pattern"),
+		Prometheus:  getBool(config, "prometheus"),
+		Duration:    30 * time.Second, // По умолчанию 30 секунд
+	}
+	
+	// Запускаем тест (сервер + клиент)
+	// TODO: реализовать одновременный запуск сервера и клиента
+	// Пока запускаем только клиент, предполагая что сервер уже работает
+	client.Run(cfg)
 	return nil
 }
 

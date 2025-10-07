@@ -1,7 +1,7 @@
 # 2GC CloudBridge QUIC testing - Makefile
 # Автоматизация сборки, тестирования и развертывания
 
-.PHONY: help build clean test run-dashboard run-server run-client run-test docker-build docker-run lint fmt vet
+.PHONY: help build clean test run-dashboard run-server run-client run-test docker-build docker-run lint fmt vet release sbom bench vuln tui run-tui
 
 # Переменные
 BINARY_NAME=quic-test
@@ -152,6 +152,32 @@ docs: ## Генерация документации
 	@echo "$(GREEN)Генерация документации...$(NC)"
 	@godoc -http=:6060 &
 	@echo "$(GREEN)Документация доступна на http://localhost:6060$(NC)"
+
+# Релизы и безопасность
+release: ## Создать релиз
+	@echo "$(GREEN)Создание релиза...$(NC)"
+	@goreleaser release --snapshot
+
+sbom: ## Генерация SBOM
+	@echo "$(GREEN)Генерация SBOM...$(NC)"
+	@syft packages . -o spdx-json=quic-test-sbom.json
+
+bench: ## Запустить бенчмарки
+	@echo "$(GREEN)Запуск бенчмарков...$(NC)"
+	@go test -bench=. -benchmem ./...
+
+vuln: ## Проверка уязвимостей
+	@echo "$(GREEN)Проверка уязвимостей...$(NC)"
+	@govulncheck ./...
+
+# TUI Dashboard
+tui: ## Собрать TUI dashboard
+	@echo "$(GREEN)Сборка TUI dashboard...$(NC)"
+	@cd cmd/tui && go build -o ../../$(BUILD_DIR)/tui .
+
+run-tui: tui ## Запустить TUI dashboard
+	@echo "$(GREEN)Запуск TUI dashboard...$(NC)"
+	@$(BUILD_DIR)/tui --demo --fps 10
 
 # Полная сборка и тестирование
 all: clean install-deps fmt vet lint test build ## Полная сборка и тестирование

@@ -10,11 +10,10 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -62,16 +61,16 @@ func NewTelemetryManager(ctx context.Context, cfg TelemetryConfig) (*TelemetryMa
 			return nil, fmt.Errorf("failed to create OTLP exporter: %w", err)
 		}
 
-		tp = trace.NewTracerProvider(
-			trace.WithBatcher(exporter),
-			trace.WithResource(res),
-			trace.WithSampler(trace.TraceIDRatioBased(cfg.SampleRate)),
+		tp = sdktrace.NewTracerProvider(
+			sdktrace.WithBatcher(exporter),
+			sdktrace.WithResource(res),
+			sdktrace.WithSampler(sdktrace.TraceIDRatioBased(cfg.SampleRate)),
 		)
 	} else {
 		// Локальный провайдер для разработки
-		tp = trace.NewTracerProvider(
-			trace.WithResource(res),
-			trace.WithSampler(trace.TraceIDRatioBased(cfg.SampleRate)),
+		tp = sdktrace.NewTracerProvider(
+			sdktrace.WithResource(res),
+			sdktrace.WithSampler(sdktrace.TraceIDRatioBased(cfg.SampleRate)),
 		)
 	}
 
@@ -84,14 +83,14 @@ func NewTelemetryManager(ctx context.Context, cfg TelemetryConfig) (*TelemetryMa
 			return nil, fmt.Errorf("failed to create Prometheus exporter: %w", err)
 		}
 
-		mp = metric.NewMeterProvider(
-			metric.WithReader(exporter),
-			metric.WithResource(res),
+		mp = sdkmetric.NewMeterProvider(
+			sdkmetric.WithReader(exporter),
+			sdkmetric.WithResource(res),
 		)
 	} else {
 		// Локальный провайдер
-		mp = metric.NewMeterProvider(
-			metric.WithResource(res),
+		mp = sdkmetric.NewMeterProvider(
+			sdkmetric.WithResource(res),
 		)
 	}
 
@@ -111,12 +110,17 @@ func NewTelemetryManager(ctx context.Context, cfg TelemetryConfig) (*TelemetryMa
 	shutdown := func(ctx context.Context) error {
 		var errs []error
 		
-		if err := tp.Shutdown(ctx); err != nil {
-			errs = append(errs, fmt.Errorf("failed to shutdown tracer provider: %w", err))
+		// Приводим к правильным типам для вызова Shutdown
+		if sdkTp, ok := tp.(*sdktrace.TracerProvider); ok {
+			if err := sdkTp.Shutdown(ctx); err != nil {
+				errs = append(errs, fmt.Errorf("failed to shutdown tracer provider: %w", err))
+			}
 		}
 		
-		if err := mp.Shutdown(ctx); err != nil {
-			errs = append(errs, fmt.Errorf("failed to shutdown meter provider: %w", err))
+		if sdkMp, ok := mp.(*sdkmetric.MeterProvider); ok {
+			if err := sdkMp.Shutdown(ctx); err != nil {
+				errs = append(errs, fmt.Errorf("failed to shutdown meter provider: %w", err))
+			}
 		}
 		
 		if len(errs) > 0 {
@@ -139,33 +143,33 @@ func (tm *TelemetryManager) StartSpan(ctx context.Context, name string, opts ...
 }
 
 // CreateInt64Counter создает счетчик
-func (tm *TelemetryManager) CreateInt64Counter(name, description string) (instrument.Int64Counter, error) {
-	return tm.meter.Int64Counter(name, instrument.WithDescription(description))
+func (tm *TelemetryManager) CreateInt64Counter(name, description string) (metric.Int64Counter, error) {
+	return tm.meter.Int64Counter(name, metric.WithDescription(description))
 }
 
 // CreateFloat64Counter создает счетчик с плавающей точкой
-func (tm *TelemetryManager) CreateFloat64Counter(name, description string) (instrument.Float64Counter, error) {
-	return tm.meter.Float64Counter(name, instrument.WithDescription(description))
+func (tm *TelemetryManager) CreateFloat64Counter(name, description string) (metric.Float64Counter, error) {
+	return tm.meter.Float64Counter(name, metric.WithDescription(description))
 }
 
 // CreateInt64Histogram создает гистограмму
-func (tm *TelemetryManager) CreateInt64Histogram(name, description string) (instrument.Int64Histogram, error) {
-	return tm.meter.Int64Histogram(name, instrument.WithDescription(description))
+func (tm *TelemetryManager) CreateInt64Histogram(name, description string) (metric.Int64Histogram, error) {
+	return tm.meter.Int64Histogram(name, metric.WithDescription(description))
 }
 
 // CreateFloat64Histogram создает гистограмму с плавающей точкой
-func (tm *TelemetryManager) CreateFloat64Histogram(name, description string) (instrument.Float64Histogram, error) {
-	return tm.meter.Float64Histogram(name, instrument.WithDescription(description))
+func (tm *TelemetryManager) CreateFloat64Histogram(name, description string) (metric.Float64Histogram, error) {
+	return tm.meter.Float64Histogram(name, metric.WithDescription(description))
 }
 
 // CreateInt64Gauge создает gauge
-func (tm *TelemetryManager) CreateInt64Gauge(name, description string) (instrument.Int64Gauge, error) {
-	return tm.meter.Int64Gauge(name, instrument.WithDescription(description))
+func (tm *TelemetryManager) CreateInt64Gauge(name, description string) (metric.Int64Gauge, error) {
+	return tm.meter.Int64Gauge(name, metric.WithDescription(description))
 }
 
 // CreateFloat64Gauge создает gauge с плавающей точкой
-func (tm *TelemetryManager) CreateFloat64Gauge(name, description string) (instrument.Float64Gauge, error) {
-	return tm.meter.Float64Gauge(name, instrument.WithDescription(description))
+func (tm *TelemetryManager) CreateFloat64Gauge(name, description string) (metric.Float64Gauge, error) {
+	return tm.meter.Float64Gauge(name, metric.WithDescription(description))
 }
 
 // Shutdown корректно завершает работу телеметрии
@@ -176,31 +180,31 @@ func (tm *TelemetryManager) Shutdown(ctx context.Context) error {
 // QUICMetrics содержит метрики для QUIC тестирования
 type QUICMetrics struct {
 	// Счетчики
-	ConnectionsTotal     instrument.Int64Counter
-	StreamsTotal         instrument.Int64Counter
-	BytesSentTotal       instrument.Int64Counter
-	BytesReceivedTotal   instrument.Int64Counter
-	ErrorsTotal          instrument.Int64Counter
-	RetransmitsTotal     instrument.Int64Counter
-	HandshakesTotal      instrument.Int64Counter
-	ZeroRTTTotal         instrument.Int64Counter
-	OneRTTTotal          instrument.Int64Counter
-	KeyUpdatesTotal      instrument.Int64Counter
-	DatagramsSentTotal   instrument.Int64Counter
-	DatagramsReceivedTotal instrument.Int64Counter
+	ConnectionsTotal     metric.Int64Counter
+	StreamsTotal         metric.Int64Counter
+	BytesSentTotal       metric.Int64Counter
+	BytesReceivedTotal   metric.Int64Counter
+	ErrorsTotal          metric.Int64Counter
+	RetransmitsTotal     metric.Int64Counter
+	HandshakesTotal      metric.Int64Counter
+	ZeroRTTTotal         metric.Int64Counter
+	OneRTTTotal          metric.Int64Counter
+	KeyUpdatesTotal      metric.Int64Counter
+	DatagramsSentTotal   metric.Int64Counter
+	DatagramsReceivedTotal metric.Int64Counter
 
 	// Гистограммы
-	LatencyHistogram     instrument.Float64Histogram
-	JitterHistogram      instrument.Float64Histogram
-	HandshakeTimeHistogram instrument.Float64Histogram
-	ThroughputHistogram  instrument.Float64Histogram
+	LatencyHistogram     metric.Float64Histogram
+	JitterHistogram      metric.Float64Histogram
+	HandshakeTimeHistogram metric.Float64Histogram
+	ThroughputHistogram  metric.Float64Histogram
 
 	// Gauges
-	ActiveConnections    instrument.Int64Gauge
-	ActiveStreams        instrument.Int64Gauge
-	CurrentThroughput    instrument.Float64Gauge
-	CurrentLatency       instrument.Float64Gauge
-	PacketLossRate       instrument.Float64Gauge
+	ActiveConnections    metric.Int64Gauge
+	ActiveStreams        metric.Int64Gauge
+	CurrentThroughput    metric.Float64Gauge
+	CurrentLatency       metric.Float64Gauge
+	PacketLossRate       metric.Float64Gauge
 }
 
 // NewQUICMetrics создает метрики для QUIC тестирования
@@ -340,105 +344,210 @@ func NewQUICMetrics(tm *TelemetryManager) (*QUICMetrics, error) {
 
 // RecordLatency записывает задержку
 func (qm *QUICMetrics) RecordLatency(ctx context.Context, latency time.Duration, attrs ...attribute.KeyValue) {
-	qm.LatencyHistogram.Record(ctx, latency.Seconds(), attrs...)
+	// Конвертируем атрибуты в RecordOption
+	var options []metric.RecordOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.LatencyHistogram.Record(ctx, latency.Seconds(), options...)
 }
 
 // RecordJitter записывает джиттер
 func (qm *QUICMetrics) RecordJitter(ctx context.Context, jitter time.Duration, attrs ...attribute.KeyValue) {
-	qm.JitterHistogram.Record(ctx, jitter.Seconds(), attrs...)
+	// Конвертируем атрибуты в RecordOption
+	var options []metric.RecordOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.JitterHistogram.Record(ctx, jitter.Seconds(), options...)
 }
 
 // RecordHandshakeTime записывает время handshake
 func (qm *QUICMetrics) RecordHandshakeTime(ctx context.Context, handshakeTime time.Duration, attrs ...attribute.KeyValue) {
-	qm.HandshakeTimeHistogram.Record(ctx, handshakeTime.Seconds(), attrs...)
+	// Конвертируем атрибуты в RecordOption
+	var options []metric.RecordOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.HandshakeTimeHistogram.Record(ctx, handshakeTime.Seconds(), options...)
 }
 
 // RecordThroughput записывает пропускную способность
 func (qm *QUICMetrics) RecordThroughput(ctx context.Context, throughput float64, attrs ...attribute.KeyValue) {
-	qm.ThroughputHistogram.Record(ctx, throughput, attrs...)
+	// Конвертируем атрибуты в RecordOption
+	var options []metric.RecordOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.ThroughputHistogram.Record(ctx, throughput, options...)
 }
 
 // IncrementConnections увеличивает счетчик соединений
 func (qm *QUICMetrics) IncrementConnections(ctx context.Context, attrs ...attribute.KeyValue) {
-	qm.ConnectionsTotal.Add(ctx, 1, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.ConnectionsTotal.Add(ctx, 1, options...)
 }
 
 // IncrementStreams увеличивает счетчик потоков
 func (qm *QUICMetrics) IncrementStreams(ctx context.Context, attrs ...attribute.KeyValue) {
-	qm.StreamsTotal.Add(ctx, 1, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.StreamsTotal.Add(ctx, 1, options...)
 }
 
 // AddBytesSent добавляет отправленные байты
 func (qm *QUICMetrics) AddBytesSent(ctx context.Context, bytes int64, attrs ...attribute.KeyValue) {
-	qm.BytesSentTotal.Add(ctx, bytes, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.BytesSentTotal.Add(ctx, bytes, options...)
 }
 
 // AddBytesReceived добавляет полученные байты
 func (qm *QUICMetrics) AddBytesReceived(ctx context.Context, bytes int64, attrs ...attribute.KeyValue) {
-	qm.BytesReceivedTotal.Add(ctx, bytes, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.BytesReceivedTotal.Add(ctx, bytes, options...)
 }
 
 // IncrementErrors увеличивает счетчик ошибок
 func (qm *QUICMetrics) IncrementErrors(ctx context.Context, attrs ...attribute.KeyValue) {
-	qm.ErrorsTotal.Add(ctx, 1, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.ErrorsTotal.Add(ctx, 1, options...)
 }
 
 // IncrementRetransmits увеличивает счетчик ретрансмиссий
 func (qm *QUICMetrics) IncrementRetransmits(ctx context.Context, attrs ...attribute.KeyValue) {
-	qm.RetransmitsTotal.Add(ctx, 1, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.RetransmitsTotal.Add(ctx, 1, options...)
 }
 
 // IncrementHandshakes увеличивает счетчик handshake
 func (qm *QUICMetrics) IncrementHandshakes(ctx context.Context, attrs ...attribute.KeyValue) {
-	qm.HandshakesTotal.Add(ctx, 1, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.HandshakesTotal.Add(ctx, 1, options...)
 }
 
 // IncrementZeroRTT увеличивает счетчик 0-RTT соединений
 func (qm *QUICMetrics) IncrementZeroRTT(ctx context.Context, attrs ...attribute.KeyValue) {
-	qm.ZeroRTTTotal.Add(ctx, 1, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.ZeroRTTTotal.Add(ctx, 1, options...)
 }
 
 // IncrementOneRTT увеличивает счетчик 1-RTT соединений
 func (qm *QUICMetrics) IncrementOneRTT(ctx context.Context, attrs ...attribute.KeyValue) {
-	qm.OneRTTTotal.Add(ctx, 1, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.OneRTTTotal.Add(ctx, 1, options...)
 }
 
 // IncrementKeyUpdates увеличивает счетчик обновлений ключей
 func (qm *QUICMetrics) IncrementKeyUpdates(ctx context.Context, attrs ...attribute.KeyValue) {
-	qm.KeyUpdatesTotal.Add(ctx, 1, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.KeyUpdatesTotal.Add(ctx, 1, options...)
 }
 
 // IncrementDatagramsSent увеличивает счетчик отправленных датаграмм
 func (qm *QUICMetrics) IncrementDatagramsSent(ctx context.Context, attrs ...attribute.KeyValue) {
-	qm.DatagramsSentTotal.Add(ctx, 1, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.DatagramsSentTotal.Add(ctx, 1, options...)
 }
 
 // IncrementDatagramsReceived увеличивает счетчик полученных датаграмм
 func (qm *QUICMetrics) IncrementDatagramsReceived(ctx context.Context, attrs ...attribute.KeyValue) {
-	qm.DatagramsReceivedTotal.Add(ctx, 1, attrs...)
+	// Конвертируем атрибуты в AddOption
+	var options []metric.AddOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.DatagramsReceivedTotal.Add(ctx, 1, options...)
 }
 
 // SetActiveConnections устанавливает количество активных соединений
 func (qm *QUICMetrics) SetActiveConnections(ctx context.Context, count int64, attrs ...attribute.KeyValue) {
-	qm.ActiveConnections.Record(ctx, count, attrs...)
+	// Конвертируем атрибуты в RecordOption
+	var options []metric.RecordOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.ActiveConnections.Record(ctx, count, options...)
 }
 
 // SetActiveStreams устанавливает количество активных потоков
 func (qm *QUICMetrics) SetActiveStreams(ctx context.Context, count int64, attrs ...attribute.KeyValue) {
-	qm.ActiveStreams.Record(ctx, count, attrs...)
+	// Конвертируем атрибуты в RecordOption
+	var options []metric.RecordOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.ActiveStreams.Record(ctx, count, options...)
 }
 
 // SetCurrentThroughput устанавливает текущую пропускную способность
 func (qm *QUICMetrics) SetCurrentThroughput(ctx context.Context, throughput float64, attrs ...attribute.KeyValue) {
-	qm.CurrentThroughput.Record(ctx, throughput, attrs...)
+	// Конвертируем атрибуты в RecordOption
+	var options []metric.RecordOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.CurrentThroughput.Record(ctx, throughput, options...)
 }
 
 // SetCurrentLatency устанавливает текущую задержку
 func (qm *QUICMetrics) SetCurrentLatency(ctx context.Context, latency float64, attrs ...attribute.KeyValue) {
-	qm.CurrentLatency.Record(ctx, latency, attrs...)
+	// Конвертируем атрибуты в RecordOption
+	var options []metric.RecordOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.CurrentLatency.Record(ctx, latency, options...)
 }
 
 // SetPacketLossRate устанавливает текущий процент потерь пакетов
 func (qm *QUICMetrics) SetPacketLossRate(ctx context.Context, lossRate float64, attrs ...attribute.KeyValue) {
-	qm.PacketLossRate.Record(ctx, lossRate, attrs...)
+	// Конвертируем атрибуты в RecordOption
+	var options []metric.RecordOption
+	for _, attr := range attrs {
+		options = append(options, metric.WithAttributes(attr))
+	}
+	qm.PacketLossRate.Record(ctx, lossRate, options...)
 }

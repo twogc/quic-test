@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"encoding/json"
+	"errors"
 	"time"
 )
 
@@ -369,10 +369,10 @@ func getFloat64FromMap(m map[string]interface{}, key string) float64 {
 // ValidateReportSchema проверяет корректность схемы отчета
 func ValidateReportSchema(schema ReportSchema) error {
 	if schema.Version == "" {
-		return json.NewEncoder(nil).Encode("version is required")
+		return errors.New("version is required")
 	}
 	if schema.Timestamp.IsZero() {
-		return json.NewEncoder(nil).Encode("timestamp is required")
+		return errors.New("timestamp is required")
 	}
 	return nil
 }

@@ -5,9 +5,10 @@
 
 [![Смотреть демо-видео](https://customer-aedqzjrbponeadcg.cloudflarestream.com/d31af3803090bcb58597de9fe685a746/thumbnails/thumbnail.jpg)](https://customer-aedqzjrbponeadcg.cloudflarestream.com/d31af3803090bcb58597de9fe685a746/watch)
 
-[![CI/CD Pipeline](https://github.com/cloudbridge-relay-installer/quic-test/workflows/QUIC%20Test%20Pipeline/badge.svg)](https://github.com/cloudbridge-relay-installer/quic-test/actions)
-[![Security](https://github.com/cloudbridge-relay-installer/quic-test/workflows/CodeQL%20Security%20Analysis/badge.svg)](https://github.com/cloudbridge-relay-installer/quic-test/security)
-[![Go Version](https://img.shields.io/badge/Go-1.21-blue.svg)](https://golang.org/)
+[![Build](https://github.com/twogc/quic-test/workflows/CI/badge.svg)](https://github.com/twogc/quic-test/actions)
+[![Lint](https://github.com/twogc/quic-test/workflows/Lint/badge.svg)](https://github.com/twogc/quic-test/actions)
+[![Security](https://github.com/twogc/quic-test/workflows/Security/badge.svg)](https://github.com/twogc/quic-test/security)
+[![Go Version](https://img.shields.io/badge/Go-1.25-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
 ## Запуск
@@ -135,6 +136,16 @@ go run main.go --list-scenarios
 ```
 go run main.go --list-profiles
 ```
+
+## Сетевые пресеты
+
+| Пресет | RTT | Jitter | Loss | Bandwidth | Ожидаемый P95 | Описание |
+|--------|-----|--------|------|-----------|---------------|----------|
+| `wifi` | 20ms | 5ms | 0.1% | 100 Mbps | 25-30ms | Домашний WiFi |
+| `lte` | 50ms | 15ms | 0.5% | 50 Mbps | 70-80ms | Мобильный LTE |
+| `satellite` | 600ms | 50ms | 1% | 10 Mbps | 650-700ms | Спутниковый интернет |
+| `datacenter` | 1ms | 0.1ms | 0% | 10 Gbps | 2-3ms | Локальная сеть ЦОД |
+| `eu-ru` | 80ms | 10ms | 0.2% | 1 Gbps | 90-100ms | Между континентами |
 
 ## Поведение по умолчанию
 - Если не указан `--duration`, тест продолжается до ручного завершения (Ctrl+C).

@@ -3,10 +3,18 @@ package client
 import (
 	"testing"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
+// createTestExporter создает экспортер с отдельным registry для тестов
+func createTestExporter() *AdvancedPrometheusExporter {
+	registry := prometheus.NewRegistry()
+	return NewAdvancedPrometheusExporterWithRegistry(registry)
+}
+
 func TestNewAdvancedPrometheusExporter(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	if exporter == nil {
 		t.Fatal("NewAdvancedPrometheusExporter returned nil")
@@ -26,7 +34,7 @@ func TestNewAdvancedPrometheusExporter(t *testing.T) {
 }
 
 func TestUpdateTestType(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	exporter.UpdateTestType("latency", "random")
 
@@ -40,63 +48,63 @@ func TestUpdateTestType(t *testing.T) {
 }
 
 func TestRecordTestExecution(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.RecordTestExecution("conn1", 100*time.Millisecond, "success")
 }
 
 func TestRecordConnectionInfo(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.RecordConnectionInfo("conn1", "127.0.0.1:9000", "TLS1.3", "AES256-GCM")
 }
 
 func TestRecordStreamInfo(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.RecordStreamInfo("stream1", "conn1", "bidirectional", "active")
 }
 
 func TestRecordLatency(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.RecordLatency(50 * time.Millisecond)
 }
 
 func TestRecordJitter(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.RecordJitter(5 * time.Millisecond)
 }
 
 func TestRecordThroughput(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.RecordThroughput(1024.0)
 }
 
 func TestRecordHandshakeTime(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.RecordHandshakeTime(200 * time.Millisecond)
 }
 
 func TestRecordRTT(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.RecordRTT(30 * time.Millisecond)
 }
 
 func TestIncrementConnections(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.IncrementConnections()
@@ -104,7 +112,7 @@ func TestIncrementConnections(t *testing.T) {
 }
 
 func TestIncrementStreams(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.IncrementStreams()
@@ -112,7 +120,7 @@ func TestIncrementStreams(t *testing.T) {
 }
 
 func TestAddBytes(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.AddBytesSent(1024)
@@ -120,7 +128,7 @@ func TestAddBytes(t *testing.T) {
 }
 
 func TestIncrementCounters(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.IncrementErrors()
@@ -132,7 +140,7 @@ func TestIncrementCounters(t *testing.T) {
 }
 
 func TestSetGauges(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.SetCurrentThroughput(1024.0)
@@ -142,7 +150,7 @@ func TestSetGauges(t *testing.T) {
 }
 
 func TestRecordEvents(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	// Не должно паниковать
 	exporter.RecordScenarioEvent("test", "conn1", "stream1", "success")
@@ -152,7 +160,7 @@ func TestRecordEvents(t *testing.T) {
 }
 
 func TestGetClientMetrics(t *testing.T) {
-	exporter := NewAdvancedPrometheusExporter()
+	exporter := createTestExporter()
 
 	metrics := exporter.GetClientMetrics()
 	if metrics == nil {

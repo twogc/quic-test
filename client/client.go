@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,6 +16,7 @@ import (
 
 	"quic-test/internal"
 	"quic-test/internal/metrics"
+
 	// "quic-test/internal/report" // удалить
 
 	"crypto/tls"
@@ -268,9 +268,7 @@ func Run(cfg internal.TestConfig) {
 
 func clientConnection(ctx context.Context, cfg internal.TestConfig, metrics *Metrics, connID int, ratePtr *int64) {
 	var tlsConf *tls.Config
-	if cfg.NoTLS {
-		tlsConf = &tls.Config{InsecureSkipVerify: true, NextProtos: []string{"quic-test"}}
-	} else if cfg.CertPath != "" && cfg.KeyPath != "" {
+	if cfg.CertPath != "" && cfg.KeyPath != "" {
 		cert, err := tls.LoadX509KeyPair(cfg.CertPath, cfg.KeyPath)
 		if err != nil {
 			metrics.mu.Lock()
@@ -283,10 +281,14 @@ func clientConnection(ctx context.Context, cfg internal.TestConfig, metrics *Met
 			fmt.Println("Ошибка загрузки сертификата:", err)
 			return
 		}
-		tlsConf = &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true, NextProtos: []string{"quic-test"}}
+		tlsConf = &tls.Config{
+			Certificates:       []tls.Certificate{cert},
+			InsecureSkipVerify: true,
+			NextProtos:         []string{"quic-test"},
+		}
 	} else {
-		// Можно добавить генерацию self-signed cert
-		tlsConf = &tls.Config{InsecureSkipVerify: true, NextProtos: []string{"quic-test"}}
+		// Используем единую функцию для генерации TLS конфигурации
+		tlsConf = internal.GenerateTLSConfig(cfg.NoTLS)
 	}
 
 	handshakeStart := time.Now()

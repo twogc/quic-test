@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"quic-test/client"
 	"quic-test/internal"
@@ -14,6 +15,9 @@ import (
 )
 
 func main() {
+	// Добавляем флаг --version
+	version := flag.Bool("version", false, "Показать версию программы")
+	
 	fmt.Println("\033[1;36m==============================\033[0m")
 	fmt.Println("\033[1;36m  2GC CloudBridge QUIC testing\033[0m")
 	fmt.Println("\033[1;36m==============================\033[0m")
@@ -64,6 +68,12 @@ func main() {
 	listProfiles := flag.Bool("list-profiles", false, "Показать список доступных сетевых профилей")
 	
 	flag.Parse()
+
+	// Обработка флага --version
+	if *version {
+		internal.PrintVersion()
+		os.Exit(0)
+	}
 
 	cfg := internal.TestConfig{
 		Mode:           *mode,
@@ -178,9 +188,28 @@ func main() {
 		client.Run(cfg)
 	case "test":
 		fmt.Println("Запуск в режиме теста (сервер+клиент)...")
-		// TODO: запуск сервера и клиента в одном процессе
+		runTestMode(cfg)
 	default:
 		fmt.Println("Неизвестный режим", cfg.Mode)
 		os.Exit(1)
 	}
+}
+
+// runTestMode запускает сервер и клиент для тестирования
+func runTestMode(cfg internal.TestConfig) {
+	// Запускаем сервер в горутине
+	serverDone := make(chan struct{})
+	go func() {
+		defer close(serverDone)
+		server.Run(cfg)
+	}()
+	
+	// Ждем, чтобы сервер запустился
+	time.Sleep(3 * time.Second)
+	
+	// Запускаем клиент
+	client.Run(cfg)
+	
+	// Ждем завершения сервера
+	<-serverDone
 }

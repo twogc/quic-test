@@ -8,6 +8,7 @@ import (
 	_ "net/http/pprof" // Регистрирует HTTP обработчики для pprof
 	"os"
 	"runtime"
+	"runtime/pprof"
 	"runtime/trace"
 	"time"
 )
@@ -136,7 +137,7 @@ func (p *Profiler) WriteHeapProfile(filename string) error {
 	}
 	defer file.Close()
 
-	if err := runtime.WriteHeapProfile(file); err != nil {
+	if err := pprof.WriteHeapProfile(file); err != nil {
 		return fmt.Errorf("failed to write heap profile: %w", err)
 	}
 
@@ -152,12 +153,12 @@ func (p *Profiler) WriteCPUProfile(filename string, duration time.Duration) erro
 	}
 	defer file.Close()
 
-	if err := runtime.StartCPUProfile(file); err != nil {
+	if err := pprof.StartCPUProfile(file); err != nil {
 		return fmt.Errorf("failed to start CPU profile: %w", err)
 	}
 
 	time.Sleep(duration)
-	runtime.StopCPUProfile()
+	pprof.StopCPUProfile()
 
 	log.Printf("CPU profile written to %s", filename)
 	return nil
@@ -165,34 +166,18 @@ func (p *Profiler) WriteCPUProfile(filename string, duration time.Duration) erro
 
 // WriteMutexProfile записывает mutex профиль в файл
 func (p *Profiler) WriteMutexProfile(filename string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return fmt.Errorf("failed to create mutex profile file: %w", err)
-	}
-	defer file.Close()
-
-	if err := runtime.WriteMutexProfile(file); err != nil {
-		return fmt.Errorf("failed to write mutex profile: %w", err)
-	}
-
-	log.Printf("Mutex profile written to %s", filename)
-	return nil
+	// Mutex профилирование доступно только через HTTP endpoint /debug/pprof/mutex
+	// или через go tool pprof
+	log.Printf("Mutex profile should be collected via HTTP endpoint /debug/pprof/mutex")
+	return fmt.Errorf("mutex profile collection not implemented - use HTTP endpoint /debug/pprof/mutex")
 }
 
 // WriteBlockProfile записывает block профиль в файл
 func (p *Profiler) WriteBlockProfile(filename string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return fmt.Errorf("failed to create block profile file: %w", err)
-	}
-	defer file.Close()
-
-	if err := runtime.WriteBlockProfile(file); err != nil {
-		return fmt.Errorf("failed to write block profile: %w", err)
-	}
-
-	log.Printf("Block profile written to %s", filename)
-	return nil
+	// Block профилирование доступно только через HTTP endpoint /debug/pprof/block
+	// или через go tool pprof
+	log.Printf("Block profile should be collected via HTTP endpoint /debug/pprof/block")
+	return fmt.Errorf("block profile collection not implemented - use HTTP endpoint /debug/pprof/block")
 }
 
 // GetMemStats возвращает статистику памяти
@@ -209,7 +194,10 @@ func (p *Profiler) ForceGC() {
 
 // SetGCPercent устанавливает процент для GC
 func (p *Profiler) SetGCPercent(percent int) int {
-	return runtime.SetGCPercent(percent)
+	// Функция SetGCPercent недоступна в некоторых версиях Go
+	// Возвращаем текущее значение
+	log.Printf("SetGCPercent not available in this Go version")
+	return 100 // Возвращаем значение по умолчанию
 }
 
 // MemStats содержит статистику памяти

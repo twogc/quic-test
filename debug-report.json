@@ -1,0 +1,72 @@
+{
+  "metrics": {
+    "Success": 0,
+    "Errors": 1,
+    "BytesSent": 0,
+    "Latencies": null,
+    "Timestamps": null,
+    "Throughput": null,
+    "TimeSeriesLatency": null,
+    "TimeSeriesThroughput": null,
+    "PacketLoss": 0,
+    "Retransmits": 0,
+    "HandshakeTimes": [
+      1.445211
+    ],
+    "TLSVersion": "",
+    "CipherSuite": "",
+    "SessionResumptionCount": 0,
+    "ZeroRTTCount": 0,
+    "OneRTTCount": 0,
+    "OutOfOrderCount": 0,
+    "FlowControlEvents": 0,
+    "KeyUpdateEvents": 0,
+    "ErrorTypeCounts": {
+      "quic_handshake": 1
+    },
+    "TimeSeriesPacketLoss": null,
+    "TimeSeriesRetransmits": null,
+    "TimeSeriesHandshakeTime": [
+      {
+        "Time": 0.001445766,
+        "Value": 1.445211
+      }
+    ],
+    "HDRMetrics": {}
+  },
+  "params": {
+    "Mode": "test",
+    "Addr": ":9000",
+    "Streams": 1,
+    "Connections": 1,
+    "Duration": 5000000000,
+    "PacketSize": 1200,
+    "Rate": 5,
+    "ReportPath": "debug-report.json",
+    "ReportFormat": "json",
+    "CertPath": "",
+    "KeyPath": "",
+    "Pattern": "random",
+    "NoTLS": true,
+    "Prometheus": false,
+    "EmulateLoss": 0,
+    "EmulateLatency": 0,
+    "EmulateDup": 0,
+    "PprofAddr": "",
+    "SlaRttP95": 0,
+    "SlaLoss": 0,
+    "SlaThroughput": 0,
+    "SlaErrors": 0,
+    "CongestionControl": "",
+    "MaxIdleTimeout": 0,
+    "HandshakeTimeout": 0,
+    "KeepAlive": 0,
+    "MaxStreams": 0,
+    "MaxStreamData": 0,
+    "Enable0RTT": false,
+    "EnableKeyUpdate": false,
+    "EnableDatagrams": false,
+    "MaxIncomingStreams": 0,
+    "MaxIncomingUniStreams": 0
+  }
+}
