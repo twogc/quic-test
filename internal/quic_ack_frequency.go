@@ -102,7 +102,7 @@ func DefaultACKFrequencyConfig() *ACKFrequencyConfig {
 }
 
 // RegisterConnection регистрирует новое соединение
-func (afm *ACKFrequencyManager) RegisterConnection(conn *quic.Conn) string {
+func (afm *ACKFrequencyManager) RegisterConnection(conn quic.Connection) string {
 	afm.mu.Lock()
 	defer afm.mu.Unlock()
 	

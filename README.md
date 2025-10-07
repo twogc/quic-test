@@ -1,7 +1,18 @@
 
 # 2GC Network Protocol Suite
 
-Комплексная платформа для тестирования и анализа сетевых протоколов: QUIC, MASQUE, ICE/STUN/TURN и других
+A comprehensive platform for testing and analyzing network protocols: QUIC, MASQUE, ICE/STUN/TURN and others
+
+## 🚀 Features
+
+- **QUIC Protocol Testing** - Advanced QUIC implementation with experimental features
+- **MASQUE Protocol Support** - Tunneling and proxying capabilities  
+- **ICE/STUN/TURN Testing** - NAT traversal and P2P connection testing
+- **TLS 1.3 Security** - Modern cryptography for secure connections
+- **HTTP/3 Support** - HTTP over QUIC implementation
+- **Experimental Features** - BBRv2, ACK-Frequency, FEC, Bit Greasing
+- **Real-time Monitoring** - Prometheus metrics and Grafana dashboards
+- **Comprehensive Testing** - Automated test matrix and regression testing
 
 ## Поддерживаемые протоколы
 
@@ -19,31 +30,43 @@
 [![Go Version](https://img.shields.io/badge/Go-1.25-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
-## Режимы работы
+## 🛠️ Usage
 
-### QUIC тестирование
+### QUIC Testing
 ```bash
-# Сервер
+# Server
 go run main.go --mode=server --addr=:9000
 
-# Клиент
+# Client
 go run main.go --mode=client --addr=127.0.0.1:9000 --connections=2 --streams=4 --packet-size=1200 --rate=100 --report=report.md --report-format=md --pattern=random
 
-# Полный тест (сервер+клиент)
+# Full test (server+client)
 go run main.go --mode=test
 ```
 
-### MASQUE тестирование
+### Experimental QUIC Features
+```bash
+# BBRv2 Congestion Control
+go run main.go --mode=experimental --cc=bbrv2 --ackfreq=3 --fec=0.1
+
+# ACK Frequency Optimization
+go run main.go --mode=experimental --ackfreq=5 --qlog=out.qlog
+
+# FEC with Bit Greasing
+go run main.go --mode=experimental --fec=0.2 --greasing=true
+```
+
+### MASQUE Testing
 ```bash
 go run main.go --mode=masque --masque-server=localhost:8443 --masque-targets=8.8.8.8:53,1.1.1.1:53
 ```
 
-### ICE/STUN/TURN тестирование
+### ICE/STUN/TURN Testing
 ```bash
 go run main.go --mode=ice --ice-stun=stun.l.google.com:19302 --ice-turn=turn.example.com:3478
 ```
 
-### Веб-интерфейс
+### Web Dashboard
 ```bash
 go run main.go --mode=dashboard
 ```
@@ -201,7 +224,21 @@ GitHub Actions автоматически:
 
 📋 **Подробнее**: [RELEASES.md](RELEASES.md)
 
-## Зависимости
+## 📚 Documentation
+
+- [Deployment Guide](docs/deployment.md)
+- [API Documentation](docs/api.md)
+- [Usage Guide](docs/usage.md)
+- [Docker Configuration](docs/docker.md)
+- [Versioning](docs/versioning.md)
+
+### Research Reports
+- [Experimental QUIC Laboratory Research Report](docs/reports/Experimental_QUIC_Laboratory_Research_Report.md)
+- [QUIC Performance Comparison Report](docs/reports/QUIC_Performance_Comparison_Report.md)
+- [Implementation Complete Report](docs/reports/IMPLEMENTATION_COMPLETE.md)
+- [Release Notes](docs/reports/RELEASE_NOTES.md)
+
+## Dependencies
 - [quic-go](https://github.com/lucas-clemente/quic-go)
 - [tablewriter](https://github.com/olekukonko/tablewriter)
 - [asciigraph](https://github.com/guptarohit/asciigraph)

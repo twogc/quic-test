@@ -1,21 +1,32 @@
-# Binaries for programs and plugins
+# Binaries
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+quic-test
+quic-test-experimental
+test-matrix
+test-matrix-runner
+dashboard
+experimental
 
 # Test binary, built with `go test -c`
 *.test
 
-# Output of the go coverage tool, specifically when used with LiteIDE
+# Output of the go coverage tool
 *.out
+coverage.html
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Logs
+*.log
+server.log
+client.log
 
-# Go workspace file
-go.work
+# Temporary files
+*.tmp
+*.temp
+tag.txt
 
 # IDE files
 .vscode/
@@ -24,65 +35,48 @@ go.work
 *.swo
 *~
 
-# OS generated files
+# OS files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# Project specific
-quic-test
-dashboard
-*.log
-test-report.*
-coverage.html
-coverage.out
-
-# Reference repositories (for development only)
-references/
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-*.temp
 
 # Build artifacts
 build/
 dist/
-bin/
 
-# Scripts directory
-scripts/
-
-# Large archive files
-*.tar.gz
-*.zip
-*.rar
-*.7z
-
-# Test artifacts
+# Test results and data
 test-results/
-profiles/
-traces/
-*.prof
-*.trace
+baseline-data/
+regression-results/
+test-qlog/
+qlog/
+
+# Monitoring data
+prometheus/
+grafana/
+qvis/
+
+# Static files
+static/
+img/
+
+# Docker volumes
+docker-data/
 
 # Environment files
 .env
 .env.local
-.env.*.local
+.env.production
 
-# Database files
-*.db
-*.sqlite
-*.sqlite3
+# Sensitive configuration
+config/secrets.yaml
+config/production.yaml
 
-# Certificate files (if any)
-*.pem
-*.key
-*.crt
-*.cert
+# Backup files
+*.bak
+*.backup
+
+# References directory (external repos)
+references/
+
+# Coverage reports
+coverage/

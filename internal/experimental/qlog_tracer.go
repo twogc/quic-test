@@ -252,3 +252,171 @@ func (qt *QlogTracer) GetStats() map[string]interface{} {
 	return stats
 }
 
+// LogCCStateChange записывает событие смены состояния congestion control
+func (qt *QlogTracer) LogCCStateChange(connectionID, oldState, newState, reason string, bandwidth float64, minRTT float64, cwnd int, pacingRate int64) {
+	event := CCStateChangeEvent{
+		Time:     time.Now(),
+		Category: "cc",
+		Event:    "state_change",
+		Data: CCStateChangeData{
+			OldState:   oldState,
+			NewState:   newState,
+			Reason:     reason,
+			Bandwidth:  bandwidth,
+			MinRTT:     minRTT,
+			CWND:       cwnd,
+			PacingRate: pacingRate,
+		},
+	}
+	
+	qt.logEvent(connectionID, event)
+}
+
+// LogBDPUpdate записывает событие обновления BDP
+func (qt *QlogTracer) LogBDPUpdate(connectionID string, bandwidth, minRTT, bdp, bandwidthEst, rttEst float64) {
+	event := BDPUpdateEvent{
+		Time:     time.Now(),
+		Category: "cc",
+		Event:    "bdp_update",
+		Data: BDPUpdateData{
+			Bandwidth:         bandwidth,
+			MinRTT:           minRTT,
+			BDP:              bdp,
+			BandwidthEstimate: bandwidthEst,
+			RTTEstimate:      rttEst,
+		},
+	}
+	
+	qt.logEvent(connectionID, event)
+}
+
+// LogPacingUpdate записывает событие обновления pacing
+func (qt *QlogTracer) LogPacingUpdate(connectionID string, oldRate, newRate int64, tokens float64, burstSize int, bandwidth, minRTT float64) {
+	event := PacingUpdateEvent{
+		Time:     time.Now(),
+		Category: "cc",
+		Event:    "pacing_update",
+		Data: PacingUpdateData{
+			OldRate:   oldRate,
+			NewRate:   newRate,
+			Tokens:    tokens,
+			BurstSize: burstSize,
+			Bandwidth: bandwidth,
+			MinRTT:   minRTT,
+		},
+	}
+	
+	qt.logEvent(connectionID, event)
+}
+
+// LogACKPolicyChange записывает событие изменения политики ACK
+func (qt *QlogTracer) LogACKPolicyChange(connectionID string, oldThreshold, newThreshold int, oldMaxDelay, newMaxDelay float64, reason string) {
+	event := ACKPolicyChangeEvent{
+		Time:     time.Now(),
+		Category: "ack",
+		Event:    "policy_change",
+		Data: ACKPolicyChangeData{
+			OldThreshold: oldThreshold,
+			NewThreshold: newThreshold,
+			OldMaxDelay:  oldMaxDelay,
+			NewMaxDelay:  newMaxDelay,
+			Reason:       reason,
+			ConnectionID: connectionID,
+		},
+	}
+	
+	qt.logEvent(connectionID, event)
+}
+
+// LogLoss записывает событие потери пакета
+func (qt *QlogTracer) LogLoss(connectionID string, packetNumber int64, packetSize int, lossRate, rtt float64, cwnd int, pacingRate int64, bandwidth float64, recoveryMode string) {
+	event := LossEvent{
+		Time:     time.Now(),
+		Category: "cc",
+		Event:    "loss",
+		Data: LossData{
+			PacketNumber: packetNumber,
+			PacketSize:   packetSize,
+			LossRate:     lossRate,
+			RTT:          rtt,
+			CWND:         cwnd,
+			PacingRate:   pacingRate,
+			Bandwidth:    bandwidth,
+			RecoveryMode: recoveryMode,
+		},
+	}
+	
+	qt.logEvent(connectionID, event)
+}
+
+// LogCongestionWindowUpdate записывает событие обновления congestion window
+func (qt *QlogTracer) LogCongestionWindowUpdate(connectionID string, oldCWND, newCWND int, reason string, bandwidth, minRTT float64, packetsInFlight int) {
+	event := CongestionWindowUpdateEvent{
+		Time:     time.Now(),
+		Category: "cc",
+		Event:    "cwnd_update",
+		Data: CongestionWindowUpdateData{
+			OldCWND:         oldCWND,
+			NewCWND:         newCWND,
+			Change:          newCWND - oldCWND,
+			Reason:          reason,
+			Bandwidth:       bandwidth,
+			MinRTT:         minRTT,
+			PacketsInFlight: packetsInFlight,
+		},
+	}
+	
+	qt.logEvent(connectionID, event)
+}
+
+// LogBandwidthSample записывает событие измерения пропускной способности
+func (qt *QlogTracer) LogBandwidthSample(connectionID string, sampleBandwidth, smoothedBandwidth, interval, rtt float64, bytesAcked int64, isAppLimited bool) {
+	event := BandwidthSampleEvent{
+		Time:     time.Now(),
+		Category: "cc",
+		Event:    "bandwidth_sample",
+		Data: BandwidthSampleData{
+			SampleBandwidth:   sampleBandwidth,
+			SmoothedBandwidth: smoothedBandwidth,
+			Interval:         interval,
+			BytesAcked:       bytesAcked,
+			IsAppLimited:     isAppLimited,
+			RTT:              rtt,
+		},
+	}
+	
+	qt.logEvent(connectionID, event)
+}
+
+// LogRTTUpdate записывает событие обновления RTT
+func (qt *QlogTracer) LogRTTUpdate(connectionID string, oldRTT, newRTT, minRTT, rttVariance, smoothedRTT float64, sampleCount int) {
+	event := RTTUpdateEvent{
+		Time:     time.Now(),
+		Category: "cc",
+		Event:    "rtt_update",
+		Data: RTTUpdateData{
+			OldRTT:      oldRTT,
+			NewRTT:      newRTT,
+			MinRTT:      minRTT,
+			RTTVariance: rttVariance,
+			SmoothedRTT: smoothedRTT,
+			SampleCount: sampleCount,
+		},
+	}
+	
+	qt.logEvent(connectionID, event)
+}
+
+// logEvent записывает событие в qlog
+func (qt *QlogTracer) logEvent(connectionID string, event interface{}) {
+	qt.mu.Lock()
+	defer qt.mu.Unlock()
+	
+	if file, exists := qt.files[connectionID]; exists {
+		// Записываем событие в файл
+		encoder := json.NewEncoder(file)
+		encoder.SetIndent("", "  ")
+		encoder.Encode(event)
+	}
+}
+

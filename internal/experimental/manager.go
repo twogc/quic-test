@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"quic-test/internal/metrics"
+
 	"go.uber.org/zap"
 )
 
@@ -15,11 +17,16 @@ type ExperimentalManager struct {
 	config *ExperimentalConfig
 	
 	// Компоненты
-	ackManager    interface{} // Заглушка для ACKFrequencyManager
+	ackManager    *ACKFrequencyManager
+	ackIntegration *ACKFrequencyIntegration
 	ccManager     *CongestionControlManager
 	qlogTracer    *QlogTracer
 	multipathMgr  *MultipathManager
 	fecManager    *FECManager
+	
+	// Метрики
+	prometheusMetrics *metrics.PrometheusMetrics
+	ccIntegration     *metrics.CCIntegration
 	
 	// Состояние
 	mu       sync.RWMutex
@@ -277,9 +284,24 @@ func (em *ExperimentalManager) initializeComponents(ctx context.Context) error {
 	// Congestion Control Manager
 	em.ccManager = NewCongestionControlManager(em.logger, em.config.CongestionControl)
 	
+	// Prometheus метрики
+	em.prometheusMetrics = metrics.NewPrometheusMetrics()
+	
+	// CC Integration для метрик
+	if em.ccManager != nil && em.ccManager.sendController != nil {
+		em.ccIntegration = metrics.NewCCIntegration(em.prometheusMetrics, em.ccManager.sendController)
+		// Запускаем сбор метрик
+		em.ccIntegration.StartMetricsCollection(em.config.MetricsInterval)
+	}
+	
 	// qlog Tracer
 	if em.config.QlogDir != "" {
 		em.qlogTracer = NewQlogTracer(em.logger, em.config.QlogDir)
+		
+		// Интегрируем qlog с congestion control
+		if em.ccManager != nil && em.ccManager.sendController != nil {
+			em.setupQlogIntegration()
+		}
 	}
 	
 	// Multipath Manager
@@ -296,7 +318,8 @@ func (em *ExperimentalManager) initializeComponents(ctx context.Context) error {
 		zap.String("cc", em.config.CongestionControl),
 		zap.Bool("qlog", em.config.QlogDir != ""),
 		zap.Bool("multipath", len(em.config.Multipath) > 0),
-		zap.Bool("fec", em.config.EnableFEC))
+		zap.Bool("fec", em.config.EnableFEC),
+		zap.Bool("metrics", em.prometheusMetrics != nil))
 	
 	return nil
 }
@@ -372,4 +395,20 @@ func (em *ExperimentalManager) GetMetrics() map[string]interface{} {
 	}
 	
 	return metrics
+}
+
+// setupQlogIntegration настраивает интеграцию qlog с congestion control
+func (em *ExperimentalManager) setupQlogIntegration() {
+	if em.qlogTracer == nil || em.ccManager == nil || em.ccManager.sendController == nil {
+		return
+	}
+	
+	// Получаем BBRv2 из send controller
+	// Предполагаем, что send controller содержит BBRv2
+	// Это упрощенная интеграция - в реальности нужно более сложная архитектура
+	
+	em.logger.Info("Setting up qlog integration with congestion control")
+	
+	// TODO: Реализовать полную интеграцию qlog с congestion control
+	// Пока что это заглушка для демонстрации архитектуры
 }

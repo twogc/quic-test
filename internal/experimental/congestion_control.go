@@ -5,16 +5,19 @@ import (
 	"sync"
 	"time"
 
+	"quic-test/internal/congestion"
+
 	"go.uber.org/zap"
 )
 
 // CongestionControlManager управляет алгоритмами управления перегрузкой
 type CongestionControlManager struct {
-	logger     *zap.Logger
-	algorithm  string
-	mu         sync.RWMutex
-	metrics    *CCMetrics
-	isActive   bool
+	logger         *zap.Logger
+	algorithm      string
+	mu             sync.RWMutex
+	metrics        *CCMetrics
+	isActive       bool
+	sendController *congestion.SendController
 }
 
 // CCMetrics метрики управления перегрузкой
@@ -32,10 +35,17 @@ type CCMetrics struct {
 
 // NewCongestionControlManager создает новый менеджер управления перегрузкой
 func NewCongestionControlManager(logger *zap.Logger, algorithm string) *CongestionControlManager {
+	// Создаем send controller в зависимости от алгоритма
+	var sendController *congestion.SendController
+	if algorithm == "bbrv2" {
+		sendController = congestion.NewSendController(1460, 32000) // MTU и начальный CWND
+	}
+	
 	return &CongestionControlManager{
-		logger:    logger,
-		algorithm: algorithm,
-		metrics:   &CCMetrics{
+		logger:         logger,
+		algorithm:      algorithm,
+		sendController: sendController,
+		metrics:        &CCMetrics{
 			Algorithm: algorithm,
 			LastUpdate: time.Now(),
 		},

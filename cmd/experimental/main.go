@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"quic-test/internal/experimental"
+	"quic-test/internal/sla"
 
 	"go.uber.org/zap"
 )
@@ -54,6 +55,19 @@ func main() {
 	duration := flag.Duration("duration", 30*time.Second, "Test duration")
 	packetSize := flag.Int("packet-size", 1200, "Packet size (bytes)")
 	rate := flag.Int("rate", 100, "Packets per second")
+	
+	// SLA-гейты для CI
+	slaP95RTT := flag.Float64("sla-p95-rtt", 0, "SLA: 95th percentile RTT limit (ms, 0=disabled)")
+	slaLoss := flag.Float64("sla-loss", 0, "SLA: Loss rate limit (%, 0=disabled)")
+	slaGoodput := flag.Float64("sla-goodput", 0, "SLA: Minimum goodput (Mbps, 0=disabled)")
+	slaMaxRTT := flag.Float64("sla-max-rtt", 0, "SLA: Maximum RTT limit (ms, 0=disabled)")
+	slaMeanRTT := flag.Float64("sla-mean-rtt", 0, "SLA: Mean RTT limit (ms, 0=disabled)")
+	slaThroughput := flag.Float64("sla-throughput", 0, "SLA: Minimum throughput (Mbps, 0=disabled)")
+	slaBandwidth := flag.Float64("sla-bandwidth", 0, "SLA: Minimum bandwidth (bps, 0=disabled)")
+	slaACKDelay := flag.Float64("sla-ack-delay", 0, "SLA: Maximum ACK delay (ms, 0=disabled)")
+	
+	// SLA профили
+	slaProfile := flag.String("sla-profile", "", "SLA profile: strict, normal, lenient")
 	
 	flag.Parse()
 
@@ -117,6 +131,61 @@ func main() {
 		logger.Fatal("Invalid configuration", zap.Error(err))
 	}
 	
+	// Настройка SLA-гейтов
+	var slaGates *sla.SLAGates
+	if *slaProfile != "" {
+		switch *slaProfile {
+		case "strict":
+			slaGates = sla.NewSLAGatesStrict()
+			fmt.Println("🔒 Using STRICT SLA profile")
+		case "lenient":
+			slaGates = sla.NewSLAGatesLenient()
+			fmt.Println("🔓 Using LENIENT SLA profile")
+		case "normal":
+			slaGates = sla.NewSLAGates()
+			fmt.Println("⚖️  Using NORMAL SLA profile")
+		default:
+			logger.Fatal("Invalid SLA profile", zap.String("profile", *slaProfile))
+		}
+	} else {
+		// Создаем SLA-гейты с пользовательскими значениями
+		slaGates = sla.NewSLAGates()
+		
+		// Применяем пользовательские значения
+		if *slaP95RTT > 0 {
+			slaGates.P95RTTMs = *slaP95RTT
+		}
+		if *slaLoss > 0 {
+			slaGates.LossRatePercent = *slaLoss
+		}
+		if *slaGoodput > 0 {
+			slaGates.MinGoodputMbps = *slaGoodput
+		}
+		if *slaMaxRTT > 0 {
+			slaGates.MaxRTTMs = *slaMaxRTT
+		}
+		if *slaMeanRTT > 0 {
+			slaGates.MeanRTTMs = *slaMeanRTT
+		}
+		if *slaThroughput > 0 {
+			slaGates.MinThroughputMbps = *slaThroughput
+		}
+		if *slaBandwidth > 0 {
+			slaGates.MinBandwidthBps = *slaBandwidth
+		}
+		if *slaACKDelay > 0 {
+			slaGates.MaxACKDelayMs = *slaACKDelay
+		}
+		
+		// Проверяем, есть ли хотя бы один SLA флаг
+		hasSLA := *slaP95RTT > 0 || *slaLoss > 0 || *slaGoodput > 0 || *slaMaxRTT > 0 || 
+		         *slaMeanRTT > 0 || *slaThroughput > 0 || *slaBandwidth > 0 || *slaACKDelay > 0
+		
+		if hasSLA {
+			fmt.Println("🎯 Using CUSTOM SLA gates")
+		}
+	}
+	
 	// Выводим конфигурацию
 	expConfig.Print()
 	
@@ -145,7 +214,11 @@ func main() {
 		}
 	case "client":
 		logger.Info("Starting experimental QUIC client")
-		if err := expManager.StartClient(ctx); err != nil {
+		// Создаем контекст с таймаутом для клиента
+		clientCtx, clientCancel := context.WithTimeout(ctx, expConfig.Duration)
+		defer clientCancel()
+		
+		if err := expManager.StartClient(clientCtx); err != nil {
 			logger.Fatal("Failed to start client", zap.Error(err))
 		}
 	case "test":

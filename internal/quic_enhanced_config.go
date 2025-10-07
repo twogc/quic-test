@@ -44,7 +44,7 @@ type EnhancedQUICConfig struct {
 func CreateEnhancedQUICConfig(cfg TestConfig, enhanced *EnhancedQUICConfig) *quic.Config {
 	config := &quic.Config{
 		// Версии QUIC с поддержкой v2
-		Versions: []quic.Version{
+		Versions: []quic.VersionNumber{
 			quic.Version2, // Приоритет v2
 			quic.Version1,
 		},

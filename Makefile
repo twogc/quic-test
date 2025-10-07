@@ -1,205 +1,187 @@
-# 2GC CloudBridge QUIC testing - Makefile
-# Автоматизация сборки, тестирования и развертывания
+# QUIC Experimental Test Suite Makefile
+# ====================================
 
-.PHONY: help build clean test run-dashboard run-server run-client run-test docker-build docker-run lint fmt vet release sbom bench vuln tui run-tui
+.PHONY: help build test clean bench-rtt bench-loss bench-pps soak-2h
 
-# Переменные
-BINARY_NAME=quic-test
-DASHBOARD_BINARY=dashboard
-CLIENT_BINARY=quic-client
-SERVER_BINARY=quic-server
-BUILD_DIR=build
-DOCKER_IMAGE=quic-test
-DOCKER_TAG=latest
+# Default target
+help:
+	@echo "QUIC Experimental Test Suite"
+	@echo "=========================="
+	@echo ""
+	@echo "Available targets:"
+	@echo "  build        - Build the QUIC test binary"
+	@echo "  test         - Run basic functionality tests"
+	@echo "  clean        - Clean build artifacts and test results"
+	@echo "  bench-rtt    - Run RTT sensitivity benchmarks"
+	@echo "  bench-loss   - Run loss rate benchmarks"
+	@echo "  bench-pps    - Run packet rate benchmarks"
+	@echo "  soak-2h      - Run 2-hour soak test"
+	@echo "  regression   - Run full regression test suite"
+	@echo "  real-world   - Run real-world scenario tests"
+	@echo ""
 
-# Цвета для вывода
-GREEN=\033[0;32m
-YELLOW=\033[1;33m
-RED=\033[0;31m
-NC=\033[0m # No Color
+# Build the QUIC test binary
+build:
+	@echo "🔨 Building QUIC test binary..."
+	go build -o quic-test-experimental ./cmd/experimental/
+	@echo "✅ Build completed"
 
-help: ## Показать справку
-	@echo "$(GREEN)2GC CloudBridge QUIC testing$(NC)"
-	@echo "$(YELLOW)Доступные команды:$(NC)"
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(GREEN)%-15s$(NC) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+# Run basic functionality tests
+test: build
+	@echo "🧪 Running basic functionality tests..."
+	@mkdir -p test-results
+	@./scripts/regression_test_script.sh --duration 30 --cleanup
+	@echo "✅ Basic tests completed"
 
-build: clean ## Собрать все бинарные файлы
-	@echo "$(GREEN)Сборка основных компонентов...$(NC)"
-	@mkdir -p $(BUILD_DIR)
-	@echo "$(YELLOW)Сборка основного бинарника...$(NC)"
-	@go build -o $(BUILD_DIR)/$(BINARY_NAME) .
-	@echo "$(YELLOW)Сборка dashboard...$(NC)"
-	@go build -o $(BUILD_DIR)/$(DASHBOARD_BINARY) ./cmd/dashboard
-	@echo "$(YELLOW)Сборка QUIC клиента...$(NC)"
-	@go build -o $(BUILD_DIR)/$(CLIENT_BINARY) ./cmd/quic-client
-	@echo "$(YELLOW)Сборка QUIC сервера...$(NC)"
-	@go build -o $(BUILD_DIR)/$(SERVER_BINARY) ./cmd/quic-server
-	@echo "$(GREEN)Сборка завершена! Файлы в $(BUILD_DIR)/$(NC)"
+# Clean build artifacts and test results
+clean:
+	@echo "🧹 Cleaning build artifacts and test results..."
+	rm -f quic-test-experimental
+	rm -rf test-results/
+	rm -rf regression-results/
+	rm -rf performance-results/
+	rm -rf real-world-results/
+	@echo "✅ Cleanup completed"
 
-build-server: ## Собрать только сервер
-	@echo "$(GREEN)Сборка QUIC сервера...$(NC)"
-	@mkdir -p $(BUILD_DIR)
-	@go build -o $(BUILD_DIR)/$(SERVER_BINARY) ./cmd/quic-server
-	@echo "$(GREEN)Сервер собран: $(BUILD_DIR)/$(SERVER_BINARY)$(NC)"
+# Run RTT sensitivity benchmarks
+bench-rtt: build
+	@echo "🌐 Running RTT sensitivity benchmarks..."
+	@mkdir -p test-results/bench-rtt
+	@./scripts/rtt_test_script.sh \
+		--rtt 5,10,25,50,100,200 \
+		--algorithms cubic,bbrv2 \
+		--duration 60 \
+		--output test-results/bench-rtt \
+		--cleanup
+	@echo "✅ RTT benchmarks completed"
 
-build-client: ## Собрать только клиент
-	@echo "$(GREEN)Сборка QUIC клиента...$(NC)"
-	@mkdir -p $(BUILD_DIR)
-	@go build -o $(BUILD_DIR)/$(CLIENT_BINARY) ./cmd/quic-client
-	@echo "$(GREEN)Клиент собран: $(BUILD_DIR)/$(CLIENT_BINARY)$(NC)"
+# Run loss rate benchmarks
+bench-loss: build
+	@echo "📉 Running loss rate benchmarks..."
+	@mkdir -p test-results/bench-loss
+	@./scripts/real_world_test_script.sh \
+		--duration 120 \
+		--output test-results/bench-loss \
+		--cleanup
+	@echo "✅ Loss rate benchmarks completed"
 
-build-tui: ## Собрать только TUI
-	@echo "$(GREEN)Сборка TUI дашборда...$(NC)"
-	@mkdir -p $(BUILD_DIR)
-	@go build -o $(BUILD_DIR)/tui ./cmd/tui
-	@echo "$(GREEN)TUI собран: $(BUILD_DIR)/tui$(NC)"
+# Run packet rate benchmarks
+bench-pps: build
+	@echo "⚡ Running packet rate benchmarks..."
+	@mkdir -p test-results/bench-pps
+	@./scripts/load_test_script.sh \
+		--load 100,300,600,1000,2000 \
+		--connections 1,2,4,8 \
+		--algorithms cubic,bbrv2 \
+		--duration 120 \
+		--output test-results/bench-pps \
+		--cleanup
+	@echo "✅ Packet rate benchmarks completed"
 
-clean: ## Очистить собранные файлы
-	@echo "$(YELLOW)Очистка...$(NC)"
-	@rm -rf $(BUILD_DIR)
-	@go clean
+# Run 2-hour soak test
+soak-2h: build
+	@echo "⏰ Running 2-hour soak test..."
+	@mkdir -p test-results/soak-2h
+	@echo "Starting long-term stability test..."
+	@nohup ./quic-test-experimental \
+		--mode server \
+		--cc bbrv2 \
+		--qlog test-results/soak-2h/server-qlog \
+		--verbose \
+		--metrics-interval 10s \
+		> test-results/soak-2h/server.log 2>&1 &
+	@SERVER_PID=$$!; \
+	sleep 5; \
+	timeout 7200s ./quic-test-experimental \
+		--mode client \
+		--addr 127.0.0.1:9000 \
+		--cc bbrv2 \
+		--qlog test-results/soak-2h/client-qlog \
+		--duration 7200s \
+		--connections 4 \
+		--streams 2 \
+		--rate 500 \
+		--packet-size 1200 \
+		--verbose \
+		> test-results/soak-2h/client.log 2>&1; \
+	kill $$SERVER_PID 2>/dev/null || true; \
+	wait $$SERVER_PID 2>/dev/null || true
+	@echo "✅ Soak test completed"
 
-test: ## Запустить тесты
-	@echo "$(GREEN)Запуск тестов...$(NC)"
-	@go test -v -race -coverprofile=coverage.out ./...
-	@go tool cover -html=coverage.out -o coverage.html
-	@echo "$(GREEN)Отчет о покрытии: coverage.html$(NC)"
+# Run full regression test suite
+regression: build
+	@echo "🔄 Running full regression test suite..."
+	@./scripts/run_regression_tests.sh --full --cleanup
+	@echo "✅ Regression tests completed"
 
-test-integration: ## Запустить интеграционные тесты
-	@echo "$(GREEN)Запуск интеграционных тестов...$(NC)"
-	@go test -v -tags=integration ./...
+# Run real-world scenario tests
+real-world: build
+	@echo "🌍 Running real-world scenario tests..."
+	@./scripts/real_world_test_script.sh --duration 120 --cleanup
+	@echo "✅ Real-world tests completed"
 
-run-dashboard: build ## Запустить веб-дашборд
-	@echo "$(GREEN)Запуск веб-дашборда...$(NC)"
-	@$(BUILD_DIR)/$(DASHBOARD_BINARY) --addr=:9990
+# Run all performance tests
+performance: build
+	@echo "🚀 Running all performance tests..."
+	@./scripts/run_performance_tests.sh --full --cleanup
+	@echo "✅ Performance tests completed"
 
-run-server: build ## Запустить QUIC сервер
-	@echo "$(GREEN)Запуск QUIC сервера...$(NC)"
-	@$(BUILD_DIR)/$(SERVER_BINARY) --addr=:9000 --prometheus
+# Generate reports
+reports:
+	@echo "📊 Generating test reports..."
+	@./scripts/run_regression_tests.sh --analysis-only
+	@./scripts/run_performance_tests.sh --analysis-only
+	@echo "✅ Reports generated"
 
-run-client: build ## Запустить QUIC клиент
-	@echo "$(GREEN)Запуск QUIC клиента...$(NC)"
-	@$(BUILD_DIR)/$(CLIENT_BINARY) --addr=127.0.0.1:9000 --connections=2 --streams=4 --rate=100
+# Install system dependencies
+deps:
+	@echo "📦 Installing system dependencies..."
+	sudo apt-get update
+	sudo apt-get install -y iproute2 jq bc
+	@echo "✅ Dependencies installed"
 
-run-test: build ## Запустить полный тест (сервер+клиент)
-	@echo "$(GREEN)Запуск полного теста...$(NC)"
-	@$(BUILD_DIR)/$(BINARY_NAME) --mode=test --connections=2 --streams=4 --rate=100 --duration=30s
+# Configure system for optimal performance
+config:
+	@echo "⚙️  Configuring system for optimal performance..."
+	@echo 'net.core.rmem_max = 134217728' | sudo tee -a /etc/sysctl.conf
+	@echo 'net.core.wmem_max = 134217728' | sudo tee -a /etc/sysctl.conf
+	@echo 'net.core.netdev_max_backlog = 5000' | sudo tee -a /etc/sysctl.conf
+	@sudo sysctl -p
+	@echo "✅ System configured"
 
-# Docker команды
-docker-build: ## Собрать Docker образы
-	@echo "$(GREEN)Сборка Docker образов...$(NC)"
-	@docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
-	@docker build -t $(DOCKER_IMAGE):dashboard -f Dockerfile.dashboard .
+# Run quick smoke test
+smoke: build
+	@echo "💨 Running quick smoke test..."
+	@mkdir -p test-results/smoke
+	@nohup ./quic-test-experimental \
+		--mode server \
+		--cc bbrv2 \
+		--verbose \
+		> test-results/smoke/server.log 2>&1 &
+	@SERVER_PID=$$!; \
+	sleep 2; \
+	timeout 10s ./quic-test-experimental \
+		--mode client \
+		--addr 127.0.0.1:9000 \
+		--cc bbrv2 \
+		--duration 10s \
+		--connections 1 \
+		--rate 100 \
+		--verbose \
+		> test-results/smoke/client.log 2>&1; \
+	kill $$SERVER_PID 2>/dev/null || true; \
+	wait $$SERVER_PID 2>/dev/null || true
+	@echo "✅ Smoke test completed"
 
-docker-run: ## Запустить через Docker Compose
-	@echo "$(GREEN)Запуск через Docker Compose...$(NC)"
-	@docker-compose up --build
+# Run comprehensive test suite
+all: clean build test bench-rtt bench-loss bench-pps regression real-world performance reports
+	@echo "🎉 All tests completed successfully!"
 
-docker-stop: ## Остановить Docker Compose
-	@echo "$(YELLOW)Остановка Docker Compose...$(NC)"
-	@docker-compose down
-
-# Качество кода
-lint: ## Запустить линтеры
-	@echo "$(GREEN)Запуск линтеров...$(NC)"
-	@golangci-lint run
-	@gosec ./...
-
-fmt: ## Форматировать код
-	@echo "$(GREEN)Форматирование кода...$(NC)"
-	@go fmt ./...
-
-vet: ## Запустить go vet
-	@echo "$(GREEN)Запуск go vet...$(NC)"
-	@go vet ./...
-
-# Разработка
-dev-setup: ## Настройка окружения для разработки
-	@echo "$(GREEN)Настройка окружения для разработки...$(NC)"
-	@go mod download
-	@go mod tidy
-	@echo "$(GREEN)Установка инструментов разработки...$(NC)"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	@go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
-
-# Профилирование
-profile-cpu: build ## Запустить с профилированием CPU
-	@echo "$(GREEN)Запуск с профилированием CPU...$(NC)"
-	@$(BUILD_DIR)/$(BINARY_NAME) --mode=test --pprof-addr=:6060 --duration=60s
-
-profile-mem: build ## Запустить с профилированием памяти
-	@echo "$(GREEN)Запуск с профилированием памяти...$(NC)"
-	@$(BUILD_DIR)/$(BINARY_NAME) --mode=test --pprof-addr=:6060 --duration=60s
-
-# Сценарии тестирования
-test-scenarios: build ## Запустить все сценарии тестирования
-	@echo "$(GREEN)Запуск сценариев тестирования...$(NC)"
-	@echo "$(YELLOW)Сценарий: many-streams$(NC)"
-	@$(BUILD_DIR)/$(BINARY_NAME) --mode=test --streams=100 --connections=1 --duration=30s --report=report-many-streams.md
-	@echo "$(YELLOW)Сценарий: loss-burst$(NC)"
-	@$(BUILD_DIR)/$(BINARY_NAME) --mode=test --emulate-loss=0.1 --emulate-latency=50ms --duration=30s --report=report-loss-burst.md
-	@echo "$(YELLOW)Сценарий: reorder$(NC)"
-	@$(BUILD_DIR)/$(BINARY_NAME) --mode=test --emulate-dup=0.05 --duration=30s --report=report-reorder.md
-
-# Сетевые профили
-test-wifi: build ## Тест с профилем WiFi
-	@echo "$(GREEN)Тест с профилем WiFi...$(NC)"
-	@$(BUILD_DIR)/$(BINARY_NAME) --mode=test --emulate-loss=0.02 --emulate-latency=10ms --duration=30s --report=report-wifi.md
-
-test-lte: build ## Тест с профилем LTE
-	@echo "$(GREEN)Тест с профилем LTE...$(NC)"
-	@$(BUILD_DIR)/$(BINARY_NAME) --mode=test --emulate-loss=0.05 --emulate-latency=30ms --duration=30s --report=report-lte.md
-
-test-sat: build ## Тест с профилем спутниковой связи
-	@echo "$(GREEN)Тест с профилем спутниковой связи...$(NC)"
-	@$(BUILD_DIR)/$(BINARY_NAME) --mode=test --emulate-loss=0.01 --emulate-latency=500ms --duration=30s --report=report-sat.md
-
-# SLA тестирование
-test-sla: build ## Запустить SLA тестирование
-	@echo "$(GREEN)Запуск SLA тестирования...$(NC)"
-	@$(BUILD_DIR)/$(BINARY_NAME) --mode=test --sla-rtt-p95=100ms --sla-loss=0.01 --duration=60s --report=report-sla.json --report-format=json
-
-# Установка зависимостей
-install-deps: ## Установить зависимости
-	@echo "$(GREEN)Установка зависимостей...$(NC)"
-	@go mod download
-	@go mod tidy
-
-# Генерация документации
-docs: ## Генерация документации
-	@echo "$(GREEN)Генерация документации...$(NC)"
-	@godoc -http=:6060 &
-	@echo "$(GREEN)Документация доступна на http://localhost:6060$(NC)"
-
-# Релизы и безопасность
-release: ## Создать релиз
-	@echo "$(GREEN)Создание релиза...$(NC)"
-	@goreleaser release --snapshot
-
-sbom: ## Генерация SBOM
-	@echo "$(GREEN)Генерация SBOM...$(NC)"
-	@syft packages . -o spdx-json=quic-test-sbom.json
-
-bench: ## Запустить бенчмарки
-	@echo "$(GREEN)Запуск бенчмарков...$(NC)"
-	@go test -bench=. -benchmem ./...
-
-vuln: ## Проверка уязвимостей
-	@echo "$(GREEN)Проверка уязвимостей...$(NC)"
-	@govulncheck ./...
-
-# TUI Dashboard
-tui: ## Собрать TUI dashboard
-	@echo "$(GREEN)Сборка TUI dashboard...$(NC)"
-	@cd cmd/tui && go build -o ../../$(BUILD_DIR)/tui .
-
-run-tui: tui ## Запустить TUI dashboard
-	@echo "$(GREEN)Запуск TUI dashboard...$(NC)"
-	@$(BUILD_DIR)/tui --demo --fps 10
-
-# Полная сборка и тестирование
-all: clean install-deps fmt vet lint test build ## Полная сборка и тестирование
-	@echo "$(GREEN)Все этапы выполнены успешно!$(NC)"
-
-# По умолчанию показываем справку
-.DEFAULT_GOAL := help
+# Show test status
+status:
+	@echo "📊 Test Status"
+	@echo "=============="
+	@if [ -f "quic-test-experimental" ]; then echo "✅ Binary: Built"; else echo "❌ Binary: Not built"; fi
+	@if [ -d "test-results" ]; then echo "✅ Test results: Available"; else echo "❌ Test results: Not available"; fi
+	@if [ -d "regression-results" ]; then echo "✅ Regression results: Available"; else echo "❌ Regression results: Not available"; fi
+	@if [ -d "performance-results" ]; then echo "✅ Performance results: Available"; else echo "❌ Performance results: Not available"; fi

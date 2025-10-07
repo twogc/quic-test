@@ -1,348 +1,253 @@
 package metrics
 
 import (
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-// PrometheusMetrics содержит все метрики Prometheus для QUIC тестирования
+// PrometheusMetrics содержит все Prometheus метрики для QUIC
 type PrometheusMetrics struct {
-	// Гистограммы
-	latencyHistogram     *prometheus.HistogramVec
-	jitterHistogram      *prometheus.HistogramVec
-	handshakeHistogram   *prometheus.HistogramVec
-	throughputHistogram  *prometheus.HistogramVec
+	// Congestion Control метрики
+	CCBandwidthBps    prometheus.Gauge
+	CCCWNDBytes       prometheus.Gauge
+	CCMinRTTMs        prometheus.Gauge
+	CCState           prometheus.Gauge
+	CCPacingBps       prometheus.Gauge
 	
-	// Счетчики
-	connectionsTotal     prometheus.Counter
-	streamsTotal         prometheus.Counter
-	bytesSentTotal       prometheus.Counter
-	bytesReceivedTotal   prometheus.Counter
-	errorsTotal          prometheus.Counter
-	retransmitsTotal      prometheus.Counter
-	handshakesTotal      prometheus.Counter
-	zeroRTTTotal         prometheus.Counter
-	oneRTTTotal          prometheus.Counter
-	sessionResumptionsTotal prometheus.Counter
+	// ACK Frequency метрики
+	ACKFreqThreshold  prometheus.Gauge
+	ACKMaxDelayMs     prometheus.Gauge
+	ACKFrequencyCount prometheus.Counter
 	
-	// Gauges
-	currentConnections   prometheus.Gauge
-	currentStreams       prometheus.Gauge
-	currentThroughput    prometheus.Gauge
-	currentLatency       prometheus.Gauge
-	packetLossRate       prometheus.Gauge
-	connectionDuration   prometheus.Gauge
+	// FEC метрики
+	FECPacketsSent    prometheus.Counter
+	FECPacketsRecovered prometheus.Counter
+	FECRedundancy     prometheus.Gauge
 	
-	// События
-	scenarioEvents       *prometheus.CounterVec
-	errorEvents          *prometheus.CounterVec
-	protocolEvents       *prometheus.CounterVec
-	networkLatency       *prometheus.HistogramVec
+	// Connection метрики
+	ConnectionsActive prometheus.Gauge
+	ConnectionsTotal  prometheus.Counter
+	StreamsActive     prometheus.Gauge
+	StreamsTotal      prometheus.Counter
+	
+	// Performance метрики
+	BytesSent         prometheus.Counter
+	BytesReceived     prometheus.Counter
+	PacketsSent       prometheus.Counter
+	PacketsReceived   prometheus.Counter
+	PacketsLost       prometheus.Counter
+	
+	// RTT метрики
+	RTTMinMs          prometheus.Gauge
+	RTTMaxMs          prometheus.Gauge
+	RTTMeanMs         prometheus.Gauge
+	RTTPercentile95Ms prometheus.Gauge
+	
+	// Throughput метрики
+	ThroughputBps     prometheus.Gauge
+	GoodputBps        prometheus.Gauge
+	
+	// Состояние
+	mu sync.RWMutex
 }
 
-// NewPrometheusMetrics создает новый экземпляр метрик Prometheus
+// NewPrometheusMetrics создает новые Prometheus метрики
 func NewPrometheusMetrics() *PrometheusMetrics {
-	return NewPrometheusMetricsWithRegistry(prometheus.DefaultRegisterer)
-}
-
-// NewPrometheusMetricsWithRegistry создает новый экземпляр метрик с указанным registry
-func NewPrometheusMetricsWithRegistry(registry prometheus.Registerer) *PrometheusMetrics {
-	m := &PrometheusMetrics{
-		// Гистограммы
-		latencyHistogram: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Name:    "quic_latency_seconds",
-				Help:    "QUIC request latency in seconds",
-				Buckets: prometheus.ExponentialBuckets(0.001, 2, 15), // 1ms to 32s
-			},
-			[]string{"connection_id", "stream_id"},
-		),
-		jitterHistogram: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Name:    "quic_jitter_seconds",
-				Help:    "QUIC jitter in seconds",
-				Buckets: prometheus.ExponentialBuckets(0.0001, 2, 12), // 0.1ms to 400ms
-			},
-			[]string{"connection_id"},
-		),
-		handshakeHistogram: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Name:    "quic_handshake_seconds",
-				Help:    "QUIC handshake duration in seconds",
-				Buckets: prometheus.ExponentialBuckets(0.01, 2, 12), // 10ms to 40s
-			},
-			[]string{"connection_id", "version"},
-		),
-		throughputHistogram: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Name:    "quic_throughput_bytes_per_second",
-				Help:    "QUIC throughput in bytes per second",
-				Buckets: prometheus.ExponentialBuckets(1024, 2, 20), // 1KB to 1GB/s
-			},
-			[]string{"connection_id"},
-		),
+	return &PrometheusMetrics{
+		// Congestion Control метрики
+		CCBandwidthBps: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_cc_bw_bps",
+			Help: "Current bandwidth estimate in bytes per second",
+		}),
+		CCCWNDBytes: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_cc_cwnd_bytes",
+			Help: "Current congestion window size in bytes",
+		}),
+		CCMinRTTMs: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_cc_min_rtt_ms",
+			Help: "Minimum RTT in milliseconds",
+		}),
+		CCState: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_cc_state",
+			Help: "Current congestion control state (0=Startup, 1=Drain, 2=ProbeBW, 3=ProbeRTT)",
+		}),
+		CCPacingBps: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_pacing_bps",
+			Help: "Current pacing rate in bytes per second",
+		}),
 		
-		// Счетчики
-		connectionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
+		// ACK Frequency метрики
+		ACKFreqThreshold: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_ack_freq_threshold",
+			Help: "ACK frequency threshold",
+		}),
+		ACKMaxDelayMs: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_ack_max_delay_ms",
+			Help: "Maximum ACK delay in milliseconds",
+		}),
+		ACKFrequencyCount: promauto.NewCounter(prometheus.CounterOpts{
+			Name: "quic_ack_frequency_total",
+			Help: "Total number of ACK frequency events",
+		}),
+		
+		// FEC метрики
+		FECPacketsSent: promauto.NewCounter(prometheus.CounterOpts{
+			Name: "quic_fec_packets_sent_total",
+			Help: "Total number of FEC packets sent",
+		}),
+		FECPacketsRecovered: promauto.NewCounter(prometheus.CounterOpts{
+			Name: "quic_fec_packets_recovered_total",
+			Help: "Total number of packets recovered by FEC",
+		}),
+		FECRedundancy: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_fec_redundancy_ratio",
+			Help: "FEC redundancy ratio",
+		}),
+		
+		// Connection метрики
+		ConnectionsActive: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_connections_active",
+			Help: "Number of active connections",
+		}),
+		ConnectionsTotal: promauto.NewCounter(prometheus.CounterOpts{
 			Name: "quic_connections_total",
-			Help: "Total number of QUIC connections",
+			Help: "Total number of connections",
 		}),
-		streamsTotal: prometheus.NewCounter(prometheus.CounterOpts{
+		StreamsActive: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_streams_active",
+			Help: "Number of active streams",
+		}),
+		StreamsTotal: promauto.NewCounter(prometheus.CounterOpts{
 			Name: "quic_streams_total",
-			Help: "Total number of QUIC streams",
+			Help: "Total number of streams",
 		}),
-		bytesSentTotal: prometheus.NewCounter(prometheus.CounterOpts{
+		
+		// Performance метрики
+		BytesSent: promauto.NewCounter(prometheus.CounterOpts{
 			Name: "quic_bytes_sent_total",
-			Help: "Total bytes sent over QUIC",
+			Help: "Total bytes sent",
 		}),
-		bytesReceivedTotal: prometheus.NewCounter(prometheus.CounterOpts{
+		BytesReceived: promauto.NewCounter(prometheus.CounterOpts{
 			Name: "quic_bytes_received_total",
-			Help: "Total bytes received over QUIC",
+			Help: "Total bytes received",
 		}),
-		errorsTotal: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "quic_errors_total",
-			Help: "Total number of QUIC errors",
+		PacketsSent: promauto.NewCounter(prometheus.CounterOpts{
+			Name: "quic_packets_sent_total",
+			Help: "Total packets sent",
 		}),
-		retransmitsTotal: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "quic_retransmits_total",
-			Help: "Total number of QUIC retransmits",
+		PacketsReceived: promauto.NewCounter(prometheus.CounterOpts{
+			Name: "quic_packets_received_total",
+			Help: "Total packets received",
 		}),
-		handshakesTotal: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "quic_handshakes_total",
-			Help: "Total number of QUIC handshakes",
-		}),
-		zeroRTTTotal: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "quic_zero_rtt_total",
-			Help: "Total number of 0-RTT connections",
-		}),
-		oneRTTTotal: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "quic_one_rtt_total",
-			Help: "Total number of 1-RTT connections",
-		}),
-		sessionResumptionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "quic_session_resumptions_total",
-			Help: "Total number of session resumptions",
+		PacketsLost: promauto.NewCounter(prometheus.CounterOpts{
+			Name: "quic_packets_lost_total",
+			Help: "Total packets lost",
 		}),
 		
-		// Gauges
-		currentConnections: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "quic_connections_current",
-			Help: "Current number of QUIC connections",
+		// RTT метрики
+		RTTMinMs: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_rtt_min_ms",
+			Help: "Minimum RTT in milliseconds",
 		}),
-		currentStreams: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "quic_streams_current",
-			Help: "Current number of QUIC streams",
+		RTTMaxMs: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_rtt_max_ms",
+			Help: "Maximum RTT in milliseconds",
 		}),
-		currentThroughput: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "quic_throughput_current_bytes_per_second",
-			Help: "Current QUIC throughput in bytes per second",
+		RTTMeanMs: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_rtt_mean_ms",
+			Help: "Mean RTT in milliseconds",
 		}),
-		currentLatency: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "quic_latency_current_seconds",
-			Help: "Current QUIC latency in seconds",
-		}),
-		packetLossRate: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "quic_packet_loss_rate",
-			Help: "Current QUIC packet loss rate (0-1)",
-		}),
-		connectionDuration: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "quic_connection_duration_seconds",
-			Help: "Current QUIC connection duration in seconds",
+		RTTPercentile95Ms: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_rtt_p95_ms",
+			Help: "95th percentile RTT in milliseconds",
 		}),
 		
-		// События
-		scenarioEvents: prometheus.NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "quic_scenario_events_total",
-				Help: "Total number of scenario events",
-			},
-			[]string{"scenario", "connection_id", "stream_id", "event"},
-		),
-		errorEvents: prometheus.NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "quic_error_events_total",
-				Help: "Total number of error events",
-			},
-			[]string{"error_type", "connection_id", "stream_id", "severity"},
-		),
-		protocolEvents: prometheus.NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "quic_protocol_events_total",
-				Help: "Total number of protocol events",
-			},
-			[]string{"event", "connection_id", "version", "cipher"},
-		),
-		networkLatency: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Name:    "quic_network_latency_seconds",
-				Help:    "Network latency in seconds",
-				Buckets: prometheus.ExponentialBuckets(0.001, 2, 15),
-			},
-			[]string{"profile", "connection_id", "region"},
-		),
+		// Throughput метрики
+		ThroughputBps: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_throughput_bps",
+			Help: "Current throughput in bytes per second",
+		}),
+		GoodputBps: promauto.NewGauge(prometheus.GaugeOpts{
+			Name: "quic_goodput_bps",
+			Help: "Current goodput in bytes per second",
+		}),
 	}
+}
+
+// UpdateCCMetrics обновляет метрики congestion control
+func (pm *PrometheusMetrics) UpdateCCMetrics(bandwidthBps float64, cwndBytes int, minRTTMs float64, state int, pacingBps int64) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
 	
-	// Регистрируем все метрики
-	registry.MustRegister(
-		m.latencyHistogram, m.jitterHistogram, m.handshakeHistogram, m.throughputHistogram,
-		m.connectionsTotal, m.streamsTotal, m.bytesSentTotal, m.bytesReceivedTotal,
-		m.errorsTotal, m.retransmitsTotal, m.handshakesTotal, m.zeroRTTTotal,
-		m.oneRTTTotal, m.sessionResumptionsTotal,
-		m.currentConnections, m.currentStreams, m.currentThroughput, m.currentLatency,
-		m.packetLossRate, m.connectionDuration,
-		m.scenarioEvents, m.errorEvents, m.protocolEvents, m.networkLatency,
-	)
+	pm.CCBandwidthBps.Set(bandwidthBps)
+	pm.CCCWNDBytes.Set(float64(cwndBytes))
+	pm.CCMinRTTMs.Set(minRTTMs)
+	pm.CCState.Set(float64(state))
+	pm.CCPacingBps.Set(float64(pacingBps))
+}
+
+// UpdateACKFrequencyMetrics обновляет метрики ACK frequency
+func (pm *PrometheusMetrics) UpdateACKFrequencyMetrics(threshold int, maxDelayMs float64) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
 	
-	return m
+	pm.ACKFreqThreshold.Set(float64(threshold))
+	pm.ACKMaxDelayMs.Set(maxDelayMs)
+	pm.ACKFrequencyCount.Inc()
 }
 
-// Реализации методов для записи метрик
-
-// RecordLatency записывает задержку
-func (m *PrometheusMetrics) RecordLatency(duration interface{}) {
-	if d, ok := duration.(time.Duration); ok {
-		m.latencyHistogram.WithLabelValues("", "").Observe(d.Seconds())
-	}
+// UpdateFECMetrics обновляет метрики FEC
+func (pm *PrometheusMetrics) UpdateFECMetrics(packetsSent, packetsRecovered int, redundancy float64) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+	
+	pm.FECPacketsSent.Add(float64(packetsSent))
+	pm.FECPacketsRecovered.Add(float64(packetsRecovered))
+	pm.FECRedundancy.Set(redundancy)
 }
 
-// RecordJitter записывает джиттер
-func (m *PrometheusMetrics) RecordJitter(duration interface{}) {
-	if d, ok := duration.(time.Duration); ok {
-		m.jitterHistogram.WithLabelValues("").Observe(d.Seconds())
-	}
+// UpdateConnectionMetrics обновляет метрики соединений
+func (pm *PrometheusMetrics) UpdateConnectionMetrics(activeConnections, totalConnections, activeStreams, totalStreams int) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+	
+	pm.ConnectionsActive.Set(float64(activeConnections))
+	pm.ConnectionsTotal.Add(float64(totalConnections))
+	pm.StreamsActive.Set(float64(activeStreams))
+	pm.StreamsTotal.Add(float64(totalStreams))
 }
 
-// RecordThroughput записывает пропускную способность
-func (m *PrometheusMetrics) RecordThroughput(throughput float64) {
-	m.throughputHistogram.WithLabelValues("").Observe(throughput)
+// UpdatePerformanceMetrics обновляет метрики производительности
+func (pm *PrometheusMetrics) UpdatePerformanceMetrics(bytesSent, bytesReceived, packetsSent, packetsReceived, packetsLost int64) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+	
+	pm.BytesSent.Add(float64(bytesSent))
+	pm.BytesReceived.Add(float64(bytesReceived))
+	pm.PacketsSent.Add(float64(packetsSent))
+	pm.PacketsReceived.Add(float64(packetsReceived))
+	pm.PacketsLost.Add(float64(packetsLost))
 }
 
-// IncrementConnections увеличивает счетчик соединений
-func (m *PrometheusMetrics) IncrementConnections() {
-	m.connectionsTotal.Inc()
-	m.currentConnections.Inc()
+// UpdateRTTMetrics обновляет метрики RTT
+func (pm *PrometheusMetrics) UpdateRTTMetrics(minRTT, maxRTT, meanRTT, p95RTT time.Duration) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+	
+	pm.RTTMinMs.Set(float64(minRTT.Nanoseconds()) / 1e6)
+	pm.RTTMaxMs.Set(float64(maxRTT.Nanoseconds()) / 1e6)
+	pm.RTTMeanMs.Set(float64(meanRTT.Nanoseconds()) / 1e6)
+	pm.RTTPercentile95Ms.Set(float64(p95RTT.Nanoseconds()) / 1e6)
 }
 
-// DecrementConnections уменьшает счетчик соединений
-func (m *PrometheusMetrics) DecrementConnections() {
-	m.currentConnections.Dec()
-}
-
-// IncrementStreams увеличивает счетчик потоков
-func (m *PrometheusMetrics) IncrementStreams() {
-	m.streamsTotal.Inc()
-	m.currentStreams.Inc()
-}
-
-// DecrementStreams уменьшает счетчик потоков
-func (m *PrometheusMetrics) DecrementStreams() {
-	m.currentStreams.Dec()
-}
-
-// AddBytesSent добавляет отправленные байты
-func (m *PrometheusMetrics) AddBytesSent(bytes int64) {
-	m.bytesSentTotal.Add(float64(bytes))
-}
-
-// AddBytesReceived добавляет полученные байты
-func (m *PrometheusMetrics) AddBytesReceived(bytes int64) {
-	m.bytesReceivedTotal.Add(float64(bytes))
-}
-
-// IncrementErrors увеличивает счетчик ошибок
-func (m *PrometheusMetrics) IncrementErrors() {
-	m.errorsTotal.Inc()
-}
-
-// IncrementRetransmits увеличивает счетчик ретрансмиссий
-func (m *PrometheusMetrics) IncrementRetransmits() {
-	m.retransmitsTotal.Inc()
-}
-
-// IncrementHandshakes увеличивает счетчик handshake
-func (m *PrometheusMetrics) IncrementHandshakes() {
-	m.handshakesTotal.Inc()
-}
-
-// IncrementZeroRTT увеличивает счетчик 0-RTT
-func (m *PrometheusMetrics) IncrementZeroRTT() {
-	m.zeroRTTTotal.Inc()
-}
-
-// IncrementOneRTT увеличивает счетчик 1-RTT
-func (m *PrometheusMetrics) IncrementOneRTT() {
-	m.oneRTTTotal.Inc()
-}
-
-// IncrementSessionResumptions увеличивает счетчик возобновлений сессии
-func (m *PrometheusMetrics) IncrementSessionResumptions() {
-	m.sessionResumptionsTotal.Inc()
-}
-
-// SetCurrentThroughput устанавливает текущую пропускную способность
-func (m *PrometheusMetrics) SetCurrentThroughput(throughput float64) {
-	m.currentThroughput.Set(throughput)
-}
-
-// SetCurrentLatency устанавливает текущую задержку
-func (m *PrometheusMetrics) SetCurrentLatency(latency interface{}) {
-	if d, ok := latency.(time.Duration); ok {
-		m.currentLatency.Set(d.Seconds())
-	}
-}
-
-// SetPacketLossRate устанавливает коэффициент потери пакетов
-func (m *PrometheusMetrics) SetPacketLossRate(rate float64) {
-	m.packetLossRate.Set(rate)
-}
-
-// SetConnectionDuration устанавливает длительность соединения
-func (m *PrometheusMetrics) SetConnectionDuration(duration interface{}) {
-	if d, ok := duration.(time.Duration); ok {
-		m.connectionDuration.Set(d.Seconds())
-	}
-}
-
-// RecordScenarioEvent записывает событие сценария
-func (m *PrometheusMetrics) RecordScenarioEvent(scenario, connID, streamID, event string) {
-	m.scenarioEvents.WithLabelValues(scenario, connID, streamID, event).Inc()
-}
-
-// RecordErrorEvent записывает событие ошибки
-func (m *PrometheusMetrics) RecordErrorEvent(errorType, connID, streamID, severity string) {
-	m.errorEvents.WithLabelValues(errorType, connID, streamID, severity).Inc()
-}
-
-// RecordProtocolEvent записывает событие протокола
-func (m *PrometheusMetrics) RecordProtocolEvent(event, connID, version, cipher string) {
-	m.protocolEvents.WithLabelValues(event, connID, version, cipher).Inc()
-}
-
-// RecordScenarioDuration записывает длительность сценария
-func (m *PrometheusMetrics) RecordScenarioDuration(scenario, connID, result string, duration interface{}) {
-	if d, ok := duration.(time.Duration); ok {
-		m.scenarioEvents.WithLabelValues(scenario, connID, "", "duration").Add(d.Seconds())
-	}
-}
-
-// RecordNetworkLatency записывает сетевую задержку
-func (m *PrometheusMetrics) RecordNetworkLatency(profile, connID, region string, latency interface{}) {
-	if d, ok := latency.(time.Duration); ok {
-		m.networkLatency.WithLabelValues(profile, connID, region).Observe(d.Seconds())
-	}
-}
-
-// RecordHandshakeTime записывает время handshake
-func (m *PrometheusMetrics) RecordHandshakeTime(duration interface{}) {
-	if d, ok := duration.(time.Duration); ok {
-		m.handshakeHistogram.WithLabelValues("", "").Observe(d.Seconds())
-	}
-}
-
-// RecordRTT записывает RTT
-func (m *PrometheusMetrics) RecordRTT(duration interface{}) {
-	if d, ok := duration.(time.Duration); ok {
-		m.latencyHistogram.WithLabelValues("", "rtt").Observe(d.Seconds())
-	}
+// UpdateThroughputMetrics обновляет метрики throughput
+func (pm *PrometheusMetrics) UpdateThroughputMetrics(throughputBps, goodputBps int64) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+	
+	pm.ThroughputBps.Set(float64(throughputBps))
+	pm.GoodputBps.Set(float64(goodputBps))
 }

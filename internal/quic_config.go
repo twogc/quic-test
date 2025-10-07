@@ -11,7 +11,7 @@ import (
 func CreateQUICConfig(cfg TestConfig) *quic.Config {
 	config := &quic.Config{
 		// Включаем все возможные версии QUIC
-		Versions: []quic.Version{
+		Versions: []quic.VersionNumber{
 			quic.Version1,
 			quic.Version2,
 		},
