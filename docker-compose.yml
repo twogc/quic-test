@@ -1,4 +1,4 @@
-# 2GC CloudBridge QUIC testing - Docker Compose
+# 2GC Network Protocol Suite - Docker Compose
 # Полное развертывание: сервер + клиент + дашборд + мониторинг
 
 version: '3.8'
@@ -8,9 +8,9 @@ services:
   quic-server:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: quic-test-server
-    command: ["./quic-server", "--addr=:9000", "--prometheus", "--pprof-addr=:6060"]
+      dockerfile: Dockerfile.server
+    container_name: 2gc-network-server
+    command: ["./quic-server", "--mode=server", "--addr=:9000", "--prometheus", "--pprof-addr=:6060"]
     ports:
       - "9000:9000"   # QUIC сервер
       - "2113:2113"   # Prometheus метрики сервера
@@ -33,9 +33,9 @@ services:
   quic-client:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: quic-test-client
-    command: ["./quic-client", "--addr=quic-server:9000", "--connections=2", "--streams=4", "--rate=100", "--prometheus", "--duration=60s"]
+      dockerfile: Dockerfile.client
+    container_name: 2gc-network-client
+    command: ["./quic-client", "--mode=client", "--addr=quic-server:9000", "--connections=2", "--streams=4", "--rate=100", "--prometheus", "--duration=60s"]
     ports:
       - "2112:2112"   # Prometheus метрики клиента
     environment:
@@ -53,8 +53,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dashboard
-    container_name: quic-test-dashboard
-    command: ["./dashboard", "--addr=:9990"]
+    container_name: 2gc-network-dashboard
+    command: ["./dashboard", "--mode=dashboard", "--addr=:9990"]
     ports:
       - "9990:9990"   # Веб-дашборд
     environment:
@@ -72,7 +72,7 @@ services:
   # Prometheus для сбора метрик
   prometheus:
     image: prom/prometheus:latest
-    container_name: quic-test-prometheus
+    container_name: 2gc-network-prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -95,7 +95,7 @@ services:
   # Grafana для визуализации
   grafana:
     image: grafana/grafana:latest
-    container_name: quic-test-grafana
+    container_name: 2gc-network-grafana
     ports:
       - "3000:3000"
     volumes:
@@ -114,7 +114,7 @@ services:
   # Jaeger для трейсинга (опционально)
   jaeger:
     image: jaegertracing/all-in-one:latest
-    container_name: quic-test-jaeger
+    container_name: 2gc-network-jaeger
     ports:
       - "16686:16686"   # Jaeger UI
       - "14268:14268"   # Jaeger collector
@@ -127,7 +127,7 @@ services:
 networks:
   quck-network:
     driver: bridge
-    name: quic-test-network
+    name: 2gc-network-suite
 
 volumes:
   prometheus-data:
@@ -140,7 +140,7 @@ volumes:
   # Nginx для балансировки нагрузки (опционально)
   nginx:
     image: nginx:alpine
-    container_name: quic-test-nginx
+    container_name: 2gc-network-nginx
     ports:
       - "80:80"
       - "443:443"
@@ -158,7 +158,7 @@ volumes:
   # Redis для кэширования (опционально)
   redis:
     image: redis:alpine
-    container_name: quic-test-redis
+    container_name: 2gc-network-redis
     ports:
       - "6379:6379"
     volumes:
