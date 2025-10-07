@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
+
+	"quic-test/internal/quic"
 
 	"go.uber.org/zap"
 )
@@ -73,7 +76,37 @@ func (ec *ExperimentalClient) Stop() {
 func (ec *ExperimentalClient) runClient(ctx context.Context) {
 	ec.logger.Info("Experimental client running")
 	
-	// Симулируем работу клиента
+	// Создаем реальный QUIC клиент
+	quicConfig := &quic.QUICClientConfig{
+		ServerAddr:     ec.config.Addr,
+		MaxStreams:     10,
+		ConnectTimeout: 10 * time.Second,
+		IdleTimeout:    30 * time.Second,
+	}
+	
+	quicClient := quic.NewQUICClient(ec.logger, quicConfig)
+	
+	// Подключаемся к серверу
+	if err := quicClient.Connect(); err != nil {
+		ec.logger.Error("Failed to connect to QUIC server", zap.Error(err))
+		return
+	}
+	
+	ec.logger.Info("Experimental QUIC client connected successfully")
+	
+	// Отправляем тестовые данные
+	testData := []byte("Hello from experimental QUIC client!")
+	if err := quicClient.SendData(testData); err != nil {
+		ec.logger.Error("Failed to send data", zap.Error(err))
+	}
+	
+	// Ждем завершения контекста
 	<-ctx.Done()
+	
+	// Отключаемся
+	if err := quicClient.Disconnect(); err != nil {
+		ec.logger.Error("Failed to disconnect", zap.Error(err))
+	}
+	
 	ec.logger.Info("Experimental client stopped by context")
 }

@@ -16,12 +16,12 @@ import (
 type QUICClient struct {
 	logger      *zap.Logger
 	serverAddr  string
-	conn        *quic.Conn
+	conn        quic.Connection
 	ctx         context.Context
 	cancel      context.CancelFunc
 	mu          sync.RWMutex
 	isConnected bool
-	streams     map[quic.StreamID]*quic.Stream
+	streams     map[quic.StreamID]quic.Stream
 }
 
 // QUICClientConfig конфигурация QUIC клиента
@@ -41,7 +41,7 @@ func NewQUICClient(logger *zap.Logger, config *QUICClientConfig) *QUICClient {
 		serverAddr: config.ServerAddr,
 		ctx:        ctx,
 		cancel:     cancel,
-		streams:    make(map[quic.StreamID]*quic.Stream),
+		streams:    make(map[quic.StreamID]quic.Stream),
 	}
 }
 
@@ -92,7 +92,7 @@ func (qc *QUICClient) Disconnect() error {
 	qc.cancel()
 
 	if qc.conn != nil {
-		if err := (*qc.conn).CloseWithError(0, "client disconnect"); err != nil {
+		if err := qc.conn.CloseWithError(0, "client disconnect"); err != nil {
 			qc.logger.Warn("Failed to close QUIC connection", zap.Error(err))
 		}
 	}
@@ -134,7 +134,7 @@ func (qc *QUICClient) SendData(data []byte) error {
 	}
 
 	// Создаем новый поток
-	stream, err := (*qc.conn).OpenStreamSync(qc.ctx)
+	stream, err := qc.conn.OpenStreamSync(qc.ctx)
 	if err != nil {
 		return fmt.Errorf("failed to open stream: %v", err)
 	}
@@ -206,7 +206,7 @@ func (qc *QUICClient) handleStreams() {
 				return
 			}
 
-			stream, err := (*qc.conn).AcceptStream(qc.ctx)
+			stream, err := qc.conn.AcceptStream(qc.ctx)
 			if err != nil {
 				if qc.ctx.Err() != nil {
 					return
@@ -227,7 +227,7 @@ func (qc *QUICClient) handleStreams() {
 }
 
 // handleStream обрабатывает отдельный поток
-func (qc *QUICClient) handleStream(stream *quic.Stream) {
+func (qc *QUICClient) handleStream(stream quic.Stream) {
 	defer func() {
 		// Удаляем поток из списка
 		qc.mu.Lock()

@@ -27,7 +27,7 @@ type QUICServer struct {
 	cancel      context.CancelFunc
 	mu          sync.RWMutex
 	isRunning   bool
-	connections map[string]*quic.Conn
+	connections map[string]quic.Connection
 }
 
 // QUICServerConfig конфигурация QUIC сервера
@@ -47,7 +47,7 @@ func NewQUICServer(logger *zap.Logger, config *QUICServerConfig) *QUICServer {
 		addr:        config.Addr,
 		ctx:         ctx,
 		cancel:      cancel,
-		connections: make(map[string]*quic.Conn),
+		connections: make(map[string]quic.Connection),
 	}
 }
 
@@ -114,7 +114,7 @@ func (qs *QUICServer) Stop() error {
 
 	// Закрываем все соединения
 	for _, conn := range qs.connections {
-		if err := (*conn).CloseWithError(0, "server shutdown"); err != nil {
+		if err := conn.CloseWithError(0, "server shutdown"); err != nil {
 			qs.logger.Warn("Failed to close QUIC connection", zap.Error(err))
 		}
 	}
@@ -172,14 +172,14 @@ func (qs *QUICServer) handleConnections() {
 }
 
 // handleConnection обрабатывает отдельное соединение
-func (qs *QUICServer) handleConnection(conn *quic.Conn, connID string) {
+func (qs *QUICServer) handleConnection(conn quic.Connection, connID string) {
 	defer func() {
 		// Удаляем соединение из списка
 		qs.mu.Lock()
 		delete(qs.connections, connID)
 		qs.mu.Unlock()
 
-		(*conn).CloseWithError(0, "connection closed")
+		conn.CloseWithError(0, "connection closed")
 		qs.logger.Info("QUIC connection closed", zap.String("conn_id", connID))
 	}()
 
@@ -189,7 +189,7 @@ func (qs *QUICServer) handleConnection(conn *quic.Conn, connID string) {
 		case <-qs.ctx.Done():
 			return
 		default:
-			stream, err := (*conn).AcceptStream(qs.ctx)
+			stream, err := conn.AcceptStream(qs.ctx)
 			if err != nil {
 				if qs.ctx.Err() != nil {
 					return
@@ -205,7 +205,7 @@ func (qs *QUICServer) handleConnection(conn *quic.Conn, connID string) {
 }
 
 // handleStream обрабатывает поток данных
-func (qs *QUICServer) handleStream(stream *quic.Stream, connID string) {
+func (qs *QUICServer) handleStream(stream quic.Stream, connID string) {
 	defer stream.Close()
 
 	buffer := make([]byte, 4096)

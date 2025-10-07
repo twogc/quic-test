@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
+	"quic-test/internal/quic"
 	"go.uber.org/zap"
 )
 
@@ -73,7 +75,31 @@ func (es *ExperimentalServer) Stop() {
 func (es *ExperimentalServer) runServer(ctx context.Context) {
 	es.logger.Info("Experimental server running")
 	
-	// Симулируем работу сервера
+	// Создаем реальный QUIC сервер
+	quicConfig := &quic.QUICServerConfig{
+		Addr:           es.config.Addr,
+		MaxConnections: 100,
+		IdleTimeout:    30 * time.Second,
+		KeepAlive:     10 * time.Second,
+	}
+	
+	quicServer := quic.NewQUICServer(es.logger, quicConfig)
+	
+	// Запускаем сервер
+	if err := quicServer.Start(); err != nil {
+		es.logger.Error("Failed to start QUIC server", zap.Error(err))
+		return
+	}
+	
+	es.logger.Info("Experimental QUIC server started successfully")
+	
+	// Ждем завершения контекста
 	<-ctx.Done()
+	
+	// Останавливаем сервер
+	if err := quicServer.Stop(); err != nil {
+		es.logger.Error("Failed to stop QUIC server", zap.Error(err))
+	}
+	
 	es.logger.Info("Experimental server stopped by context")
 }
