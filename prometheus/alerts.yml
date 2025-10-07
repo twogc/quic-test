@@ -1,0 +1,29 @@
+groups:
+- name: quic-server
+  rules:
+  - alert: QUICCriticalZone
+    expr: quic_server_rate_per_connection >= 26 and quic_server_rate_per_connection <= 35
+    for: 10s
+    labels:
+      severity: critical
+    annotations:
+      summary: "QUIC server in critical performance zone"
+      description: "Server rate {{ $value }} pps is in critical zone (26-35 pps)"
+  
+  - alert: QUICHighJitter
+    expr: histogram_quantile(0.95, quic_server_jitter_seconds) > 0.1
+    for: 30s
+    labels:
+      severity: warning
+    annotations:
+      summary: "QUIC server high jitter detected"
+      description: "Server jitter p95 is {{ $value }}s"
+  
+  - alert: QUICHighErrorRate
+    expr: rate(quic_server_errors_total[5m]) / rate(quic_server_packets_total[5m]) > 0.01
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "QUIC server high error rate"
+      description: "Server error rate is {{ $value }}%"
