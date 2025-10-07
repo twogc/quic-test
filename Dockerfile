@@ -21,7 +21,7 @@ COPY . .
 RUN make build
 
 # Этап 2: Runtime
-FROM alpine:3.20
+FROM alpine:3.22
 
 # Установка зависимостей runtime
 RUN apk add --no-cache ca-certificates tzdata
