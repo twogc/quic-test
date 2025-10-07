@@ -58,6 +58,12 @@ bin/
 # Scripts directory
 scripts/
 
+# Large archive files
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
 # Test artifacts
 test-results/
 profiles/
