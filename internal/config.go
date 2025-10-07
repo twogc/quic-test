@@ -31,8 +31,23 @@ type TestConfig struct {
 	PprofAddr string // Адрес для pprof (например, :6060)
 
 	// --- SLA проверки ---
-	SlaRttP95 time.Duration // SLA: максимальный RTT p95
-	SlaLoss   float64       // SLA: максимальная потеря пакетов
+	SlaRttP95     time.Duration // SLA: максимальный RTT p95
+	SlaLoss       float64       // SLA: максимальная потеря пакетов
+	SlaThroughput float64       // SLA: минимальная пропускная способность (KB/s)
+	SlaErrors     int64         // SLA: максимальное количество ошибок
+	
+	// --- QUIC тюнинг ---
+	CongestionControl string        // Алгоритм управления перегрузкой: cubic, bbr, reno
+	MaxIdleTimeout    time.Duration // Максимальное время простоя соединения
+	HandshakeTimeout  time.Duration // Таймаут handshake
+	KeepAlive         time.Duration // Интервал keep-alive
+	MaxStreams        int64         // Максимальное количество потоков
+	MaxStreamData     int64         // Максимальный размер данных потока
+	Enable0RTT        bool          // Включить 0-RTT
+	EnableKeyUpdate   bool          // Включить key update
+	EnableDatagrams   bool          // Включить datagrams
+	MaxIncomingStreams int64        // Максимальное количество входящих потоков
+	MaxIncomingUniStreams int64     // Максимальное количество входящих unidirectional потоков
 }
 
 // Validate проверяет корректность конфигурации
@@ -61,5 +76,32 @@ func (cfg *TestConfig) Validate() error {
 	if cfg.SlaLoss < 0 || cfg.SlaLoss > 1 {
 		return errors.New("SLA loss must be between 0 and 1")
 	}
+	
+	// Валидация QUIC параметров
+	if cfg.CongestionControl != "" && cfg.CongestionControl != "cubic" && cfg.CongestionControl != "bbr" && cfg.CongestionControl != "reno" {
+		return errors.New("congestion control must be one of: cubic, bbr, reno")
+	}
+	if cfg.MaxIdleTimeout < 0 {
+		return errors.New("max idle timeout must be non-negative")
+	}
+	if cfg.HandshakeTimeout < 0 {
+		return errors.New("handshake timeout must be non-negative")
+	}
+	if cfg.KeepAlive < 0 {
+		return errors.New("keep alive must be non-negative")
+	}
+	if cfg.MaxStreams < 0 {
+		return errors.New("max streams must be non-negative")
+	}
+	if cfg.MaxStreamData < 0 {
+		return errors.New("max stream data must be non-negative")
+	}
+	if cfg.MaxIncomingStreams < 0 {
+		return errors.New("max incoming streams must be non-negative")
+	}
+	if cfg.MaxIncomingUniStreams < 0 {
+		return errors.New("max incoming uni streams must be non-negative")
+	}
+	
 	return nil
 }

@@ -15,7 +15,7 @@ import (
 
 func main() {
 	fmt.Println("\033[1;36m==============================\033[0m")
-	fmt.Println("\033[1;36m  2GC CloudBridge QUICK testing\033[0m")
+	fmt.Println("\033[1;36m  2GC CloudBridge QUIC testing\033[0m")
 	fmt.Println("\033[1;36m==============================\033[0m")
 	fmt.Println("Тестирование производительности и стабильности QUIC-протокола для CloudBridge 2GC")
 	mode := flag.String("mode", "test", "Режим: server | client | test")
@@ -35,6 +35,34 @@ func main() {
 	emulateLoss := flag.Float64("emulate-loss", 0, "Вероятность потери пакета (0..1)")
 	emulateLatency := flag.Duration("emulate-latency", 0, "Дополнительная задержка перед отправкой пакета (например, 20ms)")
 	emulateDup := flag.Float64("emulate-dup", 0, "Вероятность дублирования пакета (0..1)")
+	
+	// SLA флаги
+	slaRttP95 := flag.Duration("sla-rtt-p95", 0, "SLA: максимальный RTT p95 (например, 100ms)")
+	slaLoss := flag.Float64("sla-loss", 0, "SLA: максимальная потеря пакетов (0..1, например, 0.01 для 1%)")
+	slaThroughput := flag.Float64("sla-throughput", 0, "SLA: минимальная пропускная способность (KB/s)")
+	slaErrors := flag.Int64("sla-errors", 0, "SLA: максимальное количество ошибок")
+	
+	// QUIC тюнинг флаги
+	cc := flag.String("cc", "", "Алгоритм управления перегрузкой: cubic, bbr, reno")
+	maxIdleTimeout := flag.Duration("max-idle-timeout", 0, "Максимальное время простоя соединения")
+	handshakeTimeout := flag.Duration("handshake-timeout", 0, "Таймаут handshake")
+	keepAlive := flag.Duration("keep-alive", 0, "Интервал keep-alive")
+	maxStreams := flag.Int64("max-streams", 0, "Максимальное количество потоков")
+	maxStreamData := flag.Int64("max-stream-data", 0, "Максимальный размер данных потока")
+	enable0RTT := flag.Bool("enable-0rtt", false, "Включить 0-RTT")
+	enableKeyUpdate := flag.Bool("enable-key-update", false, "Включить key update")
+	enableDatagrams := flag.Bool("enable-datagrams", false, "Включить datagrams")
+	maxIncomingStreams := flag.Int64("max-incoming-streams", 0, "Максимальное количество входящих потоков")
+	maxIncomingUniStreams := flag.Int64("max-incoming-uni-streams", 0, "Максимальное количество входящих unidirectional потоков")
+	
+	// Сценарии тестирования
+	scenario := flag.String("scenario", "", "Предустановленный сценарий: wifi, lte, sat, dc-eu, ru-eu, loss-burst, reorder")
+	listScenarios := flag.Bool("list-scenarios", false, "Показать список доступных сценариев")
+	
+	// Сетевые профили
+	networkProfile := flag.String("network-profile", "", "Сетевой профиль: wifi, lte, 5g, satellite, ethernet, fiber, datacenter")
+	listProfiles := flag.Bool("list-profiles", false, "Показать список доступных сетевых профилей")
+	
 	flag.Parse()
 
 	cfg := internal.TestConfig{
@@ -55,10 +83,78 @@ func main() {
 		EmulateLoss:    *emulateLoss,
 		EmulateLatency: *emulateLatency,
 		EmulateDup:     *emulateDup,
+		SlaRttP95:      *slaRttP95,
+		SlaLoss:        *slaLoss,
+		SlaThroughput:  *slaThroughput,
+		SlaErrors:      *slaErrors,
+		CongestionControl: *cc,
+		MaxIdleTimeout:    *maxIdleTimeout,
+		HandshakeTimeout:  *handshakeTimeout,
+		KeepAlive:         *keepAlive,
+		MaxStreams:        *maxStreams,
+		MaxStreamData:      *maxStreamData,
+		Enable0RTT:        *enable0RTT,
+		EnableKeyUpdate:   *enableKeyUpdate,
+		EnableDatagrams:   *enableDatagrams,
+		MaxIncomingStreams: *maxIncomingStreams,
+		MaxIncomingUniStreams: *maxIncomingUniStreams,
 	}
 
 	fmt.Printf("mode=%s, addr=%s, connections=%d, streams=%d, duration=%s, packet-size=%d, rate=%d, report=%s, report-format=%s, cert=%s, key=%s, pattern=%s, no-tls=%v, prometheus=%v\n",
 		cfg.Mode, cfg.Addr, cfg.Connections, cfg.Streams, cfg.Duration.String(), cfg.PacketSize, cfg.Rate, cfg.ReportPath, cfg.ReportFormat, cfg.CertPath, cfg.KeyPath, cfg.Pattern, cfg.NoTLS, cfg.Prometheus)
+	
+	// Выводим SLA конфигурацию если настроена
+	internal.PrintSLAConfig(cfg)
+	
+	// Выводим QUIC конфигурацию если настроена
+	internal.PrintQUICConfig(cfg)
+	
+	// Обработка сценариев
+	if *listScenarios {
+		fmt.Println("📋 Available Test Scenarios:")
+		scenarios := internal.ListScenarios()
+		for _, name := range scenarios {
+			scenario, _ := internal.GetScenario(name)
+			fmt.Printf("  - %s: %s\n", name, scenario.Description)
+		}
+		os.Exit(0)
+	}
+	
+	// Обработка сетевых профилей
+	if *listProfiles {
+		fmt.Println("🌐 Available Network Profiles:")
+		profiles := internal.ListNetworkProfiles()
+		for _, name := range profiles {
+			profile, _ := internal.GetNetworkProfile(name)
+			fmt.Printf("  - %s: %s\n", name, profile.Description)
+		}
+		os.Exit(0)
+	}
+	
+	if *scenario != "" {
+		scenarioConfig, err := internal.GetScenario(*scenario)
+		if err != nil {
+			fmt.Printf("❌ Error: %v\n", err)
+			os.Exit(1)
+		}
+		
+		// Применяем конфигурацию сценария
+		cfg = scenarioConfig.Config
+		fmt.Printf("🎯 Running scenario: %s\n", scenarioConfig.Name)
+	}
+	
+	if *networkProfile != "" {
+		profile, err := internal.GetNetworkProfile(*networkProfile)
+		if err != nil {
+			fmt.Printf("❌ Error: %v\n", err)
+			os.Exit(1)
+		}
+		
+		// Применяем сетевой профиль
+		internal.ApplyNetworkProfile(&cfg, profile)
+		internal.PrintNetworkProfile(profile)
+		internal.PrintProfileRecommendations(profile)
+	}
 
 	// Обработка сигналов для graceful shutdown
 	sigs := make(chan os.Signal, 1)

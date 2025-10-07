@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"quic-test/internal"
+	"quic-test/internal/metrics"
 	// "quic-test/internal/report" // удалить
 
 	"crypto/tls"
@@ -32,6 +34,15 @@ import (
 type TimePoint struct {
 	Time  float64 // seconds since start
 	Value float64
+}
+
+// TUIMetric представляет метрику для TUI дашборда
+type TUIMetric struct {
+	LatencyMs float64 `json:"latency_ms"`
+	Code      int     `json:"code"`
+	CPU       float64 `json:"cpu"`
+	RTTMs     float64 `json:"rtt_ms"`
+	Timestamp time.Time `json:"timestamp,omitempty"`
 }
 
 // Metrics хранит метрики теста
@@ -64,6 +75,69 @@ type Metrics struct {
 	TimeSeriesPacketLoss    []TimePoint
 	TimeSeriesRetransmits   []TimePoint
 	TimeSeriesHandshakeTime []TimePoint
+	
+	// HDR Histograms for precise metrics
+	HDRMetrics *metrics.HDRMetrics
+}
+
+// ToMap конвертирует метрики в map для совместимости с SLA проверками
+func (m *Metrics) ToMap() map[string]interface{} {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	
+	// Вычисляем средние значения
+	var avgLatency float64
+	if len(m.Latencies) > 0 {
+		sum := 0.0
+		for _, l := range m.Latencies {
+			sum += l
+		}
+		avgLatency = sum / float64(len(m.Latencies))
+	}
+	
+	var avgThroughput float64
+	if len(m.Throughput) > 0 {
+		sum := 0.0
+		for _, t := range m.Throughput {
+			sum += t
+		}
+		avgThroughput = sum / float64(len(m.Throughput))
+	}
+	
+	result := map[string]interface{}{
+		"Success":    m.Success,
+		"Errors":     m.Errors,
+		"BytesSent":  m.BytesSent,
+		"Latencies":  m.Latencies,
+		"ThroughputAverage": avgThroughput,
+		"PacketLoss": m.PacketLoss,
+		"Retransmits": m.Retransmits,
+		"TLSVersion": m.TLSVersion,
+		"CipherSuite": m.CipherSuite,
+		"SessionResumptionCount": m.SessionResumptionCount,
+		"ZeroRTTCount": m.ZeroRTTCount,
+		"OneRTTCount": m.OneRTTCount,
+		"HandshakeTime": avgLatency,
+		"KeyUpdateEvents": m.KeyUpdateEvents,
+		"FlowControlEvents": m.FlowControlEvents,
+		"ErrorTypeCounts": m.ErrorTypeCounts,
+		"TimeSeriesLatency": m.TimeSeriesLatency,
+		"TimeSeriesThroughput": m.TimeSeriesThroughput,
+		"TimeSeriesPacketLoss": m.TimeSeriesPacketLoss,
+		"TimeSeriesRetransmits": m.TimeSeriesRetransmits,
+		"TimeSeriesHandshakeTime": m.TimeSeriesHandshakeTime,
+	}
+	
+	// Добавляем HDR-метрики если доступны
+	if m.HDRMetrics != nil {
+		result["HDRLatencyStats"] = m.HDRMetrics.GetLatencyStats()
+		result["HDRJitterStats"] = m.HDRMetrics.GetJitterStats()
+		result["HDRHandshakeStats"] = m.HDRMetrics.GetHandshakeStats()
+		result["HDRThroughputStats"] = m.HDRMetrics.GetThroughputStats()
+		result["HDRNetworkStats"] = m.HDRMetrics.GetNetworkStats()
+	}
+	
+	return result
 }
 
 // Run запускает клиентский тест
@@ -80,11 +154,13 @@ func Run(cfg internal.TestConfig) {
 		cancel()
 	}()
 
-	metrics := &Metrics{}
+	testMetrics := &Metrics{
+		HDRMetrics: metrics.NewHDRMetrics(),
+	}
 	var wg sync.WaitGroup
 
 	if cfg.Prometheus {
-		go startPrometheusExporter(metrics)
+		go startPrometheusExporter(testMetrics)
 	}
 	startTime := time.Now()
 	// Time series collector
@@ -96,23 +172,23 @@ func Run(cfg internal.TestConfig) {
 			case <-ctx.Done():
 				return
 			case <-time.After(1 * time.Second):
-				metrics.mu.Lock()
+				testMetrics.mu.Lock()
 				now := time.Since(startTime).Seconds()
 				lat := 0.0
-				if len(metrics.Latencies) > lastCount {
+				if len(testMetrics.Latencies) > lastCount {
 					sum := 0.0
-					for _, l := range metrics.Latencies[lastCount:] {
+					for _, l := range testMetrics.Latencies[lastCount:] {
 						sum += l
 					}
-					lat = sum / float64(len(metrics.Latencies[lastCount:]))
+					lat = sum / float64(len(testMetrics.Latencies[lastCount:]))
 				}
-				metrics.TimeSeriesLatency = append(metrics.TimeSeriesLatency, TimePoint{Time: now, Value: lat})
-				bytesNow := metrics.BytesSent
+				testMetrics.TimeSeriesLatency = append(testMetrics.TimeSeriesLatency, TimePoint{Time: now, Value: lat})
+				bytesNow := testMetrics.BytesSent
 				throughput := float64(bytesNow-lastBytes) / 1024.0
-				metrics.TimeSeriesThroughput = append(metrics.TimeSeriesThroughput, TimePoint{Time: now, Value: throughput})
-				lastCount = len(metrics.Latencies)
+				testMetrics.TimeSeriesThroughput = append(testMetrics.TimeSeriesThroughput, TimePoint{Time: now, Value: throughput})
+				lastCount = len(testMetrics.Latencies)
 				lastBytes = bytesNow
-				metrics.mu.Unlock()
+				testMetrics.mu.Unlock()
 			}
 		}
 	}()
@@ -148,7 +224,7 @@ func Run(cfg internal.TestConfig) {
 		wg.Add(1)
 		go func(connID int) {
 			defer wg.Done()
-			clientConnection(ctx, *cfgPtr, metrics, connID, &rate)
+			clientConnection(ctx, *cfgPtr, testMetrics, connID, &rate)
 		}(c)
 	}
 
@@ -159,7 +235,7 @@ func Run(cfg internal.TestConfig) {
 			case <-ctx.Done():
 				return
 			case <-time.After(2 * time.Second):
-				printMetrics(metrics, &rate, false)
+				printMetrics(testMetrics, &rate, false)
 			}
 		}
 	}()
@@ -176,11 +252,17 @@ func Run(cfg internal.TestConfig) {
 	wg.Wait()
 
 	// Финальный красивый вывод
-	printMetrics(metrics, &rate, true)
+	printMetrics(testMetrics, &rate, true)
 
-	err := internal.SaveReport(cfg, metrics)
+	err := internal.SaveReport(cfg, testMetrics)
 	if err != nil {
 		fmt.Println("Ошибка сохранения отчёта:", err)
+	}
+	
+	// Проверяем SLA если настроено
+	if cfg.SlaRttP95 > 0 || cfg.SlaLoss > 0 || cfg.SlaThroughput > 0 || cfg.SlaErrors > 0 {
+		metricsMap := testMetrics.ToMap()
+		internal.ExitWithSLA(cfg, metricsMap)
 	}
 }
 
@@ -213,6 +295,10 @@ func clientConnection(ctx context.Context, cfg internal.TestConfig, metrics *Met
 	metrics.mu.Lock()
 	metrics.HandshakeTimes = append(metrics.HandshakeTimes, handshakeTime)
 	metrics.TimeSeriesHandshakeTime = append(metrics.TimeSeriesHandshakeTime, TimePoint{Time: time.Since(handshakeStart).Seconds(), Value: handshakeTime})
+	// Записываем handshake время в HDR-гистограммы
+	if metrics.HDRMetrics != nil {
+		metrics.HDRMetrics.RecordHandshakeTime(time.Duration(handshakeTime) * time.Millisecond)
+	}
 	if err != nil {
 		metrics.Errors++
 		if metrics.ErrorTypeCounts == nil {
@@ -330,6 +416,12 @@ func clientStream(ctx context.Context, session quic.Connection, cfg internal.Tes
 			metrics.Success++
 			metrics.Latencies = append(metrics.Latencies, latency)
 			metrics.Timestamps = append(metrics.Timestamps, time.Now())
+			// Записываем в HDR-гистограммы
+			if metrics.HDRMetrics != nil {
+				metrics.HDRMetrics.RecordLatency(time.Duration(latency) * time.Millisecond)
+				metrics.HDRMetrics.AddBytesSent(int64(n))
+				metrics.HDRMetrics.IncrementPacketsSent()
+			}
 			metrics.mu.Unlock()
 			sentPackets++
 			ackedPackets++
@@ -436,7 +528,7 @@ func printMetrics(metrics *Metrics, ratePtr *int64, final bool) {
 	if !final {
 		fmt.Print("\033[H\033[2J") // очистка экрана и курсор в левый верхний угол
 	}
-	fmt.Println("\033[1;36m  2GC CloudBridge QUICK testing Client\033[0m")
+	fmt.Println("\033[1;36m  2GC CloudBridge QUIC testing Client\033[0m")
 
 	green := color.New(color.FgGreen).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()

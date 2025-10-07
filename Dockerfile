@@ -52,18 +52,18 @@ USER quic
 EXPOSE 9000 9990 2112 2113 6060
 
 # Переменные окружения
-ENV QUICK_SERVER_ADDR=:9000
-ENV QUICK_DASHBOARD_ADDR=:9990
-ENV QUICK_PROMETHEUS_CLIENT_PORT=2112
-ENV QUICK_PROMETHEUS_SERVER_PORT=2113
-ENV QUICK_PPROF_ADDR=:6060
+ENV QUIC_SERVER_ADDR=:9000
+ENV QUIC_DASHBOARD_ADDR=:9990
+ENV QUIC_PROMETHEUS_CLIENT_PORT=2112
+ENV QUIC_PROMETHEUS_SERVER_PORT=2113
+ENV QUIC_PPROF_ADDR=:6060
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:9990/ || exit 1
 
 # Метки для контейнера
-LABEL org.opencontainers.image.title="2GC CloudBridge QUICK testing"
+LABEL org.opencontainers.image.title="2GC CloudBridge QUIC testing"
 LABEL org.opencontainers.image.description="QUIC performance testing tool with dashboard"
 LABEL org.opencontainers.image.url="https://github.com/cloudbridge-relay-installer/quck-test"
 LABEL org.opencontainers.image.source="https://github.com/cloudbridge-relay-installer/quck-test"

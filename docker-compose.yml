@@ -16,9 +16,9 @@ services:
       - "2113:2113"   # Prometheus метрики сервера
       - "6060:6060"   # pprof профилирование
     environment:
-      - QUICK_SERVER_ADDR=:9000
-      - QUICK_PROMETHEUS_SERVER_PORT=2113
-      - QUICK_PPROF_ADDR=:6060
+      - QUIC_SERVER_ADDR=:9000
+      - QUIC_PROMETHEUS_SERVER_PORT=2113
+      - QUIC_PPROF_ADDR=:6060
     networks:
       - quck-network
     restart: unless-stopped
@@ -39,8 +39,8 @@ services:
     ports:
       - "2112:2112"   # Prometheus метрики клиента
     environment:
-      - QUICK_CLIENT_ADDR=quic-server:9000
-      - QUICK_PROMETHEUS_CLIENT_PORT=2112
+      - QUIC_CLIENT_ADDR=quic-server:9000
+      - QUIC_PROMETHEUS_CLIENT_PORT=2112
     depends_on:
       quic-server:
         condition: service_healthy

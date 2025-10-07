@@ -1,6 +1,6 @@
-// 2GC CloudBridge QUICK testing - Dashboard JavaScript
+// 2GC CloudBridge QUIC testing - Dashboard JavaScript
 
-class QuickTestDashboard {
+class QUICTestDashboard {
     constructor() {
         this.isRunning = false;
         this.metrics = {};
@@ -188,5 +188,5 @@ class QuickTestDashboard {
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    new QuickTestDashboard();
+    new QUICTestDashboard();
 });

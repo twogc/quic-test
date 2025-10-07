@@ -46,9 +46,36 @@ go run main.go --mode=test
 - `--emulate-latency` — дополнительная задержка перед отправкой пакета (например, 20ms)
 - `--emulate-dup` — вероятность дублирования пакета (0..1)
 
+## SLA проверки
+- `--sla-rtt-p95` — максимальный RTT p95 (например, 100ms)
+- `--sla-loss` — максимальная потеря пакетов (0..1, например, 0.01 для 1%)
+- `--sla-throughput` — минимальная пропускная способность (KB/s)
+- `--sla-errors` — максимальное количество ошибок
+
+## QUIC тюнинг
+- `--cc` — алгоритм управления перегрузкой: cubic, bbr, reno
+- `--max-idle-timeout` — максимальное время простоя соединения
+- `--handshake-timeout` — таймаут handshake
+- `--keep-alive` — интервал keep-alive
+- `--max-streams` — максимальное количество потоков
+- `--max-stream-data` — максимальный размер данных потока
+- `--enable-0rtt` — включить 0-RTT
+- `--enable-key-update` — включить key update
+- `--enable-datagrams` — включить datagrams
+- `--max-incoming-streams` — максимальное количество входящих потоков
+- `--max-incoming-uni-streams` — максимальное количество входящих unidirectional потоков
+
+## Тестовые сценарии
+- `--scenario` — предустановленный сценарий: wifi, lte, sat, dc-eu, ru-eu, loss-burst, reorder
+- `--list-scenarios` — показать список доступных сценариев
+
+## Сетевые профили
+- `--network-profile` — сетевой профиль: wifi, lte, 5g, satellite, ethernet, fiber, datacenter
+- `--list-profiles` — показать список доступных сетевых профилей
+
 ## Расширенные возможности
 - **Расширенные метрики:**
-  - Percentile latency (p50, p95, p99), jitter, packet loss, retransmits, handshake time, session resumption, 0-RTT/1-RTT, flow control, key update, out-of-order, error breakdown.
+  - Percentile latency (p50, p95, p99, p999), jitter, packet loss, retransmits, handshake time, session resumption, 0-RTT/1-RTT, flow control, key update, out-of-order, error breakdown.
 - **Временные ряды:**
   - Для latency, throughput, packet loss, retransmits, handshake time и др.
 - **ASCII-графики:**
@@ -58,13 +85,55 @@ go run main.go --mode=test
 - **Эмуляция плохих сетей:**
   - Задержки, потери, дублирование пакетов (см. параметры выше).
 - **Интеграция с CI/CD:**
-  - JSON-отчёты, exit code по SLA.
+  - JSON-отчёты с версионированной схемой, exit code по SLA.
 - **Prometheus:**
   - Экспорт live-метрик для мониторинга.
+- **SLA проверки:**
+  - Автоматическая проверка соответствия метрик SLA требованиям с exit code.
+- **QUIC тюнинг:**
+  - Настройка алгоритмов управления перегрузкой, таймаутов, потоков, 0-RTT, key update, datagrams.
+- **Тестовые сценарии:**
+  - Предустановленные сценарии для различных типов сетей (WiFi, LTE, спутниковая связь, дата-центры).
+- **Сетевые профили:**
+  - Реалистичные профили сетей с конкретными значениями RTT, jitter, loss, bandwidth.
+- **Веб-дашборд:**
+  - REST API, Server-Sent Events для real-time обновлений, встроенные статические файлы.
 
-## Пример запуска с эмуляцией плохой сети
+## Примеры использования
+
+### Базовый тест с SLA проверками
 ```
-go run main.go --mode=client --addr=127.0.0.1:9000 --connections=2 --streams=4 --packet-size=1200 --rate=200 --emulate-loss=0.05 --emulate-latency=20ms --emulate-dup=0.01 --report=report.md
+go run main.go --mode=test --sla-rtt-p95=100ms --sla-loss=0.01 --sla-throughput=50 --report=report.json --report-format=json
+```
+
+### Тест с QUIC тюнингом
+```
+go run main.go --mode=test --cc=bbr --enable-0rtt --enable-datagrams --max-streams=100 --keep-alive=30s
+```
+
+### Тест с предустановленным сценарием
+```
+go run main.go --scenario=wifi --report=wifi-test.md
+```
+
+### Тест с сетевым профилем
+```
+go run main.go --network-profile=lte --report=lte-test.json --report-format=json
+```
+
+### Запуск веб-дашборда
+```
+go run cmd/dashboard/dashboard.go --addr=:9990
+```
+
+### Список доступных сценариев
+```
+go run main.go --list-scenarios
+```
+
+### Список сетевых профилей
+```
+go run main.go --list-profiles
 ```
 
 ## Поведение по умолчанию

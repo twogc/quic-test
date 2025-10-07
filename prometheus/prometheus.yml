@@ -1,4 +1,4 @@
-# Prometheus конфигурация для 2GC CloudBridge QUICK testing
+# Prometheus конфигурация для 2GC CloudBridge QUIC testing
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
