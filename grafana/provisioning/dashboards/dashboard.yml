@@ -1,7 +1,7 @@
 apiVersion: 1
 
 providers:
-  - name: 'default'
+  - name: '2GC Network Protocol Suite'
     orgId: 1
     folder: ''
     type: file

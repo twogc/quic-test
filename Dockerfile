@@ -2,7 +2,7 @@
 # Сборка всех компонентов в одном образе
 
 # Этап 1: Сборка
-FROM golang:1.21-alpine AS builder
+FROM golang:1.25.1-alpine AS builder
 
 # Установка зависимостей
 RUN apk add --no-cache git make

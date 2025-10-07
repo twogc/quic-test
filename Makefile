@@ -36,6 +36,24 @@ build: clean ## Собрать все бинарные файлы
 	@go build -o $(BUILD_DIR)/$(SERVER_BINARY) ./cmd/quic-server
 	@echo "$(GREEN)Сборка завершена! Файлы в $(BUILD_DIR)/$(NC)"
 
+build-server: ## Собрать только сервер
+	@echo "$(GREEN)Сборка QUIC сервера...$(NC)"
+	@mkdir -p $(BUILD_DIR)
+	@go build -o $(BUILD_DIR)/$(SERVER_BINARY) ./cmd/quic-server
+	@echo "$(GREEN)Сервер собран: $(BUILD_DIR)/$(SERVER_BINARY)$(NC)"
+
+build-client: ## Собрать только клиент
+	@echo "$(GREEN)Сборка QUIC клиента...$(NC)"
+	@mkdir -p $(BUILD_DIR)
+	@go build -o $(BUILD_DIR)/$(CLIENT_BINARY) ./cmd/quic-client
+	@echo "$(GREEN)Клиент собран: $(BUILD_DIR)/$(CLIENT_BINARY)$(NC)"
+
+build-tui: ## Собрать только TUI
+	@echo "$(GREEN)Сборка TUI дашборда...$(NC)"
+	@mkdir -p $(BUILD_DIR)
+	@go build -o $(BUILD_DIR)/tui ./cmd/tui
+	@echo "$(GREEN)TUI собран: $(BUILD_DIR)/tui$(NC)"
+
 clean: ## Очистить собранные файлы
 	@echo "$(YELLOW)Очистка...$(NC)"
 	@rm -rf $(BUILD_DIR)

@@ -85,12 +85,12 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention.time=200h'
       - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
     networks:
       - quck-network
     restart: unless-stopped
-    depends_on:
-      - quic-server
-      - quic-client
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # Grafana для визуализации
   grafana:
