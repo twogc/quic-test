@@ -2,7 +2,7 @@
 
 ## Обзор
 
-Программа QUIC Testing Tool использует файл `tag.txt` для хранения версии. Версия автоматически читается из этого файла при запуске программы.
+Программа 2GC Network Protocol Suite использует файл `tag.txt` для хранения версии. Версия автоматически читается из этого файла при запуске программы.
 
 ## Файл tag.txt
 
@@ -96,7 +96,7 @@ if err != nil {
 
 // Получить полную информацию о версии
 versionInfo := internal.GetVersionInfo()
-fmt.Println(versionInfo) // "QUIC Testing Tool v1.2.3"
+fmt.Println(versionInfo) // "2GC Network Protocol Suite v1.2.3"
 
 // Вывести версию
 internal.PrintVersion()

@@ -1,7 +1,15 @@
 
-# 2GC CloudBridge QUIC testing
+# 2GC Network Protocol Suite
 
-Нагрузочный тестер и анализатор для QUIC + TLS 1.3
+Комплексная платформа для тестирования и анализа сетевых протоколов: QUIC, MASQUE, ICE/STUN/TURN и других
+
+## Поддерживаемые протоколы
+
+- **QUIC** - Быстрый и надежный транспортный протокол
+- **MASQUE** - Протокол для туннелирования и проксирования
+- **ICE/STUN/TURN** - Протоколы для NAT traversal и P2P соединений
+- **TLS 1.3** - Современная криптография для безопасных соединений
+- **HTTP/3** - HTTP поверх QUIC
 
 [![Смотреть демо-видео](https://customer-aedqzjrbponeadcg.cloudflarestream.com/d31af3803090bcb58597de9fe685a746/thumbnails/thumbnail.jpg)](https://customer-aedqzjrbponeadcg.cloudflarestream.com/d31af3803090bcb58597de9fe685a746/watch)
 
@@ -11,25 +19,42 @@
 [![Go Version](https://img.shields.io/badge/Go-1.25-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
-## Запуск
+## Режимы работы
 
-### Сервер
-```
+### QUIC тестирование
+```bash
+# Сервер
 go run main.go --mode=server --addr=:9000
-```
 
-### Клиент
-```
+# Клиент
 go run main.go --mode=client --addr=127.0.0.1:9000 --connections=2 --streams=4 --packet-size=1200 --rate=100 --report=report.md --report-format=md --pattern=random
-```
 
-### Тест (сервер+клиент)
-```
+# Полный тест (сервер+клиент)
 go run main.go --mode=test
 ```
 
+### MASQUE тестирование
+```bash
+go run main.go --mode=masque --masque-server=localhost:8443 --masque-targets=8.8.8.8:53,1.1.1.1:53
+```
+
+### ICE/STUN/TURN тестирование
+```bash
+go run main.go --mode=ice --ice-stun=stun.l.google.com:19302 --ice-turn=turn.example.com:3478
+```
+
+### Веб-интерфейс
+```bash
+go run main.go --mode=dashboard
+```
+
+### Расширенное тестирование
+```bash
+go run main.go --mode=enhanced
+```
+
 ## Описание флагов
-- `--mode` — режим работы: `server`, `client`, `test` (по умолчанию `test`)
+- `--mode` — режим работы: `server`, `client`, `test`, `dashboard`, `masque`, `ice`, `enhanced` (по умолчанию `test`)
 - `--addr` — адрес для подключения или прослушивания (по умолчанию `:9000`)
 - `--connections` — количество QUIC-соединений (по умолчанию 1)
 - `--streams` — количество потоков на соединение (по умолчанию 1)

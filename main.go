@@ -18,10 +18,10 @@ func main() {
 	// Добавляем флаг --version
 	version := flag.Bool("version", false, "Показать версию программы")
 	
-	fmt.Println("\033[1;36m==============================\033[0m")
-	fmt.Println("\033[1;36m  2GC CloudBridge QUIC testing\033[0m")
-	fmt.Println("\033[1;36m==============================\033[0m")
-	fmt.Println("Тестирование производительности и стабильности QUIC-протокола для CloudBridge 2GC")
+	fmt.Println("\033[1;36m==========================================\033[0m")
+	fmt.Println("\033[1;36m    2GC Network Protocol Suite\033[0m")
+	fmt.Println("\033[1;36m==========================================\033[0m")
+	fmt.Println("Комплексное тестирование QUIC, MASQUE, ICE/STUN/TURN и других сетевых протоколов")
 	mode := flag.String("mode", "test", "Режим: server | client | test")
 	addr := flag.String("addr", ":9000", "Адрес для подключения или прослушивания")
 	streams := flag.Int("streams", 1, "Количество потоков на соединение")

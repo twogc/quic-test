@@ -142,9 +142,9 @@ func ShowHelp() {
 	// Показываем версию
 	version, err := internal.GetVersion()
 	if err == nil {
-		fmt.Printf("QUIC Testing Tool v%s - Расширенное тестирование QUIC протокола\n", version)
+		fmt.Printf("2GC Network Protocol Suite v%s - Комплексное тестирование сетевых протоколов\n", version)
 	} else {
-		fmt.Println("QUIC Testing Tool - Расширенное тестирование QUIC протокола")
+		fmt.Println("2GC Network Protocol Suite - Комплексное тестирование сетевых протоколов")
 	}
 	fmt.Println()
 	fmt.Println("Использование:")

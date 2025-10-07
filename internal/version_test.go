@@ -119,7 +119,7 @@ func TestGetVersionInfo(t *testing.T) {
 
 	// Тестируем получение информации о версии
 	versionInfo := GetVersionInfo()
-	expected := "QUIC Testing Tool v2.0.0"
+	expected := "2GC Network Protocol Suite v2.0.0"
 	if versionInfo != expected {
 		t.Errorf("Expected '%s', got '%s'", expected, versionInfo)
 	}

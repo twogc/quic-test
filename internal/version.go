@@ -51,15 +51,15 @@ func GetVersion() (string, error) {
 func GetVersionInfo() string {
 	version, err := GetVersion()
 	if err != nil {
-		return fmt.Sprintf("QUIC Testing Tool (version: unknown, error: %v)", err)
+		return fmt.Sprintf("2GC Network Protocol Suite (version: unknown, error: %v)", err)
 	}
 	
 	// Если версия уже начинается с "v", не добавляем еще один
 	if len(version) > 0 && version[0] == 'v' {
-		return fmt.Sprintf("QUIC Testing Tool %s", version)
+		return fmt.Sprintf("2GC Network Protocol Suite %s", version)
 	}
 	
-	return fmt.Sprintf("QUIC Testing Tool v%s", version)
+	return fmt.Sprintf("2GC Network Protocol Suite v%s", version)
 }
 
 // PrintVersion выводит информацию о версии

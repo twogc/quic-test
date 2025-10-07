@@ -1,8 +1,8 @@
-# QUIC Test API Documentation
+# 2GC Network Protocol Suite API Documentation
 
 ## Overview
 
-The QUIC Test API provides REST endpoints for managing QUIC performance tests, monitoring metrics, and generating reports. The API is designed to be simple, RESTful, and easy to integrate with monitoring systems.
+The 2GC Network Protocol Suite API provides REST endpoints for managing network protocol performance tests (QUIC, MASQUE, ICE/STUN/TURN), monitoring metrics, and generating reports. The API is designed to be simple, RESTful, and easy to integrate with monitoring systems.
 
 ## Base URL
 
@@ -44,7 +44,7 @@ Get the current status of the testing system.
 
 ### Run Test
 
-Start a new QUIC performance test.
+Start a new network protocol performance test.
 
 **POST** `/run-test`
 
