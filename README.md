@@ -1,9 +1,8 @@
-
 # 2GC Network Protocol Suite
 
 A comprehensive platform for testing and analyzing network protocols: QUIC, MASQUE, ICE/STUN/TURN and others
 
-## 🚀 Features
+## Features
 
 - **QUIC Protocol Testing** - Advanced QUIC implementation with experimental features
 - **MASQUE Protocol Support** - Tunneling and proxying capabilities  
@@ -14,15 +13,15 @@ A comprehensive platform for testing and analyzing network protocols: QUIC, MASQ
 - **Real-time Monitoring** - Prometheus metrics and Grafana dashboards
 - **Comprehensive Testing** - Automated test matrix and regression testing
 
-## Поддерживаемые протоколы
+## Supported Protocols
 
-- **QUIC** - Быстрый и надежный транспортный протокол
-- **MASQUE** - Протокол для туннелирования и проксирования
-- **ICE/STUN/TURN** - Протоколы для NAT traversal и P2P соединений
-- **TLS 1.3** - Современная криптография для безопасных соединений
-- **HTTP/3** - HTTP поверх QUIC
+- **QUIC** - Fast and reliable transport protocol
+- **MASQUE** - Protocol for tunneling and proxying
+- **ICE/STUN/TURN** - Protocols for NAT traversal and P2P connections
+- **TLS 1.3** - Modern cryptography for secure connections
+- **HTTP/3** - HTTP over QUIC
 
-[![Смотреть демо-видео](https://customer-aedqzjrbponeadcg.cloudflarestream.com/d31af3803090bcb58597de9fe685a746/thumbnails/thumbnail.jpg)](https://customer-aedqzjrbponeadcg.cloudflarestream.com/d31af3803090bcb58597de9fe685a746/watch)
+[![Watch demo video](https://customer-aedqzjrbponeadcg.cloudflarestream.com/d31af3803090bcb58597de9fe685a746/thumbnails/thumbnail.jpg)](https://customer-aedqzjrbponeadcg.cloudflarestream.com/d31af3803090bcb58597de9fe685a746/watch)
 
 [![Build](https://github.com/twogc/quic-test/workflows/CI/badge.svg)](https://github.com/twogc/quic-test/actions)
 [![Lint](https://github.com/twogc/quic-test/workflows/Lint/badge.svg)](https://github.com/twogc/quic-test/actions)
@@ -30,7 +29,7 @@ A comprehensive platform for testing and analyzing network protocols: QUIC, MASQ
 [![Go Version](https://img.shields.io/badge/Go-1.25-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
-## 🛠️ Usage
+## Usage
 
 ### QUIC Testing
 ```bash
@@ -71,160 +70,162 @@ go run main.go --mode=ice --ice-stun=stun.l.google.com:19302 --ice-turn=turn.exa
 go run main.go --mode=dashboard
 ```
 
-### Расширенное тестирование
+### Enhanced Testing
 ```bash
 go run main.go --mode=enhanced
 ```
 
-## Описание флагов
-- `--mode` — режим работы: `server`, `client`, `test`, `dashboard`, `masque`, `ice`, `enhanced` (по умолчанию `test`)
-- `--addr` — адрес для подключения или прослушивания (по умолчанию `:9000`)
-- `--connections` — количество QUIC-соединений (по умолчанию 1)
-- `--streams` — количество потоков на соединение (по умолчанию 1)
-- `--duration` — длительность теста (0 — до ручного завершения, по умолчанию 0)
-- `--packet-size` — размер пакета в байтах (по умолчанию 1200)
-- `--rate` — частота отправки пакетов в секунду (по умолчанию 100, поддерживает ramp-up/ramp-down)
-- `--report` — путь к файлу для отчёта (опционально)
-- `--report-format` — формат отчёта: `csv`, `md`, `json` (по умолчанию `md`)
-- `--cert` — путь к TLS-сертификату (опционально)
-- `--key` — путь к TLS-ключу (опционально)
-- `--pattern` — шаблон данных: `random`, `zeroes`, `increment` (по умолчанию `random`)
-- `--no-tls` — отключить TLS (для тестов)
-- `--prometheus` — экспортировать метрики Prometheus на `/metrics`
-- `--emulate-loss` — вероятность потери пакета (0..1, например 0.05 для 5%)
-- `--emulate-latency` — дополнительная задержка перед отправкой пакета (например, 20ms)
-- `--emulate-dup` — вероятность дублирования пакета (0..1)
+## Command Line Options
 
-## SLA проверки
-- `--sla-rtt-p95` — максимальный RTT p95 (например, 100ms)
-- `--sla-loss` — максимальная потеря пакетов (0..1, например, 0.01 для 1%)
-- `--sla-throughput` — минимальная пропускная способность (KB/s)
-- `--sla-errors` — максимальное количество ошибок
+- `--mode` — operation mode: `server`, `client`, `test`, `dashboard`, `masque`, `ice`, `enhanced` (default: `test`)
+- `--addr` — address for connection or listening (default: `:9000`)
+- `--connections` — number of QUIC connections (default: 1)
+- `--streams` — number of streams per connection (default: 1)
+- `--duration` — test duration (0 — until manual termination, default: 0)
+- `--packet-size` — packet size in bytes (default: 1200)
+- `--rate` — packet sending rate per second (default: 100, supports ramp-up/ramp-down)
+- `--report` — path to report file (optional)
+- `--report-format` — report format: `csv`, `md`, `json` (default: `md`)
+- `--cert` — path to TLS certificate (optional)
+- `--key` — path to TLS key (optional)
+- `--pattern` — data pattern: `random`, `zeroes`, `increment` (default: `random`)
+- `--no-tls` — disable TLS (for testing)
+- `--prometheus` — export Prometheus metrics on `/metrics`
+- `--emulate-loss` — packet loss probability (0..1, e.g. 0.05 for 5%)
+- `--emulate-latency` — additional delay before sending packet (e.g. 20ms)
+- `--emulate-dup` — packet duplication probability (0..1)
 
-## QUIC тюнинг
-- `--cc` — алгоритм управления перегрузкой: cubic, bbr, reno
-- `--max-idle-timeout` — максимальное время простоя соединения
-- `--handshake-timeout` — таймаут handshake
-- `--keep-alive` — интервал keep-alive
-- `--max-streams` — максимальное количество потоков
-- `--max-stream-data` — максимальный размер данных потока
-- `--enable-0rtt` — включить 0-RTT
-- `--enable-key-update` — включить key update
-- `--enable-datagrams` — включить datagrams
-- `--max-incoming-streams` — максимальное количество входящих потоков
-- `--max-incoming-uni-streams` — максимальное количество входящих unidirectional потоков
+## SLA Checks
+- `--sla-rtt-p95` — maximum RTT p95 (e.g. 100ms)
+- `--sla-loss` — maximum packet loss (0..1, e.g. 0.01 for 1%)
+- `--sla-throughput` — minimum throughput (KB/s)
+- `--sla-errors` — maximum number of errors
 
-## Тестовые сценарии
-- `--scenario` — предустановленный сценарий: wifi, lte, sat, dc-eu, ru-eu, loss-burst, reorder
-- `--list-scenarios` — показать список доступных сценариев
+## QUIC Tuning
+- `--cc` — congestion control algorithm: cubic, bbr, reno
+- `--max-idle-timeout` — maximum connection idle timeout
+- `--handshake-timeout` — handshake timeout
+- `--keep-alive` — keep-alive interval
+- `--max-streams` — maximum number of streams
+- `--max-stream-data` — maximum stream data size
+- `--enable-0rtt` — enable 0-RTT
+- `--enable-key-update` — enable key update
+- `--enable-datagrams` — enable datagrams
+- `--max-incoming-streams` — maximum number of incoming streams
+- `--max-incoming-uni-streams` — maximum number of incoming unidirectional streams
 
-## Сетевые профили
-- `--network-profile` — сетевой профиль: wifi, lte, 5g, satellite, ethernet, fiber, datacenter
-- `--list-profiles` — показать список доступных сетевых профилей
+## Test Scenarios
+- `--scenario` — predefined scenario: wifi, lte, sat, dc-eu, ru-eu, loss-burst, reorder
+- `--list-scenarios` — show list of available scenarios
 
-## Расширенные возможности
-- **Расширенные метрики:**
+## Network Profiles
+- `--network-profile` — network profile: wifi, lte, 5g, satellite, ethernet, fiber, datacenter
+- `--list-profiles` — show list of available network profiles
+
+## Advanced Features
+
+- **Extended Metrics:**
   - Percentile latency (p50, p95, p99, p999), jitter, packet loss, retransmits, handshake time, session resumption, 0-RTT/1-RTT, flow control, key update, out-of-order, error breakdown.
-- **Временные ряды:**
-  - Для latency, throughput, packet loss, retransmits, handshake time и др.
-- **ASCII-графики:**
-  - В отчёте Markdown для всех ключевых метрик (asciigraph).
+- **Time Series:**
+  - For latency, throughput, packet loss, retransmits, handshake time and others.
+- **ASCII Charts:**
+  - In Markdown reports for all key metrics (asciigraph).
 - **Ramp-up/ramp-down:**
-  - Скорость отправки пакетов динамически увеличивается и уменьшается для стресс-тестирования.
-- **Эмуляция плохих сетей:**
-  - Задержки, потери, дублирование пакетов (см. параметры выше).
-- **Интеграция с CI/CD:**
-  - JSON-отчёты с версионированной схемой, exit code по SLA.
+  - Packet sending rate dynamically increases and decreases for stress testing.
+- **Bad Network Emulation:**
+  - Delays, losses, packet duplication (see parameters above).
+- **CI/CD Integration:**
+  - JSON reports with versioned schema, exit code by SLA.
 - **Prometheus:**
-  - Экспорт live-метрик для мониторинга.
-- **SLA проверки:**
-  - Автоматическая проверка соответствия метрик SLA требованиям с exit code.
-- **QUIC тюнинг:**
-  - Настройка алгоритмов управления перегрузкой, таймаутов, потоков, 0-RTT, key update, datagrams.
-- **Тестовые сценарии:**
-  - Предустановленные сценарии для различных типов сетей (WiFi, LTE, спутниковая связь, дата-центры).
-- **Сетевые профили:**
-  - Реалистичные профили сетей с конкретными значениями RTT, jitter, loss, bandwidth.
-- **Веб-дашборд:**
-  - REST API, Server-Sent Events для real-time обновлений, встроенные статические файлы.
+  - Live metrics export for monitoring.
+- **SLA Checks:**
+  - Automatic verification of metrics compliance with SLA requirements with exit code.
+- **QUIC Tuning:**
+  - Configuration of congestion control algorithms, timeouts, streams, 0-RTT, key update, datagrams.
+- **Test Scenarios:**
+  - Predefined scenarios for different network types (WiFi, LTE, satellite, datacenters).
+- **Network Profiles:**
+  - Realistic network profiles with specific RTT, jitter, loss, bandwidth values.
+- **Web Dashboard:**
+  - REST API, Server-Sent Events for real-time updates, embedded static files.
 
-## Примеры использования
+## Usage Examples
 
-### Базовый тест с SLA проверками
+### Basic Test with SLA Checks
 ```
 go run main.go --mode=test --sla-rtt-p95=100ms --sla-loss=0.01 --sla-throughput=50 --report=report.json --report-format=json
 ```
 
-### Тест с QUIC тюнингом
+### Test with QUIC Tuning
 ```
 go run main.go --mode=test --cc=bbr --enable-0rtt --enable-datagrams --max-streams=100 --keep-alive=30s
 ```
 
-### Тест с предустановленным сценарием
+### Test with Predefined Scenario
 ```
 go run main.go --scenario=wifi --report=wifi-test.md
 ```
 
-### Тест с сетевым профилем
+### Test with Network Profile
 ```
 go run main.go --network-profile=lte --report=lte-test.json --report-format=json
 ```
 
-### Запуск веб-дашборда
+### Start Web Dashboard
 ```
 go run cmd/dashboard/dashboard.go --addr=:9990
 ```
 
-### Список доступных сценариев
+### List Available Scenarios
 ```
 go run main.go --list-scenarios
 ```
 
-### Список сетевых профилей
+### List Network Profiles
 ```
 go run main.go --list-profiles
 ```
 
-## Сетевые пресеты
+## Network Presets
 
-| Пресет | RTT | Jitter | Loss | Bandwidth | Ожидаемый P95 | Описание |
-|--------|-----|--------|------|-----------|---------------|----------|
-| `wifi` | 20ms | 5ms | 0.1% | 100 Mbps | 25-30ms | Домашний WiFi |
-| `lte` | 50ms | 15ms | 0.5% | 50 Mbps | 70-80ms | Мобильный LTE |
-| `satellite` | 600ms | 50ms | 1% | 10 Mbps | 650-700ms | Спутниковый интернет |
-| `datacenter` | 1ms | 0.1ms | 0% | 10 Gbps | 2-3ms | Локальная сеть ЦОД |
-| `eu-ru` | 80ms | 10ms | 0.2% | 1 Gbps | 90-100ms | Между континентами |
+| Preset | RTT | Jitter | Loss | Bandwidth | Expected P95 | Description |
+|--------|-----|--------|------|-----------|---------------|-------------|
+| `wifi` | 20ms | 5ms | 0.1% | 100 Mbps | 25-30ms | Home WiFi |
+| `lte` | 50ms | 15ms | 0.5% | 50 Mbps | 70-80ms | Mobile LTE |
+| `satellite` | 600ms | 50ms | 1% | 10 Mbps | 650-700ms | Satellite Internet |
+| `datacenter` | 1ms | 0.1ms | 0% | 10 Gbps | 2-3ms | Local Datacenter Network |
+| `eu-ru` | 80ms | 10ms | 0.2% | 1 Gbps | 90-100ms | Intercontinental |
 
-## Поведение по умолчанию
-- Если не указан `--duration`, тест продолжается до ручного завершения (Ctrl+C).
-- После завершения теста автоматически формируется и сохраняется отчёт в выбранном формате.
+## Default Behavior
+- If `--duration` is not specified, the test continues until manual termination (Ctrl+C).
+- After test completion, a report is automatically generated and saved in the selected format.
 
-## Примеры отчётов
-- Markdown, CSV, JSON — содержат параметры теста, агрегированные метрики, временные ряды, ASCII-графики, ошибки.
+## Report Examples
+- Markdown, CSV, JSON — contain test parameters, aggregated metrics, time series, ASCII charts, errors.
 
-## 🚀 Автоматические релизы
+## Automatic Releases
 
-QUIC Test использует автоматическую систему релизов через GitHub Actions.
+QUIC Test uses an automatic release system via GitHub Actions.
 
-### Быстрое обновление версии
+### Quick Version Update
 ```bash
-# Обновить версию до v1.2.3
+# Update version to v1.2.3
 ./scripts/update-version.sh v1.2.3
 
-# Зафиксировать и отправить
+# Commit and push
 git add tag.txt && git commit -m "chore: bump version to v1.2.3"
 git push origin main
 ```
 
-GitHub Actions автоматически:
-- ✅ Создаст Git тег
-- ✅ Соберет бинарники для всех платформ (Linux, Windows, macOS)
-- ✅ Создаст GitHub Release
-- ✅ Опубликует Docker образы
+GitHub Actions automatically:
+- ✅ Creates Git tag
+- ✅ Builds binaries for all platforms (Linux, Windows, macOS)
+- ✅ Creates GitHub Release
+- ✅ Publishes Docker images
 
-📋 **Подробнее**: [RELEASES.md](RELEASES.md)
+**More details**: [RELEASES.md](RELEASES.md)
 
-## 📚 Documentation
+## Documentation
 
 - [Deployment Guide](docs/deployment.md)
 - [API Documentation](docs/api.md)

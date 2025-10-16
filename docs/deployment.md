@@ -1,474 +1,721 @@
-# QUIC Test Deployment Guide
+# 2GC Network Protocol Suite - Deployment Guide
 
 ## Overview
 
-This guide covers various deployment options for the QUIC Test tool, from simple local development to production-ready containerized deployments.
+This guide covers deployment options for the 2GC Network Protocol Suite, including standalone, distributed, and cloud-native deployments.
 
-## Prerequisites
+## Quick Start
+
+### Prerequisites
 
 - Go 1.25 or later
-- Docker and Docker Compose (for containerized deployment)
-- Make (for build automation)
-- Git (for source code management)
+- Docker and Docker Compose (optional)
+- Kubernetes cluster (for distributed deployment)
 
-## Local Development
-
-### Quick Start
+### Standalone Deployment
 
 1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-org/quic-test.git
-   cd quic-test
-   ```
+```bash
+git clone https://github.com/twogc/quic-test.git
+cd quic-test
+```
 
-2. **Install dependencies**
-   ```bash
-   go mod download
-   ```
+2. **Build the application**
+```bash
+go build -o quic-test main.go
+```
 
-3. **Build the project**
-   ```bash
-   make build
-   ```
+3. **Run the server**
+```bash
+./quic-test --mode=server --addr=:9000
+```
 
-4. **Run tests**
-   ```bash
-   make test
-   ```
+4. **Run the client**
+```bash
+./quic-test --mode=client --addr=localhost:9000
+```
 
-5. **Start the dashboard**
-   ```bash
-   make run-dashboard
-   ```
+### Docker Deployment
 
-### Development Setup
+1. **Build Docker image**
+```bash
+docker build -t quic-test .
+```
 
-1. **Install development tools**
-   ```bash
-   make dev-setup
-   ```
+2. **Run with Docker Compose**
+```bash
+docker-compose up -d
+```
 
-2. **Run linting**
-   ```bash
-   make lint
-   ```
+3. **Access the dashboard**
+```bash
+open http://localhost:9990
+```
 
-3. **Run security checks**
-   ```bash
-   make vuln
-   ```
+## Docker Configuration
 
-## Docker Deployment
+### Dockerfile
 
-### Single Container
+```dockerfile
+FROM golang:1.25-alpine AS builder
 
-1. **Build the Docker image**
-   ```bash
-   docker build -t quic-test:latest .
-   ```
+WORKDIR /app
+COPY . .
+RUN go mod download
+RUN go build -o quic-test main.go
 
-2. **Run the container**
-   ```bash
-   docker run -p 9990:9990 -p 9000:9000 quic-test:latest
-   ```
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/quic-test .
+EXPOSE 9000 9990
+CMD ["./quic-test", "--mode=server", "--addr=:9000"]
+```
 
 ### Docker Compose
 
-1. **Start all services**
-   ```bash
-   docker-compose up -d
-   ```
+```yaml
+version: '3.8'
 
-2. **View logs**
-   ```bash
-   docker-compose logs -f
-   ```
+services:
+  quic-test-server:
+    build: .
+    ports:
+      - "9000:9000"
+      - "9990:9990"
+    environment:
+      - QUIC_TEST_MODE=server
+      - QUIC_TEST_ADDR=:9000
+      - QUIC_TEST_PROMETHEUS=true
+    volumes:
+      - ./config:/app/config
+      - ./reports:/app/reports
+    command: ["./quic-test", "--mode=server", "--addr=:9000", "--prometheus"]
 
-3. **Stop services**
-   ```bash
-   docker-compose down
-   ```
+  quic-test-client:
+    build: .
+    depends_on:
+      - quic-test-server
+    environment:
+      - QUIC_TEST_MODE=client
+      - QUIC_TEST_ADDR=quic-test-server:9000
+    command: ["./quic-test", "--mode=client", "--addr=quic-test-server:9000"]
 
-### Services Included
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
 
-- **quic-test**: Main application
-- **prometheus**: Metrics collection
-- **grafana**: Metrics visualization
-- **jaeger**: Distributed tracing (optional)
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+
+volumes:
+  grafana-storage:
+```
+
+## Kubernetes Deployment
+
+### Namespace
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: quic-test
+  labels:
+    name: quic-test
+```
+
+### ConfigMap
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quic-test-config
+  namespace: quic-test
+data:
+  config.yaml: |
+    server:
+      addr: ":9000"
+      tls:
+        enabled: true
+        cert: "/etc/tls/tls.crt"
+        key: "/etc/tls/tls.key"
+    monitoring:
+      prometheus:
+        enabled: true
+        port: 9990
+    scenarios:
+      - name: "wifi"
+        rtt: "20ms"
+        jitter: "5ms"
+        loss: "0.1%"
+        bandwidth: "100Mbps"
+      - name: "lte"
+        rtt: "50ms"
+        jitter: "15ms"
+        loss: "0.5%"
+        bandwidth: "50Mbps"
+```
+
+### Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quic-test-server
+  namespace: quic-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: quic-test-server
+  template:
+    metadata:
+      labels:
+        app: quic-test-server
+    spec:
+      containers:
+      - name: quic-test
+        image: quic-test:latest
+        ports:
+        - containerPort: 9000
+          name: quic
+        - containerPort: 9990
+          name: metrics
+        env:
+        - name: QUIC_TEST_MODE
+          value: "server"
+        - name: QUIC_TEST_ADDR
+          value: ":9000"
+        - name: QUIC_TEST_PROMETHEUS
+          value: "true"
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+        - name: tls
+          mountPath: /etc/tls
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9990
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 9990
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: quic-test-config
+      - name: tls
+        secret:
+          secretName: quic-test-tls
+```
+
+### Service
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: quic-test-server
+  namespace: quic-test
+spec:
+  selector:
+    app: quic-test-server
+  ports:
+  - name: quic
+    port: 9000
+    targetPort: 9000
+    protocol: UDP
+  - name: metrics
+    port: 9990
+    targetPort: 9990
+    protocol: TCP
+  type: ClusterIP
+```
+
+### Ingress
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quic-test-ingress
+  namespace: quic-test
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - quic-test.example.com
+    secretName: quic-test-tls
+  rules:
+  - host: quic-test.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: quic-test-server
+            port:
+              number: 9990
+```
 
 ## Production Deployment
 
-### Kubernetes
+### High Availability Setup
 
-1. **Create namespace**
-   ```bash
-   kubectl create namespace quic-test
-   ```
+1. **Load Balancer Configuration**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: quic-test-lb
+  namespace: quic-test
+spec:
+  type: LoadBalancer
+  selector:
+    app: quic-test-server
+  ports:
+  - name: quic
+    port: 9000
+    targetPort: 9000
+    protocol: UDP
+  - name: metrics
+    port: 9990
+    targetPort: 9990
+    protocol: TCP
+```
+
+2. **Horizontal Pod Autoscaler**
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: quic-test-hpa
+  namespace: quic-test
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: quic-test-server
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+```
+
+### Monitoring Setup
+
+1. **Prometheus Configuration**
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: quic-test
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    
+    scrape_configs:
+    - job_name: 'quic-test'
+      static_configs:
+      - targets: ['quic-test-server:9990']
+      scrape_interval: 5s
+      metrics_path: /metrics
+```
+
+2. **Grafana Dashboard**
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard
+  namespace: quic-test
+data:
+  dashboard.json: |
+    {
+      "dashboard": {
+        "title": "QUIC Test Dashboard",
+        "panels": [
+          {
+            "title": "RTT p95",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, quic_rtt_seconds)",
+                "legendFormat": "RTT p95"
+              }
+            ]
+          }
+        ]
+      }
+    }
+```
+
+### Security Configuration
+
+1. **Network Policies**
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: quic-test-netpol
+  namespace: quic-test
+spec:
+  podSelector:
+    matchLabels:
+      app: quic-test-server
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: quic-test
+    ports:
+    - protocol: UDP
+      port: 9000
+    - protocol: TCP
+      port: 9990
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090
+```
+
+2. **Pod Security Policy**
+```yaml
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: quic-test-psp
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  seLinux:
+    rule: 'RunAsAny'
+  fsGroup:
+    rule: 'RunAsAny'
+```
+
+## Cloud Deployment
+
+### AWS EKS
+
+1. **Create EKS cluster**
+```bash
+eksctl create cluster --name quic-test --region us-west-2 --nodegroup-name workers --node-type t3.medium --nodes 3
+```
 
 2. **Deploy application**
-   ```bash
-   kubectl apply -f k8s/
-   ```
+```bash
+kubectl apply -f k8s/
+```
 
-3. **Check deployment**
-   ```bash
-   kubectl get pods -n quic-test
-   ```
+3. **Configure load balancer**
+```bash
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: quic-test-alb
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+spec:
+  type: LoadBalancer
+  selector:
+    app: quic-test-server
+  ports:
+  - name: quic
+    port: 9000
+    targetPort: 9000
+    protocol: UDP
+EOF
+```
+
+### Google GKE
+
+1. **Create GKE cluster**
+```bash
+gcloud container clusters create quic-test --zone us-central1-a --num-nodes 3
+```
+
+2. **Deploy application**
+```bash
+kubectl apply -f k8s/
+```
+
+3. **Configure ingress**
+```bash
+kubectl apply -f - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quic-test-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: quic-test-ip
+spec:
+  rules:
+  - host: quic-test.example.com
+    http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: quic-test-server
+            port:
+              number: 9990
+EOF
+```
+
+### Azure AKS
+
+1. **Create AKS cluster**
+```bash
+az aks create --resource-group quic-test-rg --name quic-test --node-count 3 --enable-addons monitoring
+```
+
+2. **Deploy application**
+```bash
+kubectl apply -f k8s/
+```
+
+3. **Configure ingress**
+```bash
+kubectl apply -f - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quic-test-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - host: quic-test.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: quic-test-server
+            port:
+              number: 9990
+EOF
+```
+
+## Configuration
 
 ### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `QUIC_SERVER_ADDR` | QUIC server address | `:9000` |
-| `QUIC_DASHBOARD_ADDR` | Dashboard address | `:9990` |
-| `QUIC_PROMETHEUS_CLIENT_PORT` | Prometheus client port | `2112` |
-| `QUIC_PROMETHEUS_SERVER_PORT` | Prometheus server port | `2113` |
-| `QUIC_PPROF_ADDR` | Profiling address | `:6060` |
+| `QUIC_TEST_MODE` | Operation mode | `test` |
+| `QUIC_TEST_ADDR` | Server address | `:9000` |
+| `QUIC_TEST_PROMETHEUS` | Enable Prometheus | `false` |
+| `QUIC_TEST_TLS` | Enable TLS | `true` |
+| `QUIC_TEST_CERT` | TLS certificate path | `/etc/tls/tls.crt` |
+| `QUIC_TEST_KEY` | TLS key path | `/etc/tls/tls.key` |
+| `QUIC_TEST_LOG_LEVEL` | Log level | `info` |
+| `QUIC_TEST_CONFIG` | Config file path | `/app/config/config.yaml` |
 
-### Resource Requirements
-
-#### Minimum Requirements
-
-- **CPU**: 1 core
-- **Memory**: 512 MB
-- **Storage**: 1 GB
-
-#### Recommended Requirements
-
-- **CPU**: 2 cores
-- **Memory**: 2 GB
-- **Storage**: 10 GB
-
-#### High-Performance Requirements
-
-- **CPU**: 4+ cores
-- **Memory**: 8+ GB
-- **Storage**: 50+ GB SSD
-
-## Configuration
-
-### Test Configuration
-
-Create a configuration file `config.yaml`:
+### Configuration File
 
 ```yaml
 server:
   addr: ":9000"
-  prometheus: true
-  pprof_addr: ":6060"
+  tls:
+    enabled: true
+    cert: "/etc/tls/tls.crt"
+    key: "/etc/tls/tls.key"
+  quic:
+    max_idle_timeout: "30s"
+    handshake_timeout: "10s"
+    keep_alive: "30s"
+    max_streams: 100
+    max_stream_data: "1MB"
+    enable_0rtt: true
+    enable_key_update: true
+    enable_datagrams: true
 
-client:
-  connections: 2
-  streams: 4
-  packet_size: 1200
-  rate: 100
-  duration: "30s"
-
-dashboard:
-  addr: ":9990"
-  static_path: "./static"
-
-metrics:
+monitoring:
   prometheus:
     enabled: true
-    port: 2112
+    port: 9990
+    path: "/metrics"
   grafana:
     enabled: true
     port: 3000
 
-network:
-  emulate_loss: 0.01
-  emulate_latency: "10ms"
-  emulate_dup: 0.005
-```
-
-### Network Profiles
-
-Configure network profiles in `profiles.yaml`:
-
-```yaml
-profiles:
-  wifi:
+scenarios:
+  - name: "wifi"
     rtt: "20ms"
     jitter: "5ms"
-    loss: 0.02
-    bandwidth: 1000
-    duplication: 0.01
-
-  lte:
+    loss: "0.1%"
+    bandwidth: "100Mbps"
+  - name: "lte"
     rtt: "50ms"
     jitter: "15ms"
-    loss: 0.05
-    bandwidth: 2000
-    duplication: 0.02
+    loss: "0.5%"
+    bandwidth: "50Mbps"
 
-  datacenter:
-    rtt: "1ms"
-    jitter: "0.1ms"
-    loss: 0.0001
-    bandwidth: 100000
-    duplication: 0.0001
+sla:
+  rtt_p95: "50ms"
+  loss_rate: "1%"
+  throughput: "50Mbps"
+  errors: 0
 ```
-
-## Monitoring and Observability
-
-### Prometheus Configuration
-
-Create `prometheus/prometheus.yml`:
-
-```yaml
-global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
-
-scrape_configs:
-  - job_name: 'quic-test'
-    static_configs:
-      - targets: ['quic-test:2112', 'quic-test:2113']
-    scrape_interval: 5s
-    metrics_path: /metrics
-
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['localhost:9090']
-```
-
-### Grafana Dashboards
-
-Import the provided dashboard:
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d @grafana/dashboards/quic-test.json \
-  http://admin:admin@localhost:3000/api/dashboards/db
-```
-
-### Logging Configuration
-
-Configure structured logging:
-
-```yaml
-logging:
-  level: "info"
-  format: "json"
-  output: "stdout"
-  
-  fields:
-    service: "quic-test"
-    version: "1.0.0"
-    environment: "production"
-```
-
-## Security Considerations
-
-### Network Security
-
-1. **Firewall Rules**
-   ```bash
-   # Allow QUIC traffic
-   ufw allow 9000/udp
-   
-   # Allow dashboard access
-   ufw allow 9990/tcp
-   
-   # Allow Prometheus metrics
-   ufw allow 2112/tcp
-   ufw allow 2113/tcp
-   ```
-
-2. **TLS Configuration**
-   ```yaml
-   tls:
-     enabled: true
-     cert_file: "/etc/ssl/certs/quic-test.crt"
-     key_file: "/etc/ssl/private/quic-test.key"
-   ```
-
-### Authentication
-
-1. **API Authentication**
-   ```yaml
-   auth:
-     enabled: true
-     type: "bearer"
-     token: "your-secret-token"
-   ```
-
-2. **Dashboard Authentication**
-   ```yaml
-   dashboard:
-     auth:
-       enabled: true
-       username: "admin"
-       password: "secure-password"
-   ```
-
-## Performance Tuning
-
-### System Tuning
-
-1. **Network Buffer Sizes**
-   ```bash
-   echo 'net.core.rmem_max = 134217728' >> /etc/sysctl.conf
-   echo 'net.core.wmem_max = 134217728' >> /etc/sysctl.conf
-   sysctl -p
-   ```
-
-2. **File Descriptor Limits**
-   ```bash
-   echo '* soft nofile 65536' >> /etc/security/limits.conf
-   echo '* hard nofile 65536' >> /etc/security/limits.conf
-   ```
-
-### Application Tuning
-
-1. **Goroutine Limits**
-   ```go
-   runtime.GOMAXPROCS(runtime.NumCPU())
-   ```
-
-2. **Memory Management**
-   ```go
-   runtime.GC()
-   ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Port Already in Use**
-   ```bash
-   # Find process using port
-   lsof -i :9000
-   
-   # Kill process
-   kill -9 <PID>
-   ```
-
-2. **Permission Denied**
-   ```bash
-   # Check file permissions
-   ls -la /path/to/quic-test
-   
-   # Fix permissions
-   chmod +x /path/to/quic-test
-   ```
-
-3. **Memory Issues**
-   ```bash
-   # Check memory usage
-   free -h
-   
-   # Monitor memory
-   top -p $(pgrep quic-test)
-   ```
-
-### Debug Mode
-
-Enable debug logging:
-
+1. **Port conflicts**
 ```bash
-export LOG_LEVEL=debug
-./quic-test --mode=test --debug
+# Check if ports are in use
+netstat -tulpn | grep :9000
+netstat -tulpn | grep :9990
 ```
 
-### Profiling
-
-Enable profiling:
-
+2. **TLS certificate issues**
 ```bash
-./quic-test --mode=test --pprof-addr=:6060
+# Generate self-signed certificate
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
 ```
 
-Access profiling data:
-
+3. **Kubernetes deployment issues**
 ```bash
-go tool pprof http://localhost:6060/debug/pprof/profile
+# Check pod status
+kubectl get pods -n quic-test
+
+# Check logs
+kubectl logs -f deployment/quic-test-server -n quic-test
+
+# Check events
+kubectl get events -n quic-test
 ```
 
-## Backup and Recovery
+### Performance Tuning
 
-### Configuration Backup
-
+1. **System limits**
 ```bash
-# Backup configuration
-tar -czf quic-test-config-$(date +%Y%m%d).tar.gz config/ profiles/
+# Increase file descriptor limits
+ulimit -n 65536
 
-# Restore configuration
-tar -xzf quic-test-config-20240115.tar.gz
+# Increase network buffer sizes
+echo 'net.core.rmem_max = 16777216' >> /etc/sysctl.conf
+echo 'net.core.wmem_max = 16777216' >> /etc/sysctl.conf
+sysctl -p
 ```
 
-### Data Backup
-
-```bash
-# Backup metrics data
-docker exec quic-test-prometheus tar -czf /backup/prometheus-$(date +%Y%m%d).tar.gz /prometheus
-
-# Backup Grafana data
-docker exec quic-test-grafana tar -czf /backup/grafana-$(date +%Y%m%d).tar.gz /var/lib/grafana
+2. **Kubernetes resource limits**
+```yaml
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "500m"
+  limits:
+    memory: "1Gi"
+    cpu: "1000m"
 ```
 
-## Updates and Maintenance
+### Monitoring and Alerting
 
-### Rolling Updates
-
-1. **Update application**
-   ```bash
-   docker-compose pull
-   docker-compose up -d
-   ```
-
-2. **Verify deployment**
-   ```bash
-   docker-compose ps
-   curl http://localhost:9990/status
-   ```
-
-### Health Checks
-
-```bash
-# Application health
-curl http://localhost:9990/status
-
-# Metrics health
-curl http://localhost:2112/metrics
-
-# Dashboard health
-curl http://localhost:9990/
+1. **Prometheus alerts**
+```yaml
+groups:
+- name: quic-test
+  rules:
+  - alert: HighRTT
+    expr: histogram_quantile(0.95, quic_rtt_seconds) > 0.05
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High RTT detected"
+      description: "RTT p95 is {{ $value }}s"
 ```
 
-## Support and Maintenance
-
-### Log Analysis
-
-```bash
-# Application logs
-docker-compose logs quic-test
-
-# System logs
-journalctl -u quic-test
-
-# Error logs
-grep -i error /var/log/quic-test.log
+2. **Grafana dashboards**
+```json
+{
+  "dashboard": {
+    "title": "QUIC Test Performance",
+    "panels": [
+      {
+        "title": "RTT Distribution",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, quic_rtt_seconds)",
+            "legendFormat": "RTT p95"
+          }
+        ]
+      }
+    ]
+  }
+}
 ```
-
-### Performance Monitoring
-
-```bash
-# CPU usage
-top -p $(pgrep quic-test)
-
-# Memory usage
-ps aux | grep quic-test
-
-# Network usage
-netstat -i
-```
-
-### Maintenance Schedule
-
-- **Daily**: Check logs for errors
-- **Weekly**: Review performance metrics
-- **Monthly**: Update dependencies
-- **Quarterly**: Security audit
