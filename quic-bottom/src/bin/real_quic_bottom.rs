@@ -650,6 +650,7 @@ async fn start_http_server(
     current_metrics: Arc<Mutex<Option<RealQUICMetrics>>>,
     metrics_history: Arc<Mutex<Vec<RealQUICMetrics>>>,
 ) {
+    let current_metrics_post = Arc::clone(&current_metrics);
     let metrics_filter = warp::path("api")
         .and(warp::path("metrics"))
         .and(warp::post())
@@ -657,7 +658,7 @@ async fn start_http_server(
         .map(move |metrics: RealQUICMetrics| {
             // Update current metrics
             {
-                let mut current = current_metrics.lock().unwrap();
+                let mut current = current_metrics_post.lock().unwrap();
                 *current = Some(metrics.clone());
             }
             
@@ -678,11 +679,12 @@ async fn start_http_server(
     let health_filter = warp::path("health")
         .map(|| warp::reply::json(&serde_json::json!({"status": "healthy"})));
 
+    let current_metrics_get = Arc::clone(&current_metrics);
     let current_filter = warp::path("api")
         .and(warp::path("current"))
         .and(warp::get())
         .map(move || {
-            let current = current_metrics.lock().unwrap();
+            let current = current_metrics_get.lock().unwrap();
             warp::reply::json(&*current)
         });
 

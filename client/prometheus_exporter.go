@@ -97,7 +97,7 @@ func NewAdvancedPrometheusExporterWithRegistry(registry prometheus.Registerer) *
 	registry.MustRegister(testTypeCounters, dataPatternHistograms, connectionMetrics, streamMetrics)
 	
 	return &AdvancedPrometheusExporter{
-		metrics: metrics.NewPrometheusMetricsWithRegistry(registry),
+		metrics: metrics.NewPrometheusMetrics(),
 		clientMetrics: &ClientMetrics{
 			StartTime: time.Now(),
 		},

@@ -2,18 +2,18 @@
 
 A comprehensive platform for testing and analyzing network protocols: QUIC, MASQUE, ICE/STUN/TURN and others with **real-time professional visualizations**.
 
-## 🚀 New: Real-time QUIC Bottom Integration
+## New: Real-time QUIC Bottom Integration
 
 **Professional TUI visualizations** based on the popular `bottom` system monitor, providing real-time QUIC metrics with advanced analytics, network simulation, security testing, and cloud deployment monitoring.
 
-### ✨ Key Features
+### Key Features
 
-- **🎯 Real-time Metrics Visualization** - Professional TUI with live QUIC performance data
-- **📊 Advanced Analytics** - Heatmaps, correlation analysis, anomaly detection
-- **🌐 Network Simulation** - Real Linux tc integration with preset profiles
-- **🔒 Security Testing** - Comprehensive QUIC security analysis and attack simulation
-- **☁️ Cloud Integration** - Multi-cloud deployment with auto-scaling
-- **🎮 Interactive Controls** - Real-time parameter adjustment and view switching
+- **Real-time Metrics Visualization** - Professional TUI with live QUIC performance data
+- **Advanced Analytics** - Heatmaps, correlation analysis, anomaly detection
+- **Network Simulation** - Real Linux tc integration with preset profiles
+- **Security Testing** - Comprehensive QUIC security analysis and attack simulation
+- **Cloud Integration** - Multi-cloud deployment with auto-scaling
+- **Interactive Controls** - Real-time parameter adjustment and view switching
 
 ## Features
 
@@ -25,7 +25,7 @@ A comprehensive platform for testing and analyzing network protocols: QUIC, MASQ
 - **Experimental Features** - BBRv2, ACK-Frequency, FEC, Bit Greasing
 - **Real-time Monitoring** - Prometheus metrics and Grafana dashboards
 - **Comprehensive Testing** - Automated test matrix and regression testing
-- **🆕 Professional Visualizations** - Real-time TUI with QUIC Bottom integration
+- **Professional Visualizations** - Real-time TUI with QUIC Bottom integration
 
 ## Supported Protocols
 
@@ -44,7 +44,7 @@ A comprehensive platform for testing and analyzing network protocols: QUIC, MASQ
 [![Rust Version](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://rust-lang.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
-## 🚀 Quick Start with QUIC Bottom
+## Quick Start with QUIC Bottom
 
 ### Prerequisites
 - Go 1.25+
@@ -83,13 +83,13 @@ go build -o bin/quic-test .
 ./run_with_quic_bottom.sh --mode=test --duration=30s
 ```
 
-## 📊 QUIC Bottom Features
+## QUIC Bottom Features
 
 ### Real-time Visualizations
-- **📈 Time-series Graphs** - Latency, throughput, connections, errors
-- **🔥 Performance Heatmaps** - Visual performance data representation
-- **🔗 Correlation Analysis** - Statistical correlation between metrics
-- **⚠️ Anomaly Detection** - Real-time anomaly detection and alerts
+- **Time-series Graphs** - Latency, throughput, connections, errors
+- **Performance Heatmaps** - Visual performance data representation
+- **Correlation Analysis** - Statistical correlation between metrics
+- **Anomaly Detection** - Real-time anomaly detection and alerts
 
 ### Interactive Controls
 - `q/ESC` - Quit
@@ -111,7 +111,7 @@ go build -o bin/quic-test .
 5. **Cloud** - Cloud deployment status and controls
 6. **All** - Complete overview of all features
 
-## 🌐 Network Simulation
+## Network Simulation
 
 ### Preset Profiles
 - **excellent** - 5ms latency, 0.1% loss, 1 Gbps
@@ -127,7 +127,7 @@ go build -o bin/quic-test .
 sudo ./bin/quic-test --mode=test --quic-bottom
 ```
 
-## 🔒 Security Testing
+## Security Testing
 
 ### TLS/QUIC Security Analysis
 - **TLS Version Validation** - TLS 1.2, TLS 1.3 support
@@ -143,7 +143,7 @@ sudo ./bin/quic-test --mode=test --quic-bottom
 - **DoS Attack Simulation** - Denial of service testing
 - **Timing Attack Analysis** - Side-channel attack detection
 
-## ☁️ Cloud Integration
+## Cloud Integration
 
 ### Multi-cloud Support
 - **AWS** - EC2, ALB, CloudWatch integration
@@ -158,7 +158,7 @@ sudo ./bin/quic-test --mode=test --quic-bottom
 - **SSL/TLS Termination** - Secure connection handling
 - **Health Checks** - Automated monitoring and alerts
 
-## 📡 HTTP API
+## HTTP API
 
 ### Endpoints
 - `POST /api/metrics` - Receive metrics from Go application
@@ -259,7 +259,7 @@ go run main.go --mode=test --cloud-deploy --provider=azure --region=eastus --qui
 go run main.go --mode=test --cloud-deploy --provider=gcp --region=us-central1 --quic-bottom
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 ### Go Application (QUIC Tester)
 ```
@@ -288,7 +288,7 @@ Go QUIC Tester → HTTP API → Rust QUIC Bottom → TUI Display
   Real Metrics → JSON Format → Professional Graphs
 ```
 
-## 📊 Performance Features
+## Performance Features
 
 ### Real-time Updates
 - **100ms update interval** for smooth real-time visualization
@@ -301,7 +301,7 @@ Go QUIC Tester → HTTP API → Rust QUIC Bottom → TUI Display
 - **Correlation matrices** for statistical analysis
 - **Anomaly detection** with real-time alerts
 
-## 🛠️ Development
+## Development
 
 ### Building from Source
 ```bash
@@ -337,7 +337,7 @@ RUST_LOG=debug ./quic-bottom/target/release/quic-bottom-real
 go run main.go --mode=test --quic-bottom --debug
 ```
 
-## 📚 Documentation
+## Documentation
 
 - [Architecture Guide](docs/ARCHITECTURE.md)
 - [API Documentation](docs/api.md)
@@ -346,7 +346,7 @@ go run main.go --mode=test --quic-bottom --debug
 - [Usage Guide](docs/usage.md)
 - [Real Integration Report](REAL_INTEGRATION_REPORT.md)
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -354,28 +354,28 @@ go run main.go --mode=test --quic-bottom --debug
 4. Add tests if applicable
 5. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [QUIC-Go](https://github.com/quic-go/quic-go) - Go QUIC implementation
 - [Bottom](https://github.com/ClementTsang/bottom) - System monitor inspiration
 - [Ratatui](https://github.com/ratatui-org/ratatui) - Rust TUI framework
 - [Warp](https://github.com/seanmonstar/warp) - Rust HTTP framework
 
-## 🚀 What's New
+## What's New
 
 ### v2.0.0 - Real-time QUIC Bottom Integration
-- ✅ **Real-time metrics visualization** with professional TUI
-- ✅ **HTTP API integration** between Go and Rust applications
-- ✅ **Network simulation** with real Linux tc integration
-- ✅ **Security testing** with comprehensive QUIC analysis
-- ✅ **Cloud deployment** with multi-cloud support
-- ✅ **Interactive controls** for real-time parameter adjustment
-- ✅ **Advanced analytics** with heatmaps, correlation, and anomaly detection
+- **Real-time metrics visualization** with professional TUI
+- **HTTP API integration** between Go and Rust applications
+- **Network simulation** with real Linux tc integration
+- **Security testing** with comprehensive QUIC analysis
+- **Cloud deployment** with multi-cloud support
+- **Interactive controls** for real-time parameter adjustment
+- **Advanced analytics** with heatmaps, correlation, and anomaly detection
 
 ---
 
-**🎯 This is a complete, production-ready QUIC testing and monitoring platform with professional real-time visualizations!**
+**This is a complete, production-ready QUIC testing and monitoring platform with professional real-time visualizations!**

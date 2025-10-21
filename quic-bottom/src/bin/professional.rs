@@ -25,13 +25,13 @@ use tokio::time::Duration;
 
 use quic_bottom::{
     demo_data::DemoDataGenerator,
-    professional_graphs::{ProfessionalQuicLatencyGraph, ProfessionalQuicThroughputGraph},
+    simple_professional::SimpleProfessionalGraph,
 };
 
 /// Professional QUIC Bottom application
 pub struct ProfessionalQuicBottom {
-    latency_graph: ProfessionalQuicLatencyGraph,
-    throughput_graph: ProfessionalQuicThroughputGraph,
+    latency_graph: SimpleProfessionalGraph,
+    throughput_graph: SimpleProfessionalGraph,
     demo_generator: DemoDataGenerator,
     should_quit: bool,
     update_interval: Duration,
@@ -41,8 +41,8 @@ pub struct ProfessionalQuicBottom {
 impl ProfessionalQuicBottom {
     pub async fn new(interval_ms: u64) -> Result<Self> {
         Ok(Self {
-            latency_graph: ProfessionalQuicLatencyGraph::new(),
-            throughput_graph: ProfessionalQuicThroughputGraph::new(),
+            latency_graph: SimpleProfessionalGraph::new("Latency (ms)".to_string(), 200),
+            throughput_graph: SimpleProfessionalGraph::new("Throughput (Mbps)".to_string(), 200),
             demo_generator: DemoDataGenerator::new(),
             should_quit: false,
             update_interval: Duration::from_millis(interval_ms),
@@ -95,8 +95,8 @@ impl ProfessionalQuicBottom {
         let (latency, throughput, _, _, _) = self.demo_generator.generate_next();
 
         // Update graphs
-        self.latency_graph.add_latency(latency);
-        self.throughput_graph.add_throughput(throughput);
+        self.latency_graph.add_data_point(latency);
+        self.throughput_graph.add_data_point(throughput);
     }
 
     fn handle_key_event(&mut self, key: KeyEvent) {
@@ -112,8 +112,8 @@ impl ProfessionalQuicBottom {
             }
             KeyCode::Char('r') => {
                 // Reset data
-                self.latency_graph = ProfessionalQuicLatencyGraph::new();
-                self.throughput_graph = ProfessionalQuicThroughputGraph::new();
+                self.latency_graph = SimpleProfessionalGraph::new("Latency (ms)".to_string(), 200);
+                self.throughput_graph = SimpleProfessionalGraph::new("Throughput (Mbps)".to_string(), 200);
                 self.demo_generator = DemoDataGenerator::new();
             }
             KeyCode::Char('h') => {

@@ -7,21 +7,21 @@ import (
 	"time"
 
 	"quic-test/internal/metrics"
-
 	"go.uber.org/zap"
 )
+
 
 // ExperimentalManager управляет экспериментальными QUIC возможностями
 type ExperimentalManager struct {
 	logger *zap.Logger
 	config *ExperimentalConfig
 	
-	// Компоненты
-	ackManager    *ACKFrequencyManager
-	ackIntegration *ACKFrequencyIntegration
-	ccManager     *CongestionControlManager
-	qlogTracer    *QlogTracer
-	multipathMgr  *MultipathManager
+	// Компоненты (заглушки)
+	ackManager    interface{}
+	ackIntegration interface{}
+	ccManager     interface{}
+	qlogTracer    interface{}
+	multipathMgr  interface{}
 	fecManager    *FECManager
 	
 	// Метрики

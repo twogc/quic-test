@@ -11,12 +11,12 @@ import (
 func TestPrometheusMetrics(t *testing.T) {
 	// Создаем новый registry для тестов
 	registry := prometheus.NewRegistry()
-	metrics := NewPrometheusMetricsWithRegistry(registry)
+	metrics := NewPrometheusMetrics()
 
 	// Тестируем основные метрики
-	metrics.IncrementConnections()
-	metrics.IncrementStreams()
-	metrics.AddBytesSent(1024)
+	metrics.UpdateConnectionMetrics(1, 1, 1, 1)
+	metrics.UpdateConnectionMetrics(1, 1, 2, 2)
+	metrics.UpdatePerformanceMetrics(1024, 0, 0, 0, 0)
 	metrics.AddBytesReceived(2048)
 	metrics.IncrementErrors()
 	metrics.IncrementRetransmits()
@@ -60,7 +60,7 @@ func TestPrometheusMetrics(t *testing.T) {
 
 func TestPrometheusMetricsGauges(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	metrics := NewPrometheusMetricsWithRegistry(registry)
+	metrics := NewPrometheusMetrics()
 
 	// Тестируем gauges
 	metrics.SetCurrentThroughput(1000.5)
@@ -84,7 +84,7 @@ func TestPrometheusMetricsGauges(t *testing.T) {
 
 func TestPrometheusMetricsHistograms(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	metrics := NewPrometheusMetricsWithRegistry(registry)
+	metrics := NewPrometheusMetrics()
 
 	// Тестируем гистограммы
 	metrics.RecordLatency(100 * time.Millisecond)
@@ -117,7 +117,7 @@ func TestPrometheusMetricsHistograms(t *testing.T) {
 
 func TestPrometheusMetricsEvents(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	metrics := NewPrometheusMetricsWithRegistry(registry)
+	metrics := NewPrometheusMetrics()
 
 	// Тестируем события
 	metrics.RecordScenarioEvent("wifi", "conn1", "stream1", "start")
@@ -149,11 +149,11 @@ func TestPrometheusMetricsEvents(t *testing.T) {
 
 func TestPrometheusMetricsDecrement(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	metrics := NewPrometheusMetricsWithRegistry(registry)
+	metrics := NewPrometheusMetrics()
 
 	// Увеличиваем счетчики
-	metrics.IncrementConnections()
-	metrics.IncrementStreams()
+	metrics.UpdateConnectionMetrics(1, 1, 1, 1)
+	metrics.UpdateConnectionMetrics(1, 1, 2, 2)
 
 	// Проверяем текущие значения
 	if testutil.ToFloat64(metrics.currentConnections) != 1 {
@@ -178,7 +178,7 @@ func TestPrometheusMetricsDecrement(t *testing.T) {
 
 func TestPrometheusMetricsInvalidTypes(t *testing.T) {
 	registry := prometheus.NewRegistry()
-	metrics := NewPrometheusMetricsWithRegistry(registry)
+	metrics := NewPrometheusMetrics()
 
 	// Тестируем с неверными типами - не должно паниковать
 	metrics.RecordLatency("invalid")

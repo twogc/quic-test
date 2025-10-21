@@ -185,7 +185,7 @@ func extractMetrics(metrics map[string]interface{}) MetricsSchema {
 		PacketsReceived:   getInt64(metrics, "PacketsReceived"),
 		Latency:           extractLatencyMetrics(latencies),
 		Throughput:        extractThroughputMetrics(metrics),
-		PacketLoss:        getFloat64(metrics, "PacketLoss"),
+		PacketLoss:        getFloat64FromSchema(metrics, "PacketLoss"),
 		Retransmits:       getInt64(metrics, "Retransmits"),
 		TLSVersion:        getString(metrics, "TLSVersion"),
 		CipherSuite:       getString(metrics, "CipherSuite"),
@@ -234,10 +234,10 @@ func extractLatencyMetrics(latencies []float64) LatencyMetrics {
 // extractThroughputMetrics извлекает метрики пропускной способности
 func extractThroughputMetrics(metrics map[string]interface{}) ThroughputMetrics {
 	return ThroughputMetrics{
-		Average: getFloat64(metrics, "ThroughputAverage"),
-		Peak:    getFloat64(metrics, "ThroughputPeak"),
-		Min:     getFloat64(metrics, "ThroughputMin"),
-		Current: getFloat64(metrics, "ThroughputCurrent"),
+		Average: getFloat64FromSchema(metrics, "ThroughputAverage"),
+		Peak:    getFloat64FromSchema(metrics, "ThroughputPeak"),
+		Min:     getFloat64FromSchema(metrics, "ThroughputMin"),
+		Current: getFloat64FromSchema(metrics, "ThroughputCurrent"),
 	}
 }
 
@@ -286,7 +286,7 @@ func extractSLA(cfg TestConfig, metrics map[string]interface{}) SLASchema {
 		// Проверяем SLA
 		latencies, _ := metrics["Latencies"].([]float64)
 		_, p95, _ := calcPercentiles(latencies)
-		packetLoss := getFloat64(metrics, "PacketLoss")
+		packetLoss := getFloat64FromSchema(metrics, "PacketLoss")
 		
 		sla.Passed = true
 		
@@ -338,7 +338,7 @@ func getInt64(m map[string]interface{}, key string) int64 {
 	return 0
 }
 
-func getFloat64(m map[string]interface{}, key string) float64 {
+func getFloat64FromSchema(m map[string]interface{}, key string) float64 {
 	if v, ok := m[key].(float64); ok {
 		return v
 	}

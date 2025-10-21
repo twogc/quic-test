@@ -242,7 +242,7 @@ func ValidateScenario(scenario *TestScenario, metrics map[string]interface{}) (b
 	var violations []string
 	
 	// Проверяем пропускную способность
-	throughput := getFloat64(metrics, "ThroughputAverage")
+	throughput := getFloat64FromSchema(metrics, "ThroughputAverage")
 	if throughput < scenario.Expected.MinThroughput {
 		violations = append(violations, fmt.Sprintf("Throughput %.2f KB/s below expected %.2f KB/s", 
 			throughput, scenario.Expected.MinThroughput))
@@ -260,7 +260,7 @@ func ValidateScenario(scenario *TestScenario, metrics map[string]interface{}) (b
 	}
 	
 	// Проверяем потерю пакетов
-	packetLoss := getFloat64(metrics, "PacketLoss")
+	packetLoss := getFloat64FromSchema(metrics, "PacketLoss")
 	if packetLoss > scenario.Expected.MaxLoss {
 		violations = append(violations, fmt.Sprintf("Packet loss %.2f%% exceeds expected %.2f%%", 
 			packetLoss*100, scenario.Expected.MaxLoss*100))

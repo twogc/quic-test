@@ -62,7 +62,7 @@ func CheckSLA(cfg TestConfig, metrics map[string]interface{}) (bool, []SLAViolat
 	
 	// Проверяем потерю пакетов
 	if cfg.SlaLoss > 0 {
-		packetLoss := getFloat64(metrics, "PacketLoss")
+		packetLoss := getFloat64FromSchema(metrics, "PacketLoss")
 		if packetLoss > cfg.SlaLoss {
 			violation := SLAViolationInfo{
 				Type:     ViolationLoss,
@@ -78,7 +78,7 @@ func CheckSLA(cfg TestConfig, metrics map[string]interface{}) (bool, []SLAViolat
 	
 	// Проверяем пропускную способность
 	if cfg.SlaThroughput > 0 {
-		throughput := getFloat64(metrics, "ThroughputAverage")
+		throughput := getFloat64FromSchema(metrics, "ThroughputAverage")
 		if throughput < cfg.SlaThroughput {
 			violation := SLAViolationInfo{
 				Type:     ViolationThroughput,
@@ -152,7 +152,7 @@ func ExitWithSLA(cfg TestConfig, metrics map[string]interface{}) {
 		}
 		
 		if cfg.SlaLoss > 0 {
-			packetLoss := getFloat64(metrics, "PacketLoss")
+			packetLoss := getFloat64FromSchema(metrics, "PacketLoss")
 			status := "✅"
 			if packetLoss > cfg.SlaLoss {
 				status = "❌"
@@ -161,7 +161,7 @@ func ExitWithSLA(cfg TestConfig, metrics map[string]interface{}) {
 		}
 		
 		if cfg.SlaThroughput > 0 {
-			throughput := getFloat64(metrics, "ThroughputAverage")
+			throughput := getFloat64FromSchema(metrics, "ThroughputAverage")
 			status := "✅"
 			if throughput < cfg.SlaThroughput {
 				status = "❌"

@@ -11,6 +11,73 @@ import (
 	"go.uber.org/zap"
 )
 
+// Заглушки для неопределенных типов
+type CCStateChangeEvent struct {
+	Time     time.Time
+	Category string
+	Event    string
+	Data     CCStateChangeData
+}
+
+type CCStateChangeData struct {
+	OldState   string
+	NewState   string
+	Reason     string
+	Bandwidth  float64
+	MinRTT     float64
+	CWND       int
+	PacingRate int64
+}
+
+type BDPUpdateEvent struct {
+	Time     time.Time
+	Category string
+	Event    string
+	Data     BDPUpdateData
+}
+
+type BDPUpdateData struct {
+	BDP        float64
+	Bandwidth  float64
+	MinRTT     float64
+	Timestamp  time.Time
+	BandwidthEstimate float64
+	RTTEstimate float64
+}
+
+type PacingUpdateEvent struct {
+	Time     time.Time
+	Category string
+	Event    string
+	Data     PacingUpdateData
+}
+
+type PacingUpdateData struct {
+	PacingRate int64
+	Bandwidth  float64
+	Timestamp  time.Time
+	OldRate    int64
+	NewRate    int64
+	Tokens     int64
+	BurstSize  int64
+	MinRTT     float64
+}
+
+type ACKPolicyChangeEvent struct {
+	Time     time.Time
+	Category string
+	Event    string
+	Data     ACKPolicyChangeData
+}
+
+type ACKPolicyChangeData struct {
+	OldPolicy string
+	NewPolicy string
+	Reason    string
+	Timestamp time.Time
+	OldThreshold int
+}
+
 // QlogTracer реализует qlog трассировку для QUIC
 type QlogTracer struct {
 	logger    *zap.Logger
