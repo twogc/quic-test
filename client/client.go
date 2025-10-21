@@ -254,6 +254,10 @@ func Run(cfg internal.TestConfig) {
 	// Финальный красивый вывод
 	printMetrics(testMetrics, &rate, true)
 
+	// Отправляем метрики в QUIC Bottom
+	metricsMap := testMetrics.ToMap()
+	internal.UpdateBottomMetrics(metricsMap)
+
 	err := internal.SaveReport(cfg, testMetrics)
 	if err != nil {
 		fmt.Println("Ошибка сохранения отчёта:", err)
@@ -261,7 +265,6 @@ func Run(cfg internal.TestConfig) {
 	
 	// Проверяем SLA если настроено
 	if cfg.SlaRttP95 > 0 || cfg.SlaLoss > 0 || cfg.SlaThroughput > 0 || cfg.SlaErrors > 0 {
-		metricsMap := testMetrics.ToMap()
 		internal.ExitWithSLA(cfg, metricsMap)
 	}
 }

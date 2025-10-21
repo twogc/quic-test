@@ -1,0 +1,88 @@
+[package]
+name = "quic-bottom"
+version = "0.1.0"
+edition = "2021"
+authors = ["2GC Team"]
+description = "QUIC-specific TUI monitor based on bottom"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "quic-bottom"
+path = "src/bin/main.rs"
+
+[[bin]]
+name = "quic-bottom-demo"
+path = "src/bin/demo.rs"
+
+[[bin]]
+name = "quic-bottom-professional"
+path = "src/bin/professional.rs"
+
+[[bin]]
+name = "quic-bottom-simple-professional"
+path = "src/bin/simple_professional.rs"
+
+[[bin]]
+name = "quic-bottom-enhanced-analytics"
+path = "src/bin/enhanced_analytics.rs"
+
+[[bin]]
+name = "quic-bottom-ultimate-analytics"
+path = "src/bin/ultimate_analytics.rs"
+
+[[bin]]
+name = "quic-bottom-ultimate-analytics-console"
+path = "src/bin/ultimate_analytics_console.rs"
+
+[[bin]]
+name = "quic-bottom-real"
+path = "src/bin/real_quic_bottom.rs"
+
+[dependencies]
+# Core TUI framework
+ratatui = { version = "0.30.0-alpha.5", features = ["unstable-rendered-line-info"] }
+crossterm = "0.29.0"
+
+# Data structures and serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+
+# HTTP server for Go integration
+warp = "0.3"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# FFI for Go integration
+libc = "0.2"
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+# Configuration
+toml = "0.8"
+clap = { version = "4.0", features = ["derive"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Threading
+crossbeam-channel = "0.5"
+
+# Random number generation for demo
+rand = "0.8"
+
+[features]
+default = ["http-api"]
+http-api = []
+shared-memory = []
+ffi = []
+
+[build-dependencies]
+cbindgen = "0.26"

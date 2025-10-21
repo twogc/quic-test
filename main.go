@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
@@ -36,6 +37,7 @@ func main() {
 	pattern := flag.String("pattern", "random", "Шаблон данных: random | zeroes | increment")
 	noTLS := flag.Bool("no-tls", false, "Отключить TLS (для тестов)")
 	prometheus := flag.Bool("prometheus", false, "Экспортировать метрики Prometheus на /metrics")
+	quicBottom := flag.Bool("quic-bottom", false, "Запустить QUIC Bottom для визуализации метрик")
 	emulateLoss := flag.Float64("emulate-loss", 0, "Вероятность потери пакета (0..1)")
 	emulateLatency := flag.Duration("emulate-latency", 0, "Дополнительная задержка перед отправкой пакета (например, 20ms)")
 	emulateDup := flag.Float64("emulate-dup", 0, "Вероятность дублирования пакета (0..1)")
@@ -119,6 +121,23 @@ func main() {
 	// Выводим QUIC конфигурацию если настроена
 	internal.PrintQUICConfig(cfg)
 	
+	// Запуск QUIC Bottom если запрошен
+	if *quicBottom {
+		fmt.Println("🚀 Starting QUIC Bottom for real-time metrics visualization...")
+		go func() {
+			// Запускаем QUIC Bottom в фоновом режиме
+			cmd := exec.Command("./quic-bottom/target/release/quic-bottom-real")
+			cmd.Dir = "."
+			if err := cmd.Run(); err != nil {
+				fmt.Printf("❌ Failed to start QUIC Bottom: %v\n", err)
+			}
+		}()
+		
+		// Ждем немного, чтобы QUIC Bottom запустился
+		time.Sleep(2 * time.Second)
+		fmt.Println("✅ QUIC Bottom started on port 8080")
+	}
+
 	// Обработка сценариев
 	if *listScenarios {
 		fmt.Println("📋 Available Test Scenarios:")
@@ -165,6 +184,10 @@ func main() {
 		internal.PrintNetworkProfile(profile)
 		internal.PrintProfileRecommendations(profile)
 	}
+
+	// Инициализация QUIC Bottom
+	internal.InitBottomBridge("http://localhost:8080", 100*time.Millisecond)
+	internal.EnableBottomBridge()
 
 	// Обработка сигналов для graceful shutdown
 	sigs := make(chan os.Signal, 1)

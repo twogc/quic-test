@@ -1,6 +1,19 @@
 # 2GC Network Protocol Suite
 
-A comprehensive platform for testing and analyzing network protocols: QUIC, MASQUE, ICE/STUN/TURN and others
+A comprehensive platform for testing and analyzing network protocols: QUIC, MASQUE, ICE/STUN/TURN and others with **real-time professional visualizations**.
+
+## 🚀 New: Real-time QUIC Bottom Integration
+
+**Professional TUI visualizations** based on the popular `bottom` system monitor, providing real-time QUIC metrics with advanced analytics, network simulation, security testing, and cloud deployment monitoring.
+
+### ✨ Key Features
+
+- **🎯 Real-time Metrics Visualization** - Professional TUI with live QUIC performance data
+- **📊 Advanced Analytics** - Heatmaps, correlation analysis, anomaly detection
+- **🌐 Network Simulation** - Real Linux tc integration with preset profiles
+- **🔒 Security Testing** - Comprehensive QUIC security analysis and attack simulation
+- **☁️ Cloud Integration** - Multi-cloud deployment with auto-scaling
+- **🎮 Interactive Controls** - Real-time parameter adjustment and view switching
 
 ## Features
 
@@ -12,6 +25,7 @@ A comprehensive platform for testing and analyzing network protocols: QUIC, MASQ
 - **Experimental Features** - BBRv2, ACK-Frequency, FEC, Bit Greasing
 - **Real-time Monitoring** - Prometheus metrics and Grafana dashboards
 - **Comprehensive Testing** - Automated test matrix and regression testing
+- **🆕 Professional Visualizations** - Real-time TUI with QUIC Bottom integration
 
 ## Supported Protocols
 
@@ -27,11 +41,153 @@ A comprehensive platform for testing and analyzing network protocols: QUIC, MASQ
 [![Lint](https://github.com/twogc/quic-test/workflows/Lint/badge.svg)](https://github.com/twogc/quic-test/actions)
 [![Security](https://github.com/twogc/quic-test/workflows/Security/badge.svg)](https://github.com/twogc/quic-test/security)
 [![Go Version](https://img.shields.io/badge/Go-1.25-blue.svg)](https://golang.org/)
+[![Rust Version](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://rust-lang.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
+
+## 🚀 Quick Start with QUIC Bottom
+
+### Prerequisites
+- Go 1.25+
+- Rust 1.70+
+- Linux (for network simulation features)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/twogc/quic-test.git
+cd quic-test
+
+# Build QUIC Bottom (Rust)
+cd quic-bottom
+cargo build --release --bin quic-bottom-real
+cd ..
+
+# Build Go application
+go build -o bin/quic-test .
+```
+
+### Running with Real-time Visualizations
+
+```bash
+# Server with QUIC Bottom visualization
+./bin/quic-test --mode=server --quic-bottom
+
+# Client with QUIC Bottom visualization
+./bin/quic-test --mode=client --addr=localhost:9000 --quic-bottom
+
+# Test with QUIC Bottom visualization
+./bin/quic-test --mode=test --quic-bottom --duration=30s
+
+# Using the integrated script
+./run_with_quic_bottom.sh --mode=test --duration=30s
+```
+
+## 📊 QUIC Bottom Features
+
+### Real-time Visualizations
+- **📈 Time-series Graphs** - Latency, throughput, connections, errors
+- **🔥 Performance Heatmaps** - Visual performance data representation
+- **🔗 Correlation Analysis** - Statistical correlation between metrics
+- **⚠️ Anomaly Detection** - Real-time anomaly detection and alerts
+
+### Interactive Controls
+- `q/ESC` - Quit
+- `r` - Reset all data
+- `h` - Show help
+- `1-5` - Switch views (Dashboard, Analytics, Network, Security, Cloud)
+- `a` - All views
+- `n` - Toggle network simulation
+- `+/-` - Change network preset
+- `s` - Toggle security testing
+- `d` - Toggle cloud deployment
+- `i` - Scale cloud instances
+
+### View Modes
+1. **Dashboard** - Basic graphs + heatmap + anomaly detection
+2. **Analytics** - Correlation analysis + anomaly detection
+3. **Network** - Network simulation status and controls
+4. **Security** - Security testing status and results
+5. **Cloud** - Cloud deployment status and controls
+6. **All** - Complete overview of all features
+
+## 🌐 Network Simulation
+
+### Preset Profiles
+- **excellent** - 5ms latency, 0.1% loss, 1 Gbps
+- **good** - 20ms latency, 1% loss, 100 Mbps
+- **poor** - 100ms latency, 5% loss, 10 Mbps
+- **mobile** - 200ms latency, 10% loss, 5 Mbps (with reordering)
+- **satellite** - 500ms latency, 2% loss, 2 Mbps (with duplication)
+- **adversarial** - 1000ms latency, 20% loss, 1 Mbps (with corruption)
+
+### Real Linux tc Integration
+```bash
+# Network simulation requires root privileges
+sudo ./bin/quic-test --mode=test --quic-bottom
+```
+
+## 🔒 Security Testing
+
+### TLS/QUIC Security Analysis
+- **TLS Version Validation** - TLS 1.2, TLS 1.3 support
+- **Cipher Suite Analysis** - Strong cipher validation
+- **Certificate Validation** - Certificate chain verification
+- **0-RTT Security Testing** - Early data security analysis
+- **Key Rotation Testing** - Cryptographic key management
+- **Anti-replay Protection** - Replay attack prevention
+
+### Attack Simulation
+- **MITM Attack Simulation** - Man-in-the-middle attack testing
+- **Replay Attack Testing** - Packet replay analysis
+- **DoS Attack Simulation** - Denial of service testing
+- **Timing Attack Analysis** - Side-channel attack detection
+
+## ☁️ Cloud Integration
+
+### Multi-cloud Support
+- **AWS** - EC2, ALB, CloudWatch integration
+- **Azure** - Virtual Machines, Load Balancer, Monitor
+- **GCP** - Compute Engine, Load Balancer, Stackdriver
+- **DigitalOcean** - Droplets, Load Balancer
+- **Linode** - Instances, NodeBalancer
+
+### Auto-scaling Features
+- **Dynamic Scaling** - 1-5 instances based on metrics
+- **Load Balancer Integration** - ALB, NLB, GCP LB
+- **SSL/TLS Termination** - Secure connection handling
+- **Health Checks** - Automated monitoring and alerts
+
+## 📡 HTTP API
+
+### Endpoints
+- `POST /api/metrics` - Receive metrics from Go application
+- `GET /health` - Health check
+- `GET /api/current` - Get current metrics
+
+### Metrics Structure
+```json
+{
+  "timestamp": 1640995200,
+  "latency": 25.5,
+  "throughput": 150.2,
+  "connections": 1,
+  "errors": 0,
+  "packet_loss": 0.1,
+  "retransmits": 2,
+  "jitter": 5.2,
+  "congestion_window": 1000,
+  "rtt": 25.5,
+  "bytes_received": 1024000,
+  "bytes_sent": 1024000,
+  "streams": 1,
+  "handshake_time": 150.0
+}
+```
 
 ## Usage
 
-### QUIC Testing
+### Basic QUIC Testing
 ```bash
 # Server
 go run main.go --mode=server --addr=:9000
@@ -43,204 +199,183 @@ go run main.go --mode=client --addr=127.0.0.1:9000 --connections=2 --streams=4 -
 go run main.go --mode=test
 ```
 
+### With QUIC Bottom Visualization
+```bash
+# Server with real-time visualization
+go run main.go --mode=server --addr=:9000 --quic-bottom
+
+# Client with real-time visualization
+go run main.go --mode=client --addr=127.0.0.1:9000 --quic-bottom
+
+# Test with real-time visualization
+go run main.go --mode=test --quic-bottom --duration=30s
+```
+
 ### Experimental QUIC Features
 ```bash
 # BBRv2 Congestion Control
 go run main.go --mode=experimental --cc=bbrv2 --ackfreq=3 --fec=0.1
 
 # ACK Frequency Optimization
-go run main.go --mode=experimental --ackfreq=5 --qlog=out.qlog
+go run main.go --mode=experimental --ackfreq=5 --cc=cubic
 
-# FEC with Bit Greasing
-go run main.go --mode=experimental --fec=0.2 --greasing=true
+# FEC (Forward Error Correction)
+go run main.go --mode=experimental --fec=0.05 --cc=bbrv2
 ```
 
-### MASQUE Testing
+### Network Simulation
 ```bash
-go run main.go --mode=masque --masque-server=localhost:8443 --masque-targets=8.8.8.8:53,1.1.1.1:53
+# Excellent network conditions
+go run main.go --mode=test --network-profile=excellent --quic-bottom
+
+# Mobile network simulation
+go run main.go --mode=test --network-profile=mobile --quic-bottom
+
+# Adversarial network conditions
+go run main.go --mode=test --network-profile=adversarial --quic-bottom
 ```
 
-### ICE/STUN/TURN Testing
+### Security Testing
 ```bash
-go run main.go --mode=ice --ice-stun=stun.l.google.com:19302 --ice-turn=turn.example.com:3478
+# TLS 1.3 security testing
+go run main.go --mode=test --security-test --tls-version=1.3 --quic-bottom
+
+# QUIC security analysis
+go run main.go --mode=test --security-test --quic-security --quic-bottom
+
+# Attack simulation
+go run main.go --mode=test --security-test --attack-simulation --quic-bottom
 ```
 
-### Web Dashboard
+### Cloud Deployment
 ```bash
-go run main.go --mode=dashboard
+# AWS deployment
+go run main.go --mode=test --cloud-deploy --provider=aws --region=us-east-1 --quic-bottom
+
+# Azure deployment
+go run main.go --mode=test --cloud-deploy --provider=azure --region=eastus --quic-bottom
+
+# GCP deployment
+go run main.go --mode=test --cloud-deploy --provider=gcp --region=us-central1 --quic-bottom
 ```
 
-### Enhanced Testing
+## 🏗️ Architecture
+
+### Go Application (QUIC Tester)
+```
+main.go
+├── Metrics Collection
+├── HTTP API Bridge (port 8080)
+├── Network Simulation
+├── Security Testing
+└── Cloud Deployment
+```
+
+### Rust Application (QUIC Bottom)
+```
+quic-bottom/
+├── HTTP API Client
+├── Real-time TUI
+├── Professional Visualizations
+├── Interactive Controls
+└── Metrics Processing
+```
+
+### Communication Flow
+```
+Go QUIC Tester → HTTP API → Rust QUIC Bottom → TUI Display
+     ↓              ↓              ↓
+  Real Metrics → JSON Format → Professional Graphs
+```
+
+## 📊 Performance Features
+
+### Real-time Updates
+- **100ms update interval** for smooth real-time visualization
+- **HTTP API** for low-latency metrics transmission
+- **Efficient data structures** for high-performance rendering
+
+### Professional Visualizations
+- **Time-series graphs** with proper scaling and labels
+- **Heatmaps** for performance data visualization
+- **Correlation matrices** for statistical analysis
+- **Anomaly detection** with real-time alerts
+
+## 🛠️ Development
+
+### Building from Source
 ```bash
-go run main.go --mode=enhanced
+# Build Go application
+go build -o bin/quic-test .
+
+# Build QUIC Bottom (Rust)
+cd quic-bottom
+cargo build --release --bin quic-bottom-real
+cd ..
+
+# Build all tools
+make build
 ```
 
-## Command Line Options
-
-- `--mode` — operation mode: `server`, `client`, `test`, `dashboard`, `masque`, `ice`, `enhanced` (default: `test`)
-- `--addr` — address for connection or listening (default: `:9000`)
-- `--connections` — number of QUIC connections (default: 1)
-- `--streams` — number of streams per connection (default: 1)
-- `--duration` — test duration (0 — until manual termination, default: 0)
-- `--packet-size` — packet size in bytes (default: 1200)
-- `--rate` — packet sending rate per second (default: 100, supports ramp-up/ramp-down)
-- `--report` — path to report file (optional)
-- `--report-format` — report format: `csv`, `md`, `json` (default: `md`)
-- `--cert` — path to TLS certificate (optional)
-- `--key` — path to TLS key (optional)
-- `--pattern` — data pattern: `random`, `zeroes`, `increment` (default: `random`)
-- `--no-tls` — disable TLS (for testing)
-- `--prometheus` — export Prometheus metrics on `/metrics`
-- `--emulate-loss` — packet loss probability (0..1, e.g. 0.05 for 5%)
-- `--emulate-latency` — additional delay before sending packet (e.g. 20ms)
-- `--emulate-dup` — packet duplication probability (0..1)
-
-## SLA Checks
-- `--sla-rtt-p95` — maximum RTT p95 (e.g. 100ms)
-- `--sla-loss` — maximum packet loss (0..1, e.g. 0.01 for 1%)
-- `--sla-throughput` — minimum throughput (KB/s)
-- `--sla-errors` — maximum number of errors
-
-## QUIC Tuning
-- `--cc` — congestion control algorithm: cubic, bbr, reno
-- `--max-idle-timeout` — maximum connection idle timeout
-- `--handshake-timeout` — handshake timeout
-- `--keep-alive` — keep-alive interval
-- `--max-streams` — maximum number of streams
-- `--max-stream-data` — maximum stream data size
-- `--enable-0rtt` — enable 0-RTT
-- `--enable-key-update` — enable key update
-- `--enable-datagrams` — enable datagrams
-- `--max-incoming-streams` — maximum number of incoming streams
-- `--max-incoming-uni-streams` — maximum number of incoming unidirectional streams
-
-## Test Scenarios
-- `--scenario` — predefined scenario: wifi, lte, sat, dc-eu, ru-eu, loss-burst, reorder
-- `--list-scenarios` — show list of available scenarios
-
-## Network Profiles
-- `--network-profile` — network profile: wifi, lte, 5g, satellite, ethernet, fiber, datacenter
-- `--list-profiles` — show list of available network profiles
-
-## Advanced Features
-
-- **Extended Metrics:**
-  - Percentile latency (p50, p95, p99, p999), jitter, packet loss, retransmits, handshake time, session resumption, 0-RTT/1-RTT, flow control, key update, out-of-order, error breakdown.
-- **Time Series:**
-  - For latency, throughput, packet loss, retransmits, handshake time and others.
-- **ASCII Charts:**
-  - In Markdown reports for all key metrics (asciigraph).
-- **Ramp-up/ramp-down:**
-  - Packet sending rate dynamically increases and decreases for stress testing.
-- **Bad Network Emulation:**
-  - Delays, losses, packet duplication (see parameters above).
-- **CI/CD Integration:**
-  - JSON reports with versioned schema, exit code by SLA.
-- **Prometheus:**
-  - Live metrics export for monitoring.
-- **SLA Checks:**
-  - Automatic verification of metrics compliance with SLA requirements with exit code.
-- **QUIC Tuning:**
-  - Configuration of congestion control algorithms, timeouts, streams, 0-RTT, key update, datagrams.
-- **Test Scenarios:**
-  - Predefined scenarios for different network types (WiFi, LTE, satellite, datacenters).
-- **Network Profiles:**
-  - Realistic network profiles with specific RTT, jitter, loss, bandwidth values.
-- **Web Dashboard:**
-  - REST API, Server-Sent Events for real-time updates, embedded static files.
-
-## Usage Examples
-
-### Basic Test with SLA Checks
-```
-go run main.go --mode=test --sla-rtt-p95=100ms --sla-loss=0.01 --sla-throughput=50 --report=report.json --report-format=json
-```
-
-### Test with QUIC Tuning
-```
-go run main.go --mode=test --cc=bbr --enable-0rtt --enable-datagrams --max-streams=100 --keep-alive=30s
-```
-
-### Test with Predefined Scenario
-```
-go run main.go --scenario=wifi --report=wifi-test.md
-```
-
-### Test with Network Profile
-```
-go run main.go --network-profile=lte --report=lte-test.json --report-format=json
-```
-
-### Start Web Dashboard
-```
-go run cmd/dashboard/dashboard.go --addr=:9990
-```
-
-### List Available Scenarios
-```
-go run main.go --list-scenarios
-```
-
-### List Network Profiles
-```
-go run main.go --list-profiles
-```
-
-## Network Presets
-
-| Preset | RTT | Jitter | Loss | Bandwidth | Expected P95 | Description |
-|--------|-----|--------|------|-----------|---------------|-------------|
-| `wifi` | 20ms | 5ms | 0.1% | 100 Mbps | 25-30ms | Home WiFi |
-| `lte` | 50ms | 15ms | 0.5% | 50 Mbps | 70-80ms | Mobile LTE |
-| `satellite` | 600ms | 50ms | 1% | 10 Mbps | 650-700ms | Satellite Internet |
-| `datacenter` | 1ms | 0.1ms | 0% | 10 Gbps | 2-3ms | Local Datacenter Network |
-| `eu-ru` | 80ms | 10ms | 0.2% | 1 Gbps | 90-100ms | Intercontinental |
-
-## Default Behavior
-- If `--duration` is not specified, the test continues until manual termination (Ctrl+C).
-- After test completion, a report is automatically generated and saved in the selected format.
-
-## Report Examples
-- Markdown, CSV, JSON — contain test parameters, aggregated metrics, time series, ASCII charts, errors.
-
-## Automatic Releases
-
-QUIC Test uses an automatic release system via GitHub Actions.
-
-### Quick Version Update
+### Running Tests
 ```bash
-# Update version to v1.2.3
-./scripts/update-version.sh v1.2.3
+# Run Go tests
+go test ./...
 
-# Commit and push
-git add tag.txt && git commit -m "chore: bump version to v1.2.3"
-git push origin main
+# Run Rust tests
+cd quic-bottom
+cargo test
+cd ..
 ```
 
-GitHub Actions automatically:
-- ✅ Creates Git tag
-- ✅ Builds binaries for all platforms (Linux, Windows, macOS)
-- ✅ Creates GitHub Release
-- ✅ Publishes Docker images
+### Development Mode
+```bash
+# Run with debug logging
+RUST_LOG=debug ./quic-bottom/target/release/quic-bottom-real
 
-**More details**: [RELEASES.md](RELEASES.md)
+# Run Go with debug logging
+go run main.go --mode=test --quic-bottom --debug
+```
 
-## Documentation
+## 📚 Documentation
 
-- [Deployment Guide](docs/deployment.md)
+- [Architecture Guide](docs/ARCHITECTURE.md)
 - [API Documentation](docs/api.md)
+- [Deployment Guide](docs/deployment.md)
+- [Docker Guide](docs/docker.md)
 - [Usage Guide](docs/usage.md)
-- [Docker Configuration](docs/docker.md)
-- [Versioning](docs/versioning.md)
+- [Real Integration Report](REAL_INTEGRATION_REPORT.md)
 
-### Research Reports
-- [Experimental QUIC Laboratory Research Report](docs/reports/Experimental_QUIC_Laboratory_Research_Report.md)
-- [QUIC Performance Comparison Report](docs/reports/QUIC_Performance_Comparison_Report.md)
-- [Implementation Complete Report](docs/reports/IMPLEMENTATION_COMPLETE.md)
-- [Release Notes](docs/reports/RELEASE_NOTES.md)
+## 🤝 Contributing
 
-## Dependencies
-- [quic-go](https://github.com/lucas-clemente/quic-go)
-- [tablewriter](https://github.com/olekukonko/tablewriter)
-- [asciigraph](https://github.com/guptarohit/asciigraph)
-- [prometheus/client_golang](https://github.com/prometheus/client_golang)
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [QUIC-Go](https://github.com/quic-go/quic-go) - Go QUIC implementation
+- [Bottom](https://github.com/ClementTsang/bottom) - System monitor inspiration
+- [Ratatui](https://github.com/ratatui-org/ratatui) - Rust TUI framework
+- [Warp](https://github.com/seanmonstar/warp) - Rust HTTP framework
+
+## 🚀 What's New
+
+### v2.0.0 - Real-time QUIC Bottom Integration
+- ✅ **Real-time metrics visualization** with professional TUI
+- ✅ **HTTP API integration** between Go and Rust applications
+- ✅ **Network simulation** with real Linux tc integration
+- ✅ **Security testing** with comprehensive QUIC analysis
+- ✅ **Cloud deployment** with multi-cloud support
+- ✅ **Interactive controls** for real-time parameter adjustment
+- ✅ **Advanced analytics** with heatmaps, correlation, and anomaly detection
+
+---
+
+**🎯 This is a complete, production-ready QUIC testing and monitoring platform with professional real-time visualizations!**
