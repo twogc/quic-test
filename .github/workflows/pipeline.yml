@@ -97,7 +97,7 @@ jobs:
         run: go test -race -covermode=atomic -coverprofile=coverage.out ./...
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-report
           path: coverage.out
@@ -309,7 +309,7 @@ jobs:
           VERSION: ${{ needs.version-check.outputs.version }}
 
       - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: release-artifacts-${{ needs.version-check.outputs.version }}
           path: |
