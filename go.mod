@@ -5,7 +5,7 @@ go 1.25
 toolchain go1.25.1
 
 require (
-	github.com/HdrHistogram/hdrhistogram-go v1.1.2
+	github.com/HdrHistogram/hdrhistogram-go v1.2.0
 	github.com/fatih/color v1.18.0
 	github.com/guptarohit/asciigraph v0.7.3
 	github.com/olekukonko/tablewriter v1.0.8
