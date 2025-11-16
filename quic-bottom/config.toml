@@ -1,0 +1,50 @@
+# QUIC Bottom Configuration
+# ========================
+
+# Update interval in milliseconds
+update_interval = 100
+
+# HTTP API port for Go integration
+api_port = 8080
+
+# Maximum data points for time series
+max_data_points = 1000
+
+# Widget configuration
+[widgets]
+
+# Latency widget settings
+[widgets.latency]
+enabled = true
+max_points = 1000
+show_percentiles = true
+show_jitter = true
+
+# Throughput widget settings
+[widgets.throughput]
+enabled = true
+max_points = 1000
+show_average = true
+show_maximum = true
+
+# Connection widget settings
+[widgets.connections]
+enabled = true
+show_handshake_times = true
+show_success_rate = true
+
+# Network quality widget settings
+[widgets.network]
+enabled = true
+show_loss_graph = true
+show_retransmit_graph = true
+show_congestion_control = true
+
+# Color theme
+[colors]
+primary = "blue"
+secondary = "green"
+accent = "yellow"
+success = "green"
+warning = "yellow"
+error = "red"

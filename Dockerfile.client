@@ -1,0 +1,67 @@
+# 2GC Network Protocol Suite - Client Dockerfile
+# Оптимизированный образ для QUIC клиента
+
+FROM golang:1.25.1-alpine AS builder
+
+# Установка зависимостей
+RUN apk add --no-cache git make
+
+# Установка рабочей директории
+WORKDIR /app
+
+# Копирование go.mod и go.sum для кэширования зависимостей
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Копирование исходного кода
+COPY . .
+
+# Сборка только клиента
+RUN make build-client
+
+# Runtime образ
+FROM alpine:3.20
+
+# Установка зависимостей runtime
+RUN apk add --no-cache ca-certificates tzdata wget
+
+# Создание пользователя для безопасности
+RUN addgroup -g 1001 -S quic && \
+    adduser -u 1001 -S quic -G quic
+
+# Установка рабочей директории
+WORKDIR /app
+
+# Копирование собранного клиента
+COPY --from=builder /app/build/quic-client ./
+COPY --from=builder /app/tag.txt ./
+
+# Установка прав доступа
+RUN chown -R quic:quic /app
+USER quic
+
+# Открытие портов
+EXPOSE 2112
+
+# Переменные окружения
+ENV QUIC_CLIENT_ADDR=quic-server:9000
+ENV QUIC_PROMETHEUS_CLIENT_PORT=2112
+ENV QUIC_CONNECTIONS=2
+ENV QUIC_STREAMS=4
+ENV QUIC_RATE=100
+ENV QUIC_DURATION=60s
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:2112/metrics || exit 1
+
+# Метки для контейнера
+LABEL org.opencontainers.image.title="2GC Network Protocol Suite - Client"
+LABEL org.opencontainers.image.description="QUIC client for network protocol testing"
+LABEL org.opencontainers.image.url="https://github.com/twogc/quic-test"
+LABEL org.opencontainers.image.source="https://github.com/twogc/quic-test"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+LABEL org.opencontainers.image.vendor="2GC"
+
+# Команда по умолчанию - запуск клиента
+CMD ./quic-client --addr=${QUIC_CLIENT_ADDR:-quic-server:9000} --connections=${QUIC_CONNECTIONS:-2} --streams=${QUIC_STREAMS:-4} --rate=${QUIC_RATE:-100} --duration=${QUIC_DURATION:-60s} --prometheus ${QUIC_NO_TLS:+--no-tls}

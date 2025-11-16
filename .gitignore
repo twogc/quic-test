@@ -1,0 +1,83 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+quic-test
+quic-test-experimental
+test-matrix
+test-matrix-runner
+dashboard
+experimental
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.html
+
+# Logs
+*.log
+server.log
+client.log
+
+# Temporary files
+*.tmp
+*.temp
+tag.txt
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+dist/
+
+# Test results and data
+test-results/
+test_results/
+baseline-data/
+regression-results/
+test-qlog/
+qlog/
+
+# Monitoring data
+prometheus/
+grafana/
+qvis/
+
+# Static files
+static/
+img/
+
+# Docker volumes
+docker-data/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Sensitive configuration
+config/secrets.yaml
+config/production.yaml
+
+# Backup files
+*.bak
+*.backup
+
+# References directory (external repos)
+references/
+
+# Coverage reports
+coverage/

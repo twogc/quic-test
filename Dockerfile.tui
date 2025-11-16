@@ -1,0 +1,58 @@
+# 2GC Network Protocol Suite - TUI Dockerfile
+# Оптимизированный образ для TUI дашборда
+
+FROM golang:1.25.1-alpine AS builder
+
+# Установка зависимостей
+RUN apk add --no-cache git make
+
+# Установка рабочей директории
+WORKDIR /app
+
+# Копирование go.mod и go.sum для кэширования зависимостей
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Копирование исходного кода
+COPY . .
+
+# Сборка только TUI
+RUN cd cmd/tui && go build -o ../../build/tui .
+
+# Этап 2: Runtime
+FROM alpine:3.20
+
+# Установка зависимостей runtime
+RUN apk add --no-cache ca-certificates tzdata
+
+# Создание пользователя для безопасности
+RUN addgroup -g 1001 -S quic && \
+    adduser -u 1001 -S quic -G quic
+
+# Установка рабочей директории
+WORKDIR /app
+
+# Копирование собранного бинарника TUI
+COPY --from=builder /app/build/tui ./tui
+
+# Копирование файла версии
+COPY --from=builder /app/tag.txt ./
+
+# Установка прав доступа
+RUN chown -R quic:quic /app
+USER quic
+
+# Переменные окружения
+ENV TUI_FPS=10
+ENV TUI_DEMO=false
+
+# Метки для контейнера
+LABEL org.opencontainers.image.title="2GC Network Protocol Suite - TUI"
+LABEL org.opencontainers.image.description="TUI Dashboard component for 2GC Network Protocol Suite"
+LABEL org.opencontainers.image.url="https://github.com/twogc/quic-test"
+LABEL org.opencontainers.image.source="https://github.com/twogc/quic-test"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+LABEL org.opencontainers.image.vendor="2GC"
+
+# Команда по умолчанию - запуск TUI в демо режиме
+CMD ./tui --demo --fps=${TUI_FPS:-10}

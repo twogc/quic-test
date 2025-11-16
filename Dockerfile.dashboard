@@ -1,0 +1,66 @@
+# 2GC CloudBridge Dashboard - Multi-stage Dockerfile
+# Специализированный образ для веб-дашборда
+
+# Этап 1: Сборка
+FROM golang:1.21-alpine AS builder
+
+# Установка зависимостей
+RUN apk add --no-cache git make
+
+# Установка рабочей директории
+WORKDIR /app
+
+# Копирование go.mod и go.sum для кэширования зависимостей
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Копирование исходного кода
+COPY . .
+
+# Сборка только dashboard
+RUN go build -o dashboard ./cmd/dashboard
+
+# Этап 2: Runtime
+FROM alpine:3.20
+
+# Установка зависимостей runtime
+RUN apk add --no-cache ca-certificates tzdata
+
+# Создание пользователя для безопасности
+RUN addgroup -g 1001 -S dashboard && \
+    adduser -u 1001 -S dashboard -G dashboard
+
+# Установка рабочей директории
+WORKDIR /app
+
+# Копирование собранного бинарника
+COPY --from=builder /app/dashboard ./
+
+# Копирование статических файлов
+COPY --from=builder /app/static/ ./static/
+COPY --from=builder /app/index.html ./
+
+# Установка прав доступа
+RUN chown -R dashboard:dashboard /app
+USER dashboard
+
+# Открытие портов
+EXPOSE 9990
+
+# Переменные окружения
+ENV DASHBOARD_ADDR=:9990
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:9990/ || exit 1
+
+# Метки для контейнера
+LABEL org.opencontainers.image.title="2GC CloudBridge Dashboard"
+LABEL org.opencontainers.image.description="QUIC testing dashboard"
+LABEL org.opencontainers.image.url="https://github.com/cloudbridge-relay-installer/quck-test"
+LABEL org.opencontainers.image.source="https://github.com/cloudbridge-relay-installer/quck-test"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+LABEL org.opencontainers.image.vendor="2GC CloudBridge"
+
+# Команда по умолчанию
+CMD ["./dashboard", "--addr=:9990"]

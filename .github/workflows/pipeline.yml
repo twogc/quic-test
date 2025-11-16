@@ -1,0 +1,369 @@
+name: QUIC Test Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_VERSION: '1.25'
+
+jobs:
+  # Stage 1: Lint
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify go.mod tidy
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Install and run golangci-lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+          golangci-lint run --timeout=10m
+
+  # Stage 2: Test
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -race -covermode=atomic -coverprofile=coverage.out ./...
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.out
+
+  # Stage 3: Security
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./... || echo "Vulnerabilities found but continuing"
+
+      - name: Run gosec
+        uses: securego/gosec@v2.22.0
+        continue-on-error: true
+        with:
+          args: '-fmt sarif -out gosec.sarif -timeout 5m ./...'
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('gosec.sarif') != ''
+        with:
+          sarif_file: gosec.sarif
+
+  # Stage 4: Build Test
+  build-test:
+    name: Build Test
+    runs-on: ubuntu-latest
+    needs: security
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Test compilation
+        run: |
+          echo "Testing that code compiles successfully..."
+          go build -v -o build/quic-test .
+          go build -v -o build/quic-client ./cmd/quic-client
+          go build -v -o build/quic-server ./cmd/quic-server
+          go build -v -o build/dashboard ./cmd/dashboard
+          echo "✅ All binaries compile successfully"
+
+      - name: Test Makefile
+        run: |
+          make build
+          make test
+          echo "✅ Makefile targets work correctly"
+
+      - name: Clean up test binaries
+        run: rm -rf build/
+
+  # Stage 5: Version Check & Auto-Tagging  
+  version-check:
+    name: Version Check & Auto-Tag
+    runs-on: ubuntu-latest
+    needs: build-test
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should_release: ${{ steps.version.outputs.should_release }}
+      is_new_version: ${{ steps.version.outputs.is_new_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Read version from tag.txt
+        id: version
+        run: |
+          if [[ ! -f "tag.txt" ]]; then
+            echo "❌ tag.txt file not found!"
+            exit 1
+          fi
+          
+          VERSION=$(cat tag.txt | tr -d '\n\r' | xargs)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Version from tag.txt: ${VERSION}"
+          
+          # Check if this is a valid version format
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid version format in tag.txt: ${VERSION}"
+            echo "Expected format: v1.2.3"
+            exit 1
+          fi
+          
+          # Check if this version already exists as a tag on GitHub
+          if git ls-remote --tags origin | grep -q "refs/tags/${VERSION}$"; then
+            echo "📌 Tag ${VERSION} already exists on GitHub"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "is_new_version=false" >> $GITHUB_OUTPUT
+          else
+            echo "🆕 New version detected: ${VERSION}"
+            echo "should_release=true" >> $GITHUB_OUTPUT  
+            echo "is_new_version=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build test with version
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          go mod download
+          go build -ldflags="-X main.version=${VERSION} -X main.buildType=release" ./cmd/cloudbridge-client/
+          echo "Testing binary with version ${VERSION}:"
+          ./cloudbridge-client version | grep "Version:"
+          rm cloudbridge-client
+
+      - name: Create Git tag  
+        if: steps.version.outputs.is_new_version == 'true' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          echo "🏷️ Creating tag ${VERSION}..."
+          
+          # Configure git with GitHub Actions bot identity
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create annotated tag
+          git tag -a "${VERSION}" -m "Release ${VERSION}
+
+          Automatic release created from tag.txt version bump
+          
+          This release was automatically created when tag.txt was updated to ${VERSION}.
+          
+          Generated by GitHub Actions pipeline."
+          
+          # Set up authentication for push using token
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          
+          echo "📤 Pushing tag ${VERSION}..."
+          git push origin "refs/tags/${VERSION}"
+          
+          echo "✅ Tag ${VERSION} created and pushed successfully"
+
+  # Stage 6: Release Build & Publish (only for new versions)
+  release:
+    name: Release Build & Publish  
+    runs-on: ubuntu-latest
+    needs: version-check
+    if: needs.version-check.outputs.should_release == 'true'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Wait for tag (if just created)
+        if: needs.version-check.outputs.is_new_version == 'true'
+        run: |
+          VERSION="${{ needs.version-check.outputs.version }}"
+          echo "⏳ Waiting for tag ${VERSION} to be available..."
+          
+          # Wait up to 30 seconds for the tag to be available
+          for i in {1..6}; do
+            git fetch --tags
+            if git tag -l | grep -q "^${VERSION}$"; then
+              echo "✅ Tag ${VERSION} is now available"
+              break
+            fi
+            echo "⏳ Attempt $i/6: Tag not yet available, waiting..."
+            sleep 5
+          done
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.version-check.outputs.version }}
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ needs.version-check.outputs.version }}
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/checksums.txt
+          retention-days: 90
+
+  # Summary job
+  pipeline-success:
+    name: Pipeline Success
+    runs-on: ubuntu-latest
+    needs: [lint, test, security, build-test, version-check, release]
+    if: always()
+    steps:
+      - name: Check pipeline status
+        run: |
+          echo "=== Pipeline Summary ==="
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Test: ${{ needs.test.result }}"  
+          echo "Security: ${{ needs.security.result }}"
+          echo "Build Test: ${{ needs.build-test.result }}"
+          echo "Version Check: ${{ needs.version-check.result }}"
+          
+          # Show version info from tag.txt
+          if [[ "${{ needs.version-check.outputs.version }}" != "" ]]; then
+            echo "Version: ${{ needs.version-check.outputs.version }}"
+            echo "🆕 New Version: ${{ needs.version-check.outputs.is_new_version }}"
+            echo "Should Release: ${{ needs.version-check.outputs.should_release }}"
+          fi
+          
+          if [[ "${{ needs.release.result }}" != "skipped" ]]; then
+            echo "Release: ${{ needs.release.result }}"
+            echo "Release pipeline completed!"
+          else
+            echo "✅ CI pipeline completed (no new version)!"
+          fi
+          
+          # Check if any required job failed
+          if [[ "${{ needs.lint.result }}" != "success" || 
+                "${{ needs.test.result }}" != "success" || 
+                "${{ needs.security.result }}" != "success" || 
+                "${{ needs.build-test.result }}" != "success" ||
+                "${{ needs.version-check.result }}" != "success" ]]; then
+            echo "❌ Pipeline failed!"
+            exit 1
+          fi
+          
+          # Check release job if it ran
+          if [[ "${{ needs.release.result }}" != "skipped" ]]; then
+            if [[ "${{ needs.release.result }}" != "success" ]]; then
+              echo "❌ Release failed!"
+              exit 1
+            fi
+          fi
+          
+          echo "✅ Pipeline successful!"

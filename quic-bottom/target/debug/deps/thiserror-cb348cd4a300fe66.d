@@ -1,0 +1,12 @@
+/Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/deps/libthiserror-cb348cd4a300fe66.rmeta: /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/lib.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/aserror.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/display.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/var.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/private.rs /Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/build/thiserror-7fca2e977e011563/out/private.rs
+
+/Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/deps/thiserror-cb348cd4a300fe66.d: /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/lib.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/aserror.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/display.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/var.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/private.rs /Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/build/thiserror-7fca2e977e011563/out/private.rs
+
+/Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/lib.rs:
+/Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/aserror.rs:
+/Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/display.rs:
+/Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/var.rs:
+/Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/private.rs:
+/Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/build/thiserror-7fca2e977e011563/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/build/thiserror-7fca2e977e011563/out

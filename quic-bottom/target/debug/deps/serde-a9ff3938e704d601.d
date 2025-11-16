@@ -1,0 +1,12 @@
+/Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/deps/libserde-a9ff3938e704d601.rmeta: /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/build/serde-496277053e86700a/out/private.rs
+
+/Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/deps/serde-a9ff3938e704d601.d: /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/build/serde-496277053e86700a/out/private.rs
+
+/Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/maxlanies/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/build/serde-496277053e86700a/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/maxlanies/Git/2GC/cloudbridge-relay-installer/oss-repositories/cloudbridge/quic-test/quic-bottom/target/debug/build/serde-496277053e86700a/out
