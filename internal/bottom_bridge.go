@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
@@ -19,15 +20,27 @@ type BottomBridge struct {
 }
 
 // MetricsRequest represents the data sent to QUIC Bottom
+// Должна соответствовать структуре RealQUICMetrics в Rust
 type MetricsRequest struct {
+	// Основные поля, соответствующие RealQUICMetrics
+	Timestamp         int64   `json:"timestamp"`
 	Latency           float64 `json:"latency"`
 	Throughput        float64 `json:"throughput"`
-	ThroughputMbps    float64 `json:"throughput_mbps,omitempty"`
-	GoodputMbps       float64 `json:"goodput_mbps,omitempty"`
 	Connections       int32   `json:"connections"`
 	Errors            int32   `json:"errors"`
 	PacketLoss        float64 `json:"packet_loss"`
 	Retransmits       int32   `json:"retransmits"`
+	Jitter            float64 `json:"jitter"`
+	CongestionWindow  int32   `json:"congestion_window"`
+	RTT               float64 `json:"rtt"`
+	BytesReceived     int64   `json:"bytes_received"`
+	BytesSent         int64   `json:"bytes_sent"`
+	Streams           int32   `json:"streams"`
+	HandshakeTime     float64 `json:"handshake_time"`
+	
+	// Дополнительные поля для совместимости
+	ThroughputMbps    float64 `json:"throughput_mbps,omitempty"`
+	GoodputMbps       float64 `json:"goodput_mbps,omitempty"`
 	RetransmissionRate float64 `json:"retransmission_rate,omitempty"`
 	RTTP50Ms          float64 `json:"rtt_p50_ms,omitempty"`
 	RTTP95Ms          float64 `json:"rtt_p95_ms,omitempty"`
@@ -81,12 +94,34 @@ func (bb *BottomBridge) UpdateMetrics(metrics map[string]interface{}) error {
 		return nil
 	}
 
-	// Extract metrics from the map
-	latency := getFloat64(metrics, "Latency", 0.0)
+	// Extract metrics from the map (используем правильные ключи из ToMap())
+	// Latency берем из RTTAvgMs или вычисляем из Latencies
+	latency := getFloat64(metrics, "RTTAvgMs", 0.0)
+	if latency == 0.0 {
+		// Пробуем вычислить из массива Latencies
+		if latencies, ok := metrics["Latencies"].([]float64); ok && len(latencies) > 0 {
+			sum := 0.0
+			for _, l := range latencies {
+				sum += l
+			}
+			latency = sum / float64(len(latencies))
+		}
+	}
+	
 	throughput := getFloat64(metrics, "ThroughputAverage", 0.0)
 	throughputMbps := getFloat64(metrics, "ThroughputMbps", 0.0)
 	goodputMbps := getFloat64(metrics, "GoodputMbps", 0.0)
+	
+	// Connections вычисляем из количества успешных соединений
 	connections := getInt32(metrics, "Connections", 0)
+	if connections == 0 {
+		// Если Connections нет, используем Success как индикатор активности
+		success := getInt32(metrics, "Success", 0)
+		if success > 0 {
+			connections = 1 // Хотя бы одно соединение активно
+		}
+	}
+	
 	errors := getInt32(metrics, "Errors", 0)
 	packetLoss := getFloat64(metrics, "PacketLoss", 0.0)
 	retransmits := getInt32(metrics, "Retransmits", 0)
@@ -140,16 +175,40 @@ func (bb *BottomBridge) UpdateMetrics(metrics map[string]interface{}) error {
 		}
 	}
 
-	// Create request
+	// Извлекаем дополнительные поля из метрик
+	bytesReceived := getInt64FromMap(metrics, "BytesReceived", 0)
+	bytesSent := getInt64FromMap(metrics, "BytesSent", 0)
+	streams := getInt32(metrics, "Streams", 0)
+	handshakeTime := getFloat64(metrics, "HandshakeTime", 0.0)
+	congestionWindow := getInt32(metrics, "CongestionWindow", 0)
+	
+	// Используем ThroughputMbps если доступен, иначе ThroughputAverage
+	throughputValue := throughputMbps
+	if throughputValue == 0.0 {
+		throughputValue = throughput
+	}
+	
+	// Create request - структура должна соответствовать RealQUICMetrics в Rust
 	req := MetricsRequest{
-		Latency:            latency,
-		Throughput:         throughput,
+		// Основные поля RealQUICMetrics
+		Timestamp:        time.Now().Unix(),
+		Latency:          latency,
+		Throughput:       throughputValue, // Используем Mbps если доступен
+		Connections:      connections,
+		Errors:           errors,
+		PacketLoss:       packetLoss,
+		Retransmits:      retransmits,
+		Jitter:           jitterMs,
+		CongestionWindow: congestionWindow,
+		RTT:              rttP50, // Используем P50 как основной RTT
+		BytesReceived:    bytesReceived,
+		BytesSent:        bytesSent,
+		Streams:          streams,
+		HandshakeTime:    handshakeTime,
+		
+		// Дополнительные поля для совместимости
 		ThroughputMbps:     throughputMbps,
 		GoodputMbps:        goodputMbps,
-		Connections:        connections,
-		Errors:             errors,
-		PacketLoss:         packetLoss,
-		Retransmits:        retransmits,
 		RetransmissionRate: retransmissionRate,
 		RTTP50Ms:           rttP50,
 		RTTP95Ms:           rttP95,
@@ -187,35 +246,121 @@ func (bb *BottomBridge) UpdateMetrics(metrics map[string]interface{}) error {
 		return nil
 	}
 
+	// Debug: выводим отправленные метрики (только первые несколько раз)
+	if time.Since(bb.lastSent) > 5*time.Second || bb.lastSent.IsZero() {
+		bbrv3Info := ""
+		if req.BBRv3Phase != "" {
+			bbrv3Info = fmt.Sprintf(", BBRv3 Phase=%s, BW=%.2f Mbps", req.BBRv3Phase, req.BBRv3BandwidthFast/1_000_000.0)
+		}
+		fmt.Printf("DEBUG: Sent metrics to QUIC Bottom: latency=%.2f, throughput=%.2f, connections=%d%s\n", 
+			req.Latency, req.Throughput, req.Connections, bbrv3Info)
+	}
+
 	bb.lastSent = time.Now()
 	return nil
 }
 
 // sendMetrics sends metrics to the QUIC Bottom API
 func (bb *BottomBridge) sendMetrics(req MetricsRequest) error {
-	jsonData, err := json.Marshal(req)
+	// Для quic-bottom-real используем полную структуру RealQUICMetrics
+	// Для базового quic-bottom используем упрощенную структуру
+	realMetricsReq := map[string]interface{}{
+		"timestamp":         req.Timestamp,
+		"latency":          req.Latency,
+		"throughput":        req.Throughput,
+		"connections":      req.Connections,
+		"errors":            req.Errors,
+		"packet_loss":       req.PacketLoss,
+		"retransmits":       req.Retransmits,
+		"jitter":            req.Jitter,
+		"congestion_window": req.CongestionWindow,
+		"rtt":               req.RTT,
+		"bytes_received":    req.BytesReceived,
+		"bytes_sent":        req.BytesSent,
+		"streams":           req.Streams,
+		"handshake_time":    req.HandshakeTime,
+	}
+	
+	// Добавляем BBRv3 метрики, если они есть
+	// Используем проверку на наличие фазы, а не на > 0, так как некоторые значения могут быть 0
+	if req.BBRv3Phase != "" {
+		realMetricsReq["bbrv3_phase"] = req.BBRv3Phase
+		// Всегда добавляем числовые поля, если фаза есть (даже если 0)
+		realMetricsReq["bbrv3_bw_fast"] = req.BBRv3BandwidthFast
+		realMetricsReq["bbrv3_bw_slow"] = req.BBRv3BandwidthSlow
+		realMetricsReq["bbrv3_loss_rate_ema"] = req.BBRv3LossRateEMA
+		realMetricsReq["bbrv3_loss_rate_round"] = req.BBRv3LossRateRound
+		realMetricsReq["bbrv3_loss_threshold"] = req.BBRv3LossThreshold
+		realMetricsReq["bbrv3_headroom_usage"] = req.BBRv3HeadroomUsage
+		realMetricsReq["bbrv3_inflight_target"] = req.BBRv3InflightTarget
+		realMetricsReq["bbrv3_pacing_quantum"] = req.BBRv3PacingQuantum
+		realMetricsReq["bbrv3_pacing_gain"] = req.BBRv3PacingGain
+		realMetricsReq["bbrv3_cwnd_gain"] = req.BBRv3CWNDGain
+		realMetricsReq["bbrv3_probe_rtt_min_ms"] = req.BBRv3ProbeRTTMinMs
+		realMetricsReq["bbrv3_bufferbloat_factor"] = req.BBRv3BufferbloatFactor
+		realMetricsReq["bbrv3_stability_index"] = req.BBRv3StabilityIndex
+		realMetricsReq["bbrv3_recovery_time_ms"] = req.BBRv3RecoveryTimeMs
+		realMetricsReq["bbrv3_loss_recovery_efficiency"] = req.BBRv3LossRecoveryEfficiency
+		if req.BBRv3PhaseDurationMs != nil && len(req.BBRv3PhaseDurationMs) > 0 {
+			realMetricsReq["bbrv3_phase_duration_ms"] = req.BBRv3PhaseDurationMs
+		}
+	}
+	
+	// Создаем упрощенную структуру для базового quic-bottom
+	simpleReq := map[string]interface{}{
+		"latency":      req.Latency,
+		"throughput":   req.Throughput,
+		"connections":  req.Connections,
+		"errors":       req.Errors,
+		"packet_loss":  req.PacketLoss,
+		"retransmits":  req.Retransmits,
+	}
+	
+	// Пробуем сначала /api/metrics для quic-bottom-real (полная структура)
+	endpoint := bb.apiURL + "/api/metrics"
+	jsonData, err := json.Marshal(realMetricsReq)
 	if err != nil {
 		return fmt.Errorf("failed to marshal metrics: %v", err)
 	}
-
-	resp, err := bb.client.Post(bb.apiURL+"/metrics", "application/json", bytes.NewBuffer(jsonData))
+	
+	resp, err := bb.client.Post(endpoint, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil || (resp != nil && resp.StatusCode != http.StatusOK) {
+		// Fallback на /metrics для базового quic-bottom (упрощенная структура)
+		if resp != nil {
+			resp.Body.Close()
+		}
+		endpoint = bb.apiURL + "/metrics"
+		jsonData, err = json.Marshal(simpleReq)
+		if err != nil {
+			return fmt.Errorf("failed to marshal metrics: %v", err)
+		}
+		resp, err = bb.client.Post(endpoint, "application/json", bytes.NewBuffer(jsonData))
+		if err != nil {
+			return fmt.Errorf("failed to send metrics: %v", err)
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("failed to send metrics: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("QUIC Bottom API returned status %d", resp.StatusCode)
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("QUIC Bottom API returned status %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	// Parse response
-	var metricsResp MetricsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&metricsResp); err != nil {
-		return fmt.Errorf("failed to decode response: %v", err)
+	// Parse response (может быть простой JSON или MetricsResponse)
+	var responseData map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&responseData); err != nil {
+		// Если не удалось распарсить, это не критично - главное что статус 200
+		return nil
 	}
 
-	if metricsResp.Status != "ok" {
-		return fmt.Errorf("QUIC Bottom API error: %s", metricsResp.Message)
+	// Проверяем статус если есть
+	if status, ok := responseData["status"].(string); ok && status != "ok" {
+		if msg, ok := responseData["message"].(string); ok {
+			return fmt.Errorf("QUIC Bottom API error: %s", msg)
+		}
 	}
 
 	return nil
@@ -273,6 +418,31 @@ func getInt32(m map[string]interface{}, key string, defaultValue int32) int32 {
 		}
 		if f, ok := val.(float64); ok {
 			return int32(f)
+		}
+		if i, ok := val.(int); ok {
+			return int32(i)
+		}
+		if i, ok := val.(int64); ok {
+			return int32(i)
+		}
+	}
+	return defaultValue
+}
+
+// getInt64FromMap извлекает int64 из map (чтобы избежать конфликта с getInt64 в schema.go)
+func getInt64FromMap(m map[string]interface{}, key string, defaultValue int64) int64 {
+	if val, ok := m[key]; ok {
+		if i, ok := val.(int64); ok {
+			return i
+		}
+		if f, ok := val.(float64); ok {
+			return int64(f)
+		}
+		if i, ok := val.(int); ok {
+			return int64(i)
+		}
+		if i, ok := val.(int32); ok {
+			return int64(i)
 		}
 	}
 	return defaultValue

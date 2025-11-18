@@ -127,6 +127,7 @@
 
 **Языки:** Rust 1.70+
 **Основные библиотеки:** Ratatui, Warp, Tokio
+**Документация:** [Руководство по использованию TUI](docs/TUI_USER_GUIDE.md)
 
 ### 3. HTTP API Bridge
 Система взаимодействия между компонентами:
@@ -154,7 +155,7 @@
 go run main.go --mode=test --network-profile=mobile --duration=60s --quic-bottom
 
 # Тестирование с Forward Error Correction
-go run main.go --mode=experimental --fec=0.1 --cc=bbrv2 --quic-bottom
+go run main.go --mode=experimental --fec=0.1 --cc=bbrv3 --quic-bottom
 ```
 **Цель:** Сравнение производительности в различных условиях и отправка результатов для анализа.
 
@@ -481,14 +482,14 @@ go run main.go --mode=test --network-profile=adversarial --quic-bottom
 
 ### Тестирование экспериментальных функций
 ```bash
-# BBRv2 алгоритм управления перегрузкой
-go run main.go --mode=experimental --cc=bbrv2 --quic-bottom
+# BBRv3 алгоритм управления перегрузкой
+go run main.go --mode=experimental --cc=bbrv3 --quic-bottom
 
 # Forward Error Correction с 10% избыточности
 go run main.go --mode=experimental --fec=0.1 --quic-bottom
 
-# Комбинация: BBRv2 + FEC + ACK Frequency
-go run main.go --mode=experimental --cc=bbrv2 --fec=0.1 --ackfreq=5 --quic-bottom
+# Комбинация: BBRv3 + FEC + ACK Frequency
+go run main.go --mode=experimental --cc=bbrv3 --fec=0.1 --ackfreq=5 --quic-bottom
 ```
 
 ### Тестирование безопасности
@@ -635,9 +636,17 @@ go run main.go --mode=tcp-tunnel \
 Если у вас возникли вопросы или проблемы:
 
 1. **Проверьте документацию:**
+   - **[Руководство по использованию TUI](docs/TUI_USER_GUIDE.md)** - Полное руководство по работе с интерфейсом QUIC Bottom Real
+     - Установка и настройка
+     - Описание всех режимов просмотра
+     - Справочник клавиатурных сокращений
+     - Интерпретация метрик
+     - Решение проблем
    - [Architecture Guide](docs/architecture.md)
    - [Troubleshooting Guide](docs/troubleshooting.md)
    - [API Documentation](docs/api.md)
+   
+   Полный список документации доступен в [docs/README.md](docs/README.md).
 
 2. **Посмотрите примеры:**
    - Примеры использования в разделе [Примеры команд](#примеры-команд-для-различных-сценариев)

@@ -21,6 +21,8 @@ A comprehensive platform for testing and analyzing network protocols: QUIC, MASQ
 
 **Professional TUI visualizations** based on the popular `bottom` system monitor, providing real-time QUIC metrics with advanced analytics, network simulation, security testing, and cloud deployment monitoring.
 
+**Documentation:** See [TUI User Guide](docs/TUI_USER_GUIDE.md) for complete usage instructions.
+
 ## TCP-over-QUIC Research Framework
 
 This test suite includes a comprehensive framework for researching **TCP application tunneling over QUIC** — modeling real-world overlay networks and Zero Trust architectures. Compare native TCP, native QUIC, and TCP-over-QUIC (CloudBridge architecture) in mobile, satellite, and adversarial network conditions.
@@ -272,14 +274,14 @@ go run main.go --mode=test --quic-bottom --duration=30s
 
 ### Experimental QUIC Features
 ```bash
-# BBRv2 Congestion Control
-go run main.go --mode=experimental --cc=bbrv2 --ackfreq=3 --fec=0.1
+# BBRv3 Congestion Control
+go run main.go --mode=experimental --cc=bbrv3 --ackfreq=3 --fec=0.1
 
 # ACK Frequency Optimization
 go run main.go --mode=experimental --ackfreq=5 --cc=cubic
 
 # FEC (Forward Error Correction)
-go run main.go --mode=experimental --fec=0.05 --cc=bbrv2
+go run main.go --mode=experimental --fec=0.05 --cc=bbrv3
 ```
 
 ### Network Simulation
@@ -398,12 +400,25 @@ go run main.go --mode=test --quic-bottom --debug
 
 ## Documentation
 
+### User Guides
+
+- **[TUI User Guide](docs/TUI_USER_GUIDE.md)** - Complete guide to using the QUIC Bottom Real Terminal User Interface
+  - Installation and setup
+  - All view modes explained
+  - Keyboard shortcuts reference
+  - Metrics interpretation
+  - Troubleshooting guide
+
+### Technical Documentation
+
 - [Architecture Guide](docs/ARCHITECTURE.md)
 - [API Documentation](docs/api.md)
 - [Deployment Guide](docs/deployment.md)
 - [Docker Guide](docs/docker.md)
 - [Usage Guide](docs/usage.md)
 - [Real Integration Report](REAL_INTEGRATION_REPORT.md)
+
+For complete documentation index, see [docs/README.md](docs/README.md).
 
 ## Contributing
 

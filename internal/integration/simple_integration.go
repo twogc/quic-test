@@ -13,6 +13,11 @@ import (
 	"go.uber.org/zap"
 )
 
+var (
+	lastWarnTimeSI time.Time
+	warnMutexSI    sync.Mutex
+)
+
 // SimpleIntegration простая интеграция компонентов с quic-go
 type SimpleIntegration struct {
 	logger         *zap.Logger
@@ -200,12 +205,41 @@ func (si *SimpleIntegration) GetBBRv3Metrics() map[string]interface{} {
 	si.mu.RLock()
 	defer si.mu.RUnlock()
 	
-	if !si.isActive || si.sendController == nil {
+	if !si.isActive {
+		// Debug: выводим только раз в 10 секунд
+		warnMutexSI.Lock()
+		now := time.Now()
+		if now.Sub(lastWarnTimeSI) > 10*time.Second {
+			fmt.Printf("[DEBUG] GetBBRv3Metrics: isActive=false\n")
+			lastWarnTimeSI = now
+		}
+		warnMutexSI.Unlock()
+		return nil
+	}
+	
+	if si.sendController == nil {
+		// Debug: выводим только раз в 10 секунд
+		warnMutexSI.Lock()
+		now := time.Now()
+		if now.Sub(lastWarnTimeSI) > 10*time.Second {
+			fmt.Printf("[DEBUG] GetBBRv3Metrics: sendController is nil\n")
+			lastWarnTimeSI = now
+		}
+		warnMutexSI.Unlock()
 		return nil
 	}
 	
 	// Проверяем, используется ли BBRv3
-	if si.sendController.GetAlgorithm() != "bbrv3" {
+	algorithm := si.sendController.GetAlgorithm()
+	if algorithm != "bbrv3" {
+		// Debug: выводим только раз в 10 секунд
+		warnMutexSI.Lock()
+		now := time.Now()
+		if now.Sub(lastWarnTimeSI) > 10*time.Second {
+			fmt.Printf("[DEBUG] GetBBRv3Metrics: algorithm=%s (expected bbrv3)\n", algorithm)
+			lastWarnTimeSI = now
+		}
+		warnMutexSI.Unlock()
 		return nil
 	}
 	

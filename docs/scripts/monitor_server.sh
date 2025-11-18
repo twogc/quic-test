@@ -20,7 +20,7 @@ fi
 echo ""
 
 # Проверка порта
-echo "🌐 Network Status:"
+echo "Network Status:"
 if netstat -tuln 2>/dev/null | grep -q ":9000 "; then
     echo "✅ Port 9000 is LISTENING"
 else

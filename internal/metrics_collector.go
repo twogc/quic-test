@@ -1,7 +1,9 @@
 package internal
 
 import (
+	"fmt"
 	"sync"
+	"time"
 
 	"quic-test/internal/congestion"
 	"quic-test/internal/integration"
@@ -71,6 +73,12 @@ func (gmc *GlobalMetricsCollector) GetFairnessIndex() float64 {
 	return congestion.JainFairnessIndex(gmc.flowThroughputs)
 }
 
+var (
+	lastDebugTime   time.Time
+	lastWarnTime    time.Time
+	debugMutex      sync.Mutex
+)
+
 // EnhanceMetricsMap adds BBRv3 and experimental metrics to metrics map
 func EnhanceMetricsMap(metricsMap map[string]interface{}) map[string]interface{} {
 	// Get BBRv3 metrics if available
@@ -78,6 +86,35 @@ func EnhanceMetricsMap(metricsMap map[string]interface{}) map[string]interface{}
 	bbrv3Metrics := gmc.GetBBRv3Metrics()
 	if bbrv3Metrics != nil {
 		metricsMap["BBRv3Metrics"] = bbrv3Metrics
+		// Debug: выводим только раз в 5 секунд, чтобы не засорять логи
+		if phase, ok := bbrv3Metrics["phase"].(string); ok && phase != "" {
+			debugMutex.Lock()
+			now := time.Now()
+			if now.Sub(lastDebugTime) > 5*time.Second {
+				bw := 0.0
+				if bwFast, ok := bbrv3Metrics["bw_fast"].(float64); ok {
+					bw = bwFast / 1_000_000.0
+				}
+				fmt.Printf("[DEBUG] EnhanceMetricsMap: BBRv3 Phase=%s, BW=%.2f Mbps\n", phase, bw)
+				lastDebugTime = now
+			}
+			debugMutex.Unlock()
+		}
+	} else {
+		// Debug: проверяем, почему метрики nil
+		gmc.mu.RLock()
+		hasIntegration := gmc.experimentalIntegration != nil
+		gmc.mu.RUnlock()
+		if !hasIntegration {
+			// Выводим только раз в 10 секунд
+			debugMutex.Lock()
+			now := time.Now()
+			if now.Sub(lastWarnTime) > 10*time.Second {
+				fmt.Printf("[DEBUG] EnhanceMetricsMap: experimentalIntegration is nil\n")
+				lastWarnTime = now
+			}
+			debugMutex.Unlock()
+		}
 	}
 	
 	// Add fairness index if we have multiple flows

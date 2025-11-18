@@ -40,6 +40,8 @@ impl CorrelationWidget {
                 "Latency".to_string(),
                 "Throughput".to_string(),
                 "Packet Loss".to_string(),
+                "RTT".to_string(),
+                "Jitter".to_string(),
                 "Retransmits".to_string(),
                 "Connections".to_string(),
                 "Errors".to_string(),
@@ -60,6 +62,7 @@ impl CorrelationWidget {
     }
 
     /// Calculate correlation between two data series
+    /// Returns Pearson correlation coefficient
     pub fn calculate_correlation(&self, data1: &[f64], data2: &[f64]) -> f64 {
         if data1.len() != data2.len() || data1.is_empty() {
             return 0.0;
@@ -81,11 +84,20 @@ impl CorrelationWidget {
             sum_sq2 += dy * dy;
         }
 
+        // Check for zero variance (constant values)
         if sum_sq1 == 0.0 || sum_sq2 == 0.0 {
             return 0.0;
         }
 
-        numerator / (sum_sq1 * sum_sq2).sqrt()
+        let denominator = (sum_sq1 * sum_sq2).sqrt();
+        if denominator == 0.0 {
+            return 0.0;
+        }
+
+        let correlation = numerator / denominator;
+        
+        // Clamp to [-1, 1] range
+        correlation.max(-1.0).min(1.0)
     }
 
     /// Get color for correlation strength
@@ -141,11 +153,14 @@ impl CorrelationWidget {
     }
 
     fn render_correlation_matrix(&self, f: &mut Frame, area: Rect) {
+        // Show matrix even if correlations are empty (they're being recalculated)
+        // Only show empty message if we truly have no data
         if self.correlations.is_empty() {
-            let empty_text = "No correlation data available yet...";
+            // Show a brief message that correlations are being calculated
+            let empty_text = "Recalculating correlations...\nPlease wait a moment";
             let empty_paragraph = Paragraph::new(empty_text)
-                .style(Style::default().fg(Color::Gray))
-                .block(Block::default().borders(Borders::ALL));
+                .style(Style::default().fg(Color::Yellow))
+                .block(Block::default().borders(Borders::ALL).title("QUIC Metrics Correlation"));
             f.render_widget(empty_paragraph, area);
             return;
         }
@@ -218,19 +233,45 @@ impl QUICCorrelationWidget {
 
     /// Add metric data
     pub fn add_metric_data(&mut self, metric: String, value: f64) {
-        self.metric_data.entry(metric.clone()).or_insert_with(Vec::new).push(value);
+        let entry = self.metric_data.entry(metric.clone()).or_insert_with(Vec::new);
+        entry.push(value);
         
         // Keep only recent data (last 100 points)
-        if let Some(data) = self.metric_data.get_mut(&metric) {
-            if data.len() > 100 {
-                data.remove(0);
-            }
+        if entry.len() > 100 {
+            entry.remove(0);
         }
+    }
+    
+    /// Get number of data points for a metric
+    pub fn get_data_points_count(&self, metric: &str) -> usize {
+        self.metric_data.get(metric).map(|v| v.len()).unwrap_or(0)
+    }
+    
+    /// Get total number of metrics with data
+    pub fn get_metrics_count(&self) -> usize {
+        self.metric_data.len()
     }
 
     /// Update correlations
     pub fn update_correlations(&mut self) {
-        let metrics: Vec<String> = self.metric_data.keys().cloned().collect();
+        // Get all metrics that have data (need at least 3 points for meaningful correlation)
+        let min_data_points = 3;
+        let metrics: Vec<String> = self.metric_data.keys()
+            .filter(|k| {
+                let count = self.metric_data.get(*k).map(|v| v.len()).unwrap_or(0);
+                count >= min_data_points
+            })
+            .cloned()
+            .collect();
+        
+        // Only calculate if we have at least 2 metrics with enough data
+        if metrics.len() < 2 {
+            return;
+        }
+        
+        // Calculate new correlations first, then replace old ones
+        // This prevents flickering when correlations are temporarily empty
+        let mut new_correlations = Vec::new();
         
         for i in 0..metrics.len() {
             for j in (i + 1)..metrics.len() {
@@ -238,22 +279,75 @@ impl QUICCorrelationWidget {
                     self.metric_data.get(&metrics[i]),
                     self.metric_data.get(&metrics[j])
                 ) {
-                    let correlation = self.correlation.calculate_correlation(data1, data2);
-                    let significance = correlation.abs(); // Simplified significance
-                    
-                    self.correlation.add_correlation(
-                        metrics[i].clone(),
-                        metrics[j].clone(),
-                        correlation,
-                        significance,
-                    );
+                    // Only calculate correlation if we have enough data points
+                    if data1.len() >= min_data_points && data2.len() >= min_data_points {
+                        // Use the minimum length to ensure both series are aligned
+                        // Use more recent data (last N points) for better correlation
+                        let min_len = data1.len().min(data2.len()).min(50); // Use up to 50 points
+                        let data1_slice = &data1[data1.len() - min_len..];
+                        let data2_slice = &data2[data2.len() - min_len..];
+                        
+                        // Check if data has variance (not all values are the same)
+                        let has_variance1 = data1_slice.iter().any(|&x| (x - data1_slice[0]).abs() > 0.001);
+                        let has_variance2 = data2_slice.iter().any(|&x| (x - data2_slice[0]).abs() > 0.001);
+                        
+                        if has_variance1 && has_variance2 {
+                            let correlation = self.correlation.calculate_correlation(data1_slice, data2_slice);
+                            let significance = correlation.abs(); // Simplified significance
+                            
+                            // Only add if correlation is meaningful (not NaN or infinite)
+                            if correlation.is_finite() {
+                                new_correlations.push(CorrelationData {
+                                    metric1: metrics[i].clone(),
+                                    metric2: metrics[j].clone(),
+                                    correlation,
+                                    significance,
+                                });
+                            }
+                        }
+                    }
                 }
             }
+        }
+        
+        // Only replace old correlations if we found new ones
+        // This prevents clearing correlations when recalculation fails
+        if !new_correlations.is_empty() {
+            self.correlation.correlations = new_correlations;
         }
     }
 
     /// Render the correlation widget
     pub fn render(&self, f: &mut Frame, area: Rect) {
+        // Check if we have enough data before rendering
+        let metrics_with_data: Vec<String> = self.metric_data.keys()
+            .filter(|k| self.metric_data.get(*k).map(|v| v.len()).unwrap_or(0) >= 3)
+            .cloned()
+            .collect();
+        
+        // Only show status if we don't have enough data points yet
+        // If we have correlations, show them even if they're temporarily empty during recalculation
+        if metrics_with_data.len() < 2 {
+            let data_counts: Vec<String> = self.metric_data.iter()
+                .map(|(k, v)| format!("{}: {} pts", k, v.len()))
+                .collect();
+            
+            let status_text = format!(
+                "Collecting data...\nMetrics with 3+ points: {}/{}\n\nData points:\n{}",
+                metrics_with_data.len(),
+                self.metric_data.len(),
+                data_counts.join("\n")
+            );
+            
+            let status_paragraph = Paragraph::new(status_text)
+                .style(Style::default().fg(Color::Yellow))
+                .block(Block::default().borders(Borders::ALL).title("QUIC Metrics Correlation"));
+            f.render_widget(status_paragraph, area);
+            return;
+        }
+        
+        // If we have enough data, always render the correlation matrix
+        // Even if correlations are temporarily empty, they will be recalculated
         self.correlation.render(f, area);
     }
 }

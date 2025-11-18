@@ -287,6 +287,23 @@ func Run(cfg internal.TestConfig) {
 	if cfg.Prometheus {
 		go startPrometheusExporter(testMetrics)
 	}
+	// Создаем и регистрируем глобальный SimpleIntegration ДО запуска горутин соединений
+	// Это нужно, чтобы EnhanceMetricsMap мог получить BBRv3 метрики с самого начала
+	// Глобальный SimpleIntegration будет использоваться во всех соединениях для сбора метрик
+	var globalSI *integration.SimpleIntegration
+	if cfg.CongestionControl == "bbrv3" || cfg.CongestionControl == "bbrv2" {
+		logger, _ := zap.NewDevelopment()
+		globalSI = integration.NewSimpleIntegration(logger, cfg.CongestionControl)
+		if err := globalSI.Initialize(); err != nil {
+			fmt.Printf("Warning: Failed to initialize global %s integration: %v\n", cfg.CongestionControl, err)
+			globalSI = nil
+		} else {
+			gmc := internal.GetGlobalMetricsCollector()
+			gmc.SetExperimentalIntegration(globalSI)
+			fmt.Printf("[INFO] Global BBRv3 integration registered in GlobalMetricsCollector\n")
+		}
+	}
+
 	startTime := time.Now()
 	// Time series collector
 	go func() {
@@ -314,6 +331,11 @@ func Run(cfg internal.TestConfig) {
 				lastCount = len(testMetrics.Latencies)
 				lastBytes = bytesNow
 				testMetrics.mu.Unlock()
+				
+				// Периодическая отправка метрик в QUIC Bottom
+				metricsMap := testMetrics.ToMap()
+				metricsMap = internal.EnhanceMetricsMap(metricsMap)
+				internal.UpdateBottomMetrics(metricsMap)
 			}
 		}
 	}()
@@ -360,14 +382,21 @@ func Run(cfg internal.TestConfig) {
 			if cfg.CongestionControl == "bbrv3" || cfg.CongestionControl == "bbrv2" {
 				fmt.Printf("[DEBUG] Connection %d goroutine started\n", connID)
 			}
-			// Создаем отдельный SimpleIntegration для каждого соединения
+			// Используем глобальный SimpleIntegration для всех соединений
+			// Это позволяет собирать метрики BBRv3 в одном месте
 			var si *integration.SimpleIntegration
 			if cfg.CongestionControl == "bbrv3" || cfg.CongestionControl == "bbrv2" {
-				logger, _ := zap.NewDevelopment()
-				si = integration.NewSimpleIntegration(logger, cfg.CongestionControl)
-				if err := si.Initialize(); err != nil {
-					fmt.Printf("Warning: Failed to initialize %s integration for connection %d: %v\n", cfg.CongestionControl, connID, err)
-					si = nil
+				// Используем глобальный SimpleIntegration, если он создан
+				if globalSI != nil {
+					si = globalSI
+				} else {
+					// Fallback: создаем локальный, если глобальный не создан
+					logger, _ := zap.NewDevelopment()
+					si = integration.NewSimpleIntegration(logger, cfg.CongestionControl)
+					if err := si.Initialize(); err != nil {
+						fmt.Printf("Warning: Failed to initialize %s integration for connection %d: %v\n", cfg.CongestionControl, connID, err)
+						si = nil
+					}
 				}
 			}
 			clientConnection(ctx, *cfgPtr, testMetrics, connID, &rate, si)
@@ -454,7 +483,7 @@ func Run(cfg internal.TestConfig) {
 	}
 	
 	// Опционально: отправка в QUIC Bottom (если нужно)
-	// internal.UpdateBottomMetrics(metricsMap)
+	internal.UpdateBottomMetrics(metricsMap)
 
 	// Save report with enhanced metrics (including BBRv3)
 	err := internal.SaveReport(cfg, metricsMap)
@@ -1271,11 +1300,26 @@ func parseAddr(addr string) *net.UDPAddr {
 			parts := splitHostPort(addr)
 			if len(parts) == 2 {
 				host, port = parts[0], parts[1]
+				// Если host пустой (например, ":9000"), используем localhost
+				if host == "" {
+					host = "127.0.0.1"
+				}
+			} else if len(parts) == 1 {
+				// Только порт (например, ":9000" или "9000")
+				if parts[0] != "" {
+					port = parts[0]
+				}
 			}
 		}
 		udpAddr = &net.UDPAddr{
 			IP:   net.ParseIP(host),
 			Port: parseInt(port),
+		}
+	} else {
+		// Проверяем, что IP не пустой и не IPv6 :: (который может вызвать проблемы)
+		if udpAddr.IP == nil || udpAddr.IP.IsUnspecified() {
+			// Если IP пустой или неопределенный, используем 127.0.0.1
+			udpAddr.IP = net.ParseIP("127.0.0.1")
 		}
 	}
 	return udpAddr
