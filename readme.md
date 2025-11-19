@@ -475,8 +475,6 @@ Through this laboratory work, students will:
 - Analyze dual congestion control effects (TCP + QUIC algorithms)
 - Explore Forward Error Correction impact on tunneled TCP applications
 
-**More information:** [CloudBridge Research GitHub](https://github.com/twogc/cloudbridge-research)
-
 For detailed Russian language documentation with lab materials and teaching guidelines, see [readme_ru.md](readme_ru.md).
 
 ## Acknowledgments
