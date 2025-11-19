@@ -156,7 +156,7 @@ go build -o bin/quic-test .
 - `q/ESC` - Quit
 - `r` - Reset all data
 - `h` - Show help
-- `1-5` - Switch views (Dashboard, Analytics, Network, Security, Cloud)
+- `1-6` - Switch views (Dashboard, Analytics, Network, Security, Cloud, BBRv3)
 - `a` - All views
 - `n` - Toggle network simulation
 - `+/-` - Change network preset
@@ -170,7 +170,8 @@ go build -o bin/quic-test .
 3. **Network** - Network simulation status and controls
 4. **Security** - Security testing status and results
 5. **Cloud** - Cloud deployment status and controls
-6. **All** - Complete overview of all features
+6. **BBRv3** - BBRv3 congestion control metrics and analysis
+7. **All** - Complete overview of all features
 
 ## Network Simulation
 
