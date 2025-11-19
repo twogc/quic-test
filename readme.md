@@ -96,7 +96,7 @@ Related Projects: [AI Routing Lab](https://github.com/twogc/ai-routing-lab), [Cl
 - **TLS 1.3** - Modern cryptography for secure connections
 - **HTTP/3** - HTTP over QUIC
 
-[![Watch demo video](docs/media/quic-thumbnail.jpg)](https://github.com/twogc/quic-test/blob/main/quic.mp4)
+[![Watch demo video](docs/media/quic-thumbnail.jpg)](https://github.com/user-attachments/assets/b3124696-1ab8-48e3-8b04-1cec3881c3a4)
 
 [![Build](https://github.com/twogc/quic-test/workflows/CI/badge.svg)](https://github.com/twogc/quic-test/actions)
 [![Lint](https://github.com/twogc/quic-test/workflows/Lint/badge.svg)](https://github.com/twogc/quic-test/actions)
