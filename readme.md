@@ -437,6 +437,14 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 This project is developed and maintained by **CloudBridge Research**, an independent research center specializing in network technologies, distributed systems, and cybersecurity.
 
+### Why Support CloudBridge Research?
+
+Community sponsorship keeps the research roadmap moving forward, trains new experts, and ensures our open technologies stay available to everyone:
+
+- **Innovation** — fuel cutting-edge research in network technologies shaping the future of the Internet
+- **Talent** — access top students and researchers through academic programs and summer schools
+- **Impact** — help define open standards and technologies adopted worldwide
+
 ### Mission
 - Conduct fundamental and applied research in network protocols (QUIC, MASQUE, BGP, etc.)
 - Develop and distribute open-source software for network optimization
@@ -453,8 +461,16 @@ This project is developed and maintained by **CloudBridge Research**, an indepen
 ### Contact & Resources
 - **Official Website:** https://cloudbridge-research.ru/
 - **Director:** [Maksim Lanies](https://cloudbridge-research.ru/about/maxim-lanies/)
-- **GitHub:** https://github.com/twogc/cloudbridge-research
 - **Email:** info@cloudbridge-research.ru
+- **Sponsors & Partners:** https://cloudbridge-research.ru/sponsors/ — Invest in the future of network technologies and support CloudBridge Research initiatives.
+
+### Funding Sources
+
+CloudBridge Research combines public and private programs to keep research sustainable:
+
+- **Government Grants** — RSF, RFBR, Ministry of Education and Science, Presidential grants
+- **Corporate Funding** — technology vendors, cloud providers, telecom operators, data centers
+- **Education Grants** — curriculum development, student scholarships, summer school support
 
 ### Educational Programs
 This test suite is used in CloudBridge Research laboratory programs for:
