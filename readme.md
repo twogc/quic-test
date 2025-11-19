@@ -452,7 +452,7 @@ This project is developed and maintained by **CloudBridge Research**, an indepen
 
 ### Contact & Resources
 - **Official Website:** https://cloudbridge-research.ru/
-- **Director:** [Maxim Lanies](https://cloudbridge-research.ru/about/maxim-lanies/)
+- **Director:** [Maksim Lanies](https://cloudbridge-research.ru/about/maxim-lanies/)
 - **GitHub:** https://github.com/twogc/cloudbridge-research
 - **Email:** info@cloudbridge-research.ru
 
