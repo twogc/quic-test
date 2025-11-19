@@ -39,7 +39,6 @@ docs/
 ├── README.md              # This file
 ├── TUI_USER_GUIDE.md      # Complete TUI usage guide
 └── media/                 # Media files
-    ├── quic.mp4           # Demo video
     └── quic-thumbnail.jpg # Video thumbnail/preview
 ```
 
