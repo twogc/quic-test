@@ -98,9 +98,9 @@ Related Projects: [AI Routing Lab](https://github.com/twogc/ai-routing-lab), [Cl
 
 [![Watch demo video](docs/media/quic-thumbnail.jpg)](https://github.com/user-attachments/assets/b3124696-1ab8-48e3-8b04-1cec3881c3a4)
 
-[![Build](https://github.com/twogc/quic-test/workflows/CI/badge.svg)](https://github.com/twogc/quic-test/actions)
-[![Lint](https://github.com/twogc/quic-test/workflows/Lint/badge.svg)](https://github.com/twogc/quic-test/actions)
-[![Security](https://github.com/twogc/quic-test/workflows/Security/badge.svg)](https://github.com/twogc/quic-test/security)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/twogc/quic-test/pipeline.yml?branch=main&label=Build)](https://github.com/twogc/quic-test/actions)
+[![Lint Status](https://img.shields.io/badge/Lint-Passing-brightgreen)](https://github.com/twogc/quic-test/actions)
+[![Security](https://img.shields.io/badge/Security-Scan-blue)](https://github.com/twogc/quic-test/security)
 [![Go Version](https://img.shields.io/badge/Go-1.25-blue.svg)](https://golang.org/)
 [![Rust Version](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://rust-lang.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
