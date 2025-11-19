@@ -37,7 +37,9 @@ For educational materials and lecture guides, see:
 ```
 docs/
 ├── README.md              # This file
-└── TUI_USER_GUIDE.md      # Complete TUI usage guide
+├── TUI_USER_GUIDE.md      # Complete TUI usage guide
+└── media/                 # Media files
+    └── quic.mp4           # Demo video
 ```
 
 ## Contributing
