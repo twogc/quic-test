@@ -55,7 +55,7 @@ func (ns *NetworkSimulator) Start() error {
 		return fmt.Errorf("network simulation is already active")
 	}
 
-	log.Printf("🌐 Starting network simulation: Latency=%v, Loss=%.2f%%, Bandwidth=%d bps", 
+	log.Printf("Starting network simulation: Latency=%v, Loss=%.2f%%, Bandwidth=%d bps", 
 		ns.config.Latency, ns.config.PacketLoss*100, ns.config.Bandwidth)
 
 	// Apply network conditions using Linux tc (traffic control)

@@ -86,7 +86,7 @@ func main() {
 	defer logger.Sync()
 
 	fmt.Println("🔥 Запуск MASQUE тестирования...")
-	fmt.Printf("🌐 Сервер: %s\n", *masqueServer)
+	fmt.Printf("Сервер: %s\n", *masqueServer)
 	fmt.Printf("Цели: %s\n", *masqueTargets)
 
 	// Запускаем MASQUE тестирование

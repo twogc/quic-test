@@ -56,6 +56,10 @@ type TestConfig struct {
 	// --- PQC (Post-Quantum Cryptography) ---
 	PQCEnabled  bool   // Включить Post-Quantum Cryptography (симуляция)
 	PQCAlgorithm string // PQC алгоритм: "ml-kem-512", "ml-kem-768", "dilithium-2", "hybrid", "baseline"
+
+	// --- AI Routing ---
+	AIEnabled    bool   // Включить AI-маршрутизацию
+	AIServiceURL string // URL сервиса прогнозирования (например, http://localhost:5000)
 }
 
 // Validate проверяет корректность конфигурации

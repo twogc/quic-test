@@ -22,7 +22,7 @@ TEST_DURATION=${TEST_DURATION:-60}
 CONCURRENT_TESTS=${CONCURRENT_TESTS:-10}
 
 echo -e "${CYAN}Test Configuration:${NC}"
-echo "  🌐 MASQUE Server: $MASQUE_SERVER"
+echo "  MASQUE Server: $MASQUE_SERVER"
 echo "  ⏱️ Test Duration: $TEST_DURATION seconds"
 echo "  🔗 Concurrent Tests: $CONCURRENT_TESTS"
 echo ""
@@ -264,7 +264,7 @@ else
 fi
 
 echo ""
-echo -e "${BLUE}🌐 Available Interfaces:${NC}"
+echo -e "${BLUE}Available Interfaces:${NC}"
 echo "  MASQUE Server: masque://$MASQUE_SERVER"
 echo "  Prometheus: http://212.233.79.160:2113/metrics"
 echo "  Grafana: http://212.233.79.160:3000"

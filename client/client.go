@@ -6,20 +6,21 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
+	"math"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"math"
 	"sort"
 	"sync"
 	"syscall"
 	"time"
 
 	"quic-test/internal"
-	"quic-test/internal/metrics"
-	"quic-test/internal/integration"
+	"quic-test/internal/ai"
 	"quic-test/internal/fec"
+	"quic-test/internal/integration"
+	"quic-test/internal/metrics"
 	"quic-test/internal/pqc"
 
 	"crypto/tls"
@@ -302,6 +303,53 @@ func Run(cfg internal.TestConfig) {
 			gmc.SetExperimentalIntegration(globalSI)
 			fmt.Printf("[INFO] Global BBRv3 integration registered in GlobalMetricsCollector\n")
 		}
+	}
+
+	// --- AI Prediction Consumer ---
+	if cfg.AIEnabled {
+		aiClient := ai.NewPredictionClient(cfg.AIServiceURL)
+		fmt.Printf("[INFO] AI Routing enabled. Connecting to %s\n", cfg.AIServiceURL)
+		
+		go func() {
+			ticker := time.NewTicker(1 * time.Second)
+			defer ticker.Stop()
+			
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+					// Collect current metrics for features
+					metricsMap := testMetrics.ToMap()
+					rtt := metricsMap["RTTP95Ms"].(float64)
+					jitter := metricsMap["JitterMs"].(float64)
+					loss := metricsMap["PacketLoss"].(float64)
+					throughput := metricsMap["ThroughputMbps"].(float64)
+					
+					// Feature vector: [rtt, jitter, loss, throughput]
+					features := []float64{rtt, jitter, loss, throughput}
+					
+					// Request prediction for current route (simulated ID "route-0")
+					pred, err := aiClient.GetPrediction("route-0", features)
+					if err != nil {
+						// Log error but don't stop test
+						// fmt.Printf("[AI Warning] Prediction failed: %v\n", err)
+						continue
+					}
+					
+					// Log prediction result
+					if pred.ConfidenceScore > 0.8 {
+						fmt.Printf("[AI] Prediction: Latency=%.2fms, Jitter=%.2fms (Confidence: %.2f)\n", 
+							pred.PredictedLatencyMs, pred.PredictedJitterMs, pred.ConfidenceScore)
+							
+						// Simulate route switching logic
+						if pred.PredictedLatencyMs > 100 {
+							fmt.Printf("[AI] High latency predicted! Recommending route switch...\n")
+						}
+					}
+				}
+			}
+		}()
 	}
 
 	startTime := time.Now()

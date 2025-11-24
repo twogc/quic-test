@@ -21,7 +21,7 @@ clear_screen() {
 
 # Функция для показа статуса сервера
 show_server_status() {
-    echo -e "${YELLOW}🖥️  QUIC Сервер:${NC}"
+    echo -e "${YELLOW}QUIC Сервер:${NC}"
     if docker ps | grep -q "2gc-network-server"; then
         echo -e "${GREEN}  ✅ Запущен${NC}"
         # Показываем последние логи сервера
@@ -77,7 +77,7 @@ show_recent_reports() {
 
 # Функция для показа сетевой статистики
 show_network_stats() {
-    echo -e "${YELLOW}🌐 Сетевая статистика:${NC}"
+    echo -e "${YELLOW}Сетевая статистика:${NC}"
     echo -e "${CYAN}  📡 UDP порт 9000:${NC}"
     if sudo ss -ulpn | grep -q ":9000"; then
         echo -e "${GREEN}    ✅ Слушает${NC}"

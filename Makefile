@@ -45,7 +45,7 @@ clean:
 
 # Run RTT sensitivity benchmarks
 bench-rtt: build
-	@echo "🌐 Running RTT sensitivity benchmarks..."
+	@echo "Running RTT sensitivity benchmarks..."
 	@mkdir -p test-results/bench-rtt
 	@./scripts/rtt_test_script.sh \
 		--rtt 5,10,25,50,100,200 \

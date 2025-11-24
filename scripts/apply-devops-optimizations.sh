@@ -29,7 +29,7 @@ apply_system_optimizations() {
     echo "  ✅ UDP буферы увеличены до 128MB"
     
     # Сетевые оптимизации
-    echo -e "${CYAN}🌐 Настройка сетевых параметров:${NC}"
+    echo -e "${CYAN}Настройка сетевых параметров:${NC}"
     sudo sysctl -w net.core.netdev_max_backlog=5000 >/dev/null 2>&1
     sudo sysctl -w net.core.somaxconn=65535 >/dev/null 2>&1
     sudo sysctl -w net.ipv4.udp_mem="102400 873800 16777216" >/dev/null 2>&1

@@ -99,6 +99,10 @@ func ParseFlags() (string, map[string]interface{}) {
 	iceTurnUser := flag.String("ice-turn-user", "", "TURN username")
 	iceTurnPass := flag.String("ice-turn-pass", "", "TURN password")
 
+	// Флаги для AI
+	aiEnabled := flag.Bool("ai-enabled", false, "Включить AI-маршрутизацию")
+	aiServiceURL := flag.String("ai-service-url", "http://localhost:5000", "URL сервиса прогнозирования")
+
 	flag.Parse()
 
 	// Обработка флага --version
@@ -123,6 +127,8 @@ func ParseFlags() (string, map[string]interface{}) {
 		"iceTurnServers": *iceTurnServers,
 		"iceTurnUser":    *iceTurnUser,
 		"iceTurnPass":    *iceTurnPass,
+		"aiEnabled":      *aiEnabled,
+		"aiServiceURL":   *aiServiceURL,
 	}
 
 	return *mode, config
@@ -219,6 +225,8 @@ func runClient(args []string) error {
 		Rate:        getInt(config, "rate"),
 		Pattern:     getString(config, "pattern"),
 		Prometheus:  getBool(config, "prometheus"),
+		AIEnabled:   getBool(config, "aiEnabled"),
+		AIServiceURL: getString(config, "aiServiceURL"),
 	}
 	
 	// Запускаем клиент

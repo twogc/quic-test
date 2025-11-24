@@ -212,7 +212,7 @@ func printConfig(config *experimental.ErrorTestingConfig, scenario string) {
 		fmt.Printf("  - Scenario: Custom\n")
 	}
 	
-	fmt.Printf("\n🌐 Network Errors:\n")
+	fmt.Printf("\nNetwork Errors:\n")
 	fmt.Printf("  - Network Errors: %v\n", config.NetworkErrors)
 	fmt.Printf("  - Packet Loss: %.1f%%\n", config.PacketLoss*100)
 	fmt.Printf("  - Packet Duplication: %.1f%%\n", config.PacketDuplication*100)

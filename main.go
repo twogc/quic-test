@@ -174,7 +174,7 @@ func main() {
 	
 	// Обработка сетевых профилей
 	if *listProfiles {
-		fmt.Println("🌐 Available Network Profiles:")
+		fmt.Println("Available Network Profiles:")
 		profiles := internal.ListNetworkProfiles()
 		for _, name := range profiles {
 			profile, _ := internal.GetNetworkProfile(name)
@@ -208,8 +208,8 @@ func main() {
 		internal.PrintProfileRecommendations(profile)
 	}
 
-	// Инициализация QUIC Bottom
-	internal.InitBottomBridge("http://localhost:8080", 100*time.Millisecond)
+	// Инициализация QUIC Bottom (используем 127.0.0.1 вместо localhost для избежания IPv6 проблем)
+	internal.InitBottomBridge("http://127.0.0.1:8080", 100*time.Millisecond)
 	internal.EnableBottomBridge()
 
 	// Обработка сигналов для graceful shutdown

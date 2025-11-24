@@ -103,7 +103,7 @@ impl UltimateAnalyticsConsole {
                 self.network_simulation_active = true;
                 self.network_preset = "mobile".to_string();
                 self.apply_network_preset();
-                println!("🌐 Network simulation activated: {}", self.network_preset);
+                println!("Network simulation activated: {}", self.network_preset);
             }
             
             // Simulate security testing toggle
@@ -225,12 +225,12 @@ impl UltimateAnalyticsConsole {
         println!("  Throughput: {:.2} Mbps", 100.0 + (self.time_slot as f64 * 5.0));
         
         if self.network_simulation_active {
-            println!("🌐 Network Simulation: ACTIVE ({})", self.network_preset);
+            println!("Network Simulation: ACTIVE ({})", self.network_preset);
             println!("  Applied Latency: +{:.1} ms", self.network_latency);
             println!("  Applied Loss: +{:.1}%", self.network_loss);
             println!("  Bandwidth: {:.1} Mbps", self.network_bandwidth);
         } else {
-            println!("🌐 Network Simulation: INACTIVE");
+            println!("Network Simulation: INACTIVE");
         }
         
         if self.security_test_active {

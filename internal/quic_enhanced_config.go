@@ -20,7 +20,7 @@ type EnhancedQUICConfig struct {
 	EnableDatagrams   bool
 	
 	// Экспериментальные настройки
-	CongestionControl    string        // cubic, bbr, bbrv2, reno
+	CongestionControl    string        // cubic, bbr, bbrv2, bbrv3, reno
 	ACKFrequency         int           // ACK frequency (0 = auto)
 	MaxACKDelay          time.Duration // Максимальная задержка ACK
 	EnableMultipath      bool          // Multipath QUIC (экспериментально)

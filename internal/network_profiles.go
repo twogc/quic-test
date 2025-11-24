@@ -214,7 +214,7 @@ func ListNetworkProfiles() []string {
 
 // PrintNetworkProfile выводит информацию о сетевом профиле
 func PrintNetworkProfile(profile *NetworkProfile) {
-	fmt.Printf("🌐 Network Profile: %s\n", profile.Name)
+	fmt.Printf("Network Profile: %s\n", profile.Name)
 	fmt.Printf("📝 Description: %s\n", profile.Description)
 	fmt.Printf("Characteristics:\n")
 	fmt.Printf("  - RTT: %v\n", profile.RTT)

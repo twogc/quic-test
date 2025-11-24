@@ -21,7 +21,7 @@ print_color() {
 
 # Конфигурация тестов
 ACK_FREQUENCIES=(1 2 3 4 5)           # ACK frequency values
-ALGORITHMS=("cubic" "bbrv2")          # Алгоритмы congestion control
+ALGORITHMS=("cubic" "bbrv3")          # Алгоритмы congestion control
 TEST_DURATION=30                       # Длительность теста в секундах
 OUTPUT_DIR="./ack-frequency-results"   # Директория для результатов
 
@@ -232,7 +232,7 @@ Usage: $0 [OPTIONS]
 
 OPTIONS:
   --frequencies VALUES - ACK frequency values to test (comma-separated, default: 1,2,3,4,5)
-  --algorithms VALUES  - Algorithms to test (comma-separated, default: cubic,bbrv2)
+  --algorithms VALUES  - Algorithms to test (comma-separated, default: cubic,bbrv3)
   --duration SECONDS   - Test duration per test (default: 30)
   --output DIR         - Output directory (default: ./ack-frequency-results)
   --cleanup            - Clean up previous results before running
@@ -241,7 +241,7 @@ OPTIONS:
 
 EXAMPLES:
   $0                                    # Run all tests with default settings
-  $0 --frequencies 2,3,4 --algorithms bbrv2 # Test specific ACK frequencies with BBRv2 only
+  $0 --frequencies 2,3,4 --algorithms bbrv3 # Test specific ACK frequencies with BBRv3 only
   $0 --duration 60 --cleanup            # Run 60-second tests, clean first
   $0 --analysis-only                    # Analyze existing results
 

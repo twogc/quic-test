@@ -70,22 +70,8 @@ async fn main() -> Result<()> {
 }
 
 async fn start_api_server(port: u16) -> Result<()> {
-    use warp::Filter;
-    
-    let metrics = warp::path("metrics")
-        .and(warp::get())
-        .map(|| {
-            match quic_bottom::metrics::get_current_metrics() {
-                Some(m) => warp::reply::json(&m),
-                None => warp::reply::json(&serde_json::json!({"error": "No metrics available"})),
-            }
-        });
-    
-    let health = warp::path("health")
-        .and(warp::get())
-        .map(|| warp::reply::json(&serde_json::json!({"status": "ok"})));
-    
-    let routes = metrics.or(health);
+    // Используем create_api_routes из bridge.rs для поддержки POST /metrics
+    let routes = quic_bottom::bridge::create_api_routes();
     
     info!("Starting API server on port {}", port);
     warp::serve(routes)

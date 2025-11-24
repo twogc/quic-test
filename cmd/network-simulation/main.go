@@ -24,7 +24,7 @@ func main() {
 	)
 	flag.Parse()
 
-	fmt.Println("🌐 QUIC Network Simulation")
+	fmt.Println("QUIC Network Simulation")
 	fmt.Println("==========================")
 
 	// Create network simulation config
