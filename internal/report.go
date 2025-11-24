@@ -9,6 +9,10 @@ import (
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/fatih/color"
+	"github.com/guptarohit/asciigraph"
+	"github.com/olekukonko/tablewriter"
 )
 
 // SaveReport сохраняет отчет по завершении теста в выбранном формате
@@ -42,7 +46,8 @@ func SaveReport(cfg TestConfig, metrics any) error {
 	if err != nil {
 		return fmt.Errorf("ошибка сохранения отчета: %w", err)
 	}
-	fmt.Println("\nОтчет сохранен:", filename)
+	// Используем цветной вывод для сообщения об успехе
+	color.Green("\n✓ Отчет сохранен: %s", filename)
 	return nil
 }
 
@@ -78,6 +83,35 @@ func saveCSV(filename string, rows [][]string) error {
 			fmt.Printf("Warning: failed to close file %s: %v\n", filename, err)
 		}
 	}()
+	
+	// Используем tablewriter для форматированного вывода в консоль
+	table := tablewriter.NewWriter(os.Stdout)
+	if len(rows) > 0 {
+		// Преобразуем заголовок в []any
+		header := make([]any, len(rows[0]))
+		for i, v := range rows[0] {
+			header[i] = v
+		}
+		table.Header(header...)
+		
+		// Добавляем строки данных
+		if len(rows) > 1 {
+			for _, row := range rows[1:] {
+				rowAny := make([]any, len(row))
+				for i, v := range row {
+					rowAny[i] = v
+				}
+				if err := table.Append(rowAny...); err != nil {
+					fmt.Printf("Warning: failed to append row: %v\n", err)
+				}
+			}
+		}
+		if err := table.Render(); err != nil {
+			fmt.Printf("Warning: failed to render table: %v\n", err)
+		}
+	}
+	
+	// Сохраняем в CSV файл
 	w := csv.NewWriter(f)
 	defer w.Flush()
 	return w.WriteAll(rows)
@@ -193,23 +227,33 @@ func makeReportMarkdown(cfg TestConfig, metrics any) string {
 	return buf.String()
 }
 
-// ascii-график (заглушка, если нет asciigraph)
+// asciigraphPlot создает ASCII график из данных
 func asciigraphPlot(data []float64, caption string) string {
 	if len(data) == 0 {
 		return ""
 	}
-	// Можно подключить asciigraph, если доступен, иначе простая заглушка
-	max := data[0]
-	min := data[0]
-	for _, v := range data {
-		if v > max {
-			max = v
-		}
-		if v < min {
-			min = v
-		}
+	
+	// Ограничиваем количество точек для читаемости графика
+	maxPoints := 80
+	step := 1
+	if len(data) > maxPoints {
+		step = len(data) / maxPoints
 	}
-	return fmt.Sprintf("%s: min=%.2f max=%.2f (graph suppressed)\n", caption, min, max)
+	
+	// Сэмплируем данные если их слишком много
+	sampledData := make([]float64, 0, maxPoints)
+	for i := 0; i < len(data); i += step {
+		sampledData = append(sampledData, data[i])
+	}
+	
+	// Создаем график с настройками
+	graph := asciigraph.Plot(sampledData,
+		asciigraph.Height(10),
+		asciigraph.Width(70),
+		asciigraph.Caption(caption),
+	)
+	
+	return graph
 }
 
 // calcPercentiles и calcJitter (дублируем для отчета)
