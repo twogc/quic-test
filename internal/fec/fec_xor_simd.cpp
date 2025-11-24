@@ -12,6 +12,12 @@
     #include <arm_neon.h>
 #endif
 
+// NUMA support for Linux
+#ifdef __linux__
+    #include <numaif.h>
+    #include <numa.h>
+#endif
+
 // ============================================================================
 // Feature detection (x86 and ARM)
 // ============================================================================
@@ -478,8 +484,6 @@ void* fec_alloc_slab_numa(size_t size, int numa_node) {
     // Try NUMA-aware allocation if available
     // Fall back to regular alloc if not supported
 #ifdef __linux__
-    #include <numaif.h>
-
     void* ptr = nullptr;
     size_t aligned_size = (size + 63) & ~63UL;
 
