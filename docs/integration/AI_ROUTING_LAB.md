@@ -10,37 +10,46 @@ This document provides comprehensive instructions for integrating **quic-test** 
 
 ```
 quic-test (Go)
-    ↓
-Prometheus Metrics (port 9090)
-    ↓
+    ↓       ↑
+Prometheus  Predictions
+Metrics     (Feedback Loop)
+    ↓       ↑
 AI Routing Lab Collector
-    ↓
+    ↓       ↑
 Metrics Database (JSON/CSV)
-    ↓
+    ↓       ↑
 ML Models (LSTM, XGBoost, etc.)
-    ↓
-Predictions (latency, jitter, loss)
-    ↓
-CloudBridge Relay (Route Selection)
+    ↓       ↑
+Predictions API (FastAPI)
 ```
 
 ### System Components
 
 | Component | Language | Purpose |
 |-----------|----------|---------|
-| quic-test | Go | QUIC protocol testing, metrics generation |
+| quic-test | Go | QUIC protocol testing, metrics generation, **AI consumer** |
 | AI Routing Lab Collector | Python | Ingests Prometheus metrics from quic-test |
 | ML Models | Python (TensorFlow/PyTorch) | Trains and serves latency/jitter predictions |
 | CloudBridge Relay | Go | Uses ML predictions for intelligent routing |
+
+## AI Consumer Integration
+
+`quic-test` now includes a built-in AI consumer that closes the loop:
+
+1.  **Metrics Collection**: `quic-test` collects real-time metrics (RTT, Jitter, Loss).
+2.  **Prediction Request**: Periodically sends these metrics to the AI Routing Lab Inference API.
+3.  **Route Optimization**: Receives predictions (e.g., "High Latency Expected") and simulates route switching logic.
+
+To enable this feature, use the `--ai-enabled` flag.
 
 ## Quick Start
 
 ### Step 1: Start quic-test with Prometheus Export
 
 ```bash
-# Terminal 1: Start quic-test server with metrics
+# Terminal 1: Start quic-test server with metrics and AI enabled
 cd quic-test
-./bin/quic-test --mode=server --addr=:9000 --prometheus-port 9090
+./bin/quic-test --mode=server --addr=:9000 --prometheus-port 9090 --ai-enabled --ai-service-url http://localhost:5000
 ```
 
 **Verify Prometheus endpoint:**
