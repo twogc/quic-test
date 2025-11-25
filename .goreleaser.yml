@@ -126,9 +126,8 @@ archives:
       - goos: windows
         format: zip
     files:
-      - README.md
+      - readme.md
       - LICENSE
-      - "*.md"
     builds:
       - quic-test
 
@@ -139,9 +138,8 @@ archives:
       - goos: windows
         format: zip
     files:
-      - README.md
+      - readme.md
       - LICENSE
-      - "*.md"
     builds:
       - dashboard
 
@@ -152,9 +150,8 @@ archives:
       - goos: windows
         format: zip
     files:
-      - README.md
+      - readme.md
       - LICENSE
-      - "*.md"
     builds:
       - quic-client
 
@@ -165,9 +162,8 @@ archives:
       - goos: windows
         format: zip
     files:
-      - README.md
+      - readme.md
       - LICENSE
-      - "*.md"
     builds:
       - quic-server
 
@@ -178,9 +174,8 @@ archives:
       - goos: windows
         format: zip
     files:
-      - README.md
+      - readme.md
       - LICENSE
-      - "*.md"
     builds:
       - tui
 
@@ -192,9 +187,8 @@ archives:
       - goos: windows
         format: zip
     files:
-      - README.md
+      - readme.md
       - LICENSE
-      - "*.md"
       - Makefile
       - docker-compose.yml
       - Dockerfile*
