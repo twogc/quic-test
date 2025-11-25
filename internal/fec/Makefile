@@ -78,7 +78,7 @@ endif
 
 $(TARGET_SCALAR): fec_xor_simd.cpp fec_xor_simd.h
 	@echo "Building scalar fallback..."
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -DFEC_SCALAR_ONLY -o $@ $< $(LDFLAGS)
 
 clean:
 	rm -f libfec_*.so libfec_*.dylib *.o *.a

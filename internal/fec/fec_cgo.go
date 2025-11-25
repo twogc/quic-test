@@ -4,12 +4,8 @@
 package fec
 
 /*
-#cgo CFLAGS: -I. -mavx2
+#cgo CFLAGS: -I.
 #cgo LDFLAGS: -L. -Wl,-rpath,.
-
-// Platform-specific LDFLAGS
-#cgo linux LDFLAGS: -lfec_avx2 -lnuma
-#cgo darwin LDFLAGS: -lfec_avx2
 
 #include "fec_xor_simd.h"
 #include <stdint.h>

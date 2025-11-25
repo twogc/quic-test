@@ -1,8 +1,6 @@
 #include "fec_xor_simd.h"
 #include <cstring>
 #include <cstdlib>
-#include <algorithm>
-#include <stdexcept>
 
 // Platform-specific SIMD headers
 #ifdef __x86_64__
@@ -71,7 +69,7 @@ static CPUFeatures detect_cpu_features() {
 // AVX2 Implementation (32-byte SIMD width, baseline for x86_64)
 // ============================================================================
 
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(FEC_SCALAR_ONLY)
 void xor_packets_avx2(
     const uint8_t* packets[],
     size_t num_packets,
@@ -203,7 +201,7 @@ void xor_packets_avx2(
         }
     }
 }
-#endif  // __x86_64__
+#endif  // __x86_64__ && !FEC_SCALAR_ONLY
 
 // ============================================================================
 // AVX-512 Implementation (64-byte SIMD width, high-performance variant)
@@ -345,7 +343,7 @@ void xor_packets_avx512(
 // ARM64 NEON Implementation (128-bit SIMD width)
 // ============================================================================
 
-#ifdef __aarch64__
+#if defined(__aarch64__) && !defined(FEC_SCALAR_ONLY)
 void xor_packets_neon(
     const uint8_t* packets[],
     size_t num_packets,
@@ -402,7 +400,7 @@ void xor_packets_neon(
         }
     }
 }
-#endif  // __aarch64__
+#endif  // __aarch64__ && !FEC_SCALAR_ONLY
 
 // ============================================================================
 // Scalar Fallback Implementation
@@ -437,7 +435,10 @@ xor_impl_fn fec_select_xor_impl() {
         return g_xor_impl;
     }
 
-#ifdef __x86_64__
+#ifdef FEC_SCALAR_ONLY
+    // Scalar-only build: no SIMD support
+    g_xor_impl = xor_packets_scalar;
+#elif defined(__x86_64__)
     CPUFeatures features = detect_cpu_features();
 
     if (features.has_avx512f && features.has_avx512bw) {
