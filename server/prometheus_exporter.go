@@ -50,7 +50,7 @@ type ServerMetrics struct {
 // NewAdvancedPrometheusExporter создает новый экспортер метрик для сервера
 func NewAdvancedPrometheusExporter(serverAddr string) *AdvancedPrometheusExporter {
 	return &AdvancedPrometheusExporter{
-		metrics: metrics.NewPrometheusMetrics(),
+		metrics: metrics.NewPrometheusMetrics(prometheus.DefaultRegisterer),
 		serverMetrics: &ServerMetrics{
 			ServerAddr: serverAddr,
 			StartTime:  time.Now(),

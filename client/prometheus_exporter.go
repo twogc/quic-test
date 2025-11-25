@@ -46,7 +46,7 @@ type ClientMetrics struct {
 // NewAdvancedPrometheusExporter создает новый экспортер метрик
 func NewAdvancedPrometheusExporter() *AdvancedPrometheusExporter {
 	return &AdvancedPrometheusExporter{
-		metrics: metrics.NewPrometheusMetrics(),
+		metrics: metrics.NewPrometheusMetrics(prometheus.DefaultRegisterer),
 		clientMetrics: &ClientMetrics{
 			StartTime: time.Now(),
 		},
@@ -97,7 +97,7 @@ func NewAdvancedPrometheusExporterWithRegistry(registry prometheus.Registerer) *
 	registry.MustRegister(testTypeCounters, dataPatternHistograms, connectionMetrics, streamMetrics)
 	
 	return &AdvancedPrometheusExporter{
-		metrics: metrics.NewPrometheusMetrics(),
+		metrics: metrics.NewPrometheusMetrics(registry),
 		clientMetrics: &ClientMetrics{
 			StartTime: time.Now(),
 		},

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"quic-test/internal/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
 
@@ -321,7 +322,7 @@ func (em *ExperimentalManager) initializeComponents(ctx context.Context) error {
 	em.ccManager = NewCongestionControlManager(em.logger, em.config.CongestionControl)
 	
 	// Prometheus метрики
-	em.prometheusMetrics = metrics.NewPrometheusMetrics()
+	em.prometheusMetrics = metrics.NewPrometheusMetrics(prometheus.DefaultRegisterer)
 	
 	// CC Integration для метрик
 	var ccMgr *CongestionControlManager
