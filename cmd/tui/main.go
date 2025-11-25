@@ -339,14 +339,8 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	
 	// Обработка ресайза терминала (только для Unix-систем)
-	var resizeChan chan os.Signal
-	if isUnix() {
-		resizeChan = make(chan os.Signal, 1)
-		signal.Notify(resizeChan, syscall.SIGWINCH)
-	} else {
-		// На Windows создаем пустой канал, который никогда не получит сигнал
-		resizeChan = make(chan os.Signal, 1)
-	}
+	resizeChan := make(chan os.Signal, 1)
+	notifyResize(resizeChan)
 	
 	// Канал для остановки демо
 	stopChan := make(chan struct{})

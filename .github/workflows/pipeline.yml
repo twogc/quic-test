@@ -454,7 +454,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: docker.io/cloudbridge/quic-test
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/quic-test
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -480,6 +480,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: cloudbridge/quic-test
+          repository: ${{ secrets.DOCKERHUB_USERNAME }}/quic-test
           short-description: "Professional QUIC Protocol Testing Platform"
           readme-filepath: ./readme.md
