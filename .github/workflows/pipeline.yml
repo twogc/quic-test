@@ -53,7 +53,14 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libnuma-dev
+          sudo apt-get install -y libnuma-dev clang
+
+      - name: Build FEC library
+        run: |
+          cd internal/fec
+          make clean
+          make
+          cd ../..
 
       - name: Download dependencies
         run: go mod download
@@ -98,7 +105,14 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libnuma-dev
+          sudo apt-get install -y libnuma-dev clang
+
+      - name: Build FEC library
+        run: |
+          cd internal/fec
+          make clean
+          make
+          cd ../..
 
       - name: Download dependencies
         run: go mod download
@@ -132,7 +146,14 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libnuma-dev
+          sudo apt-get install -y libnuma-dev clang
+
+      - name: Build FEC library
+        run: |
+          cd internal/fec
+          make clean
+          make
+          cd ../..
 
       - name: Download dependencies
         run: go mod download
