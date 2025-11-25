@@ -189,6 +189,11 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnuma-dev clang
+
       - name: Test compilation
         run: |
           echo "Testing that code compiles successfully..."
@@ -229,6 +234,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnuma-dev clang
 
       - name: Read version from tag.txt
         id: version
