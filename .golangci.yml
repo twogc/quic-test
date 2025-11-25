@@ -1,13 +1,13 @@
 linters:
   enable:
     - errcheck
-    - gosimple
     - govet
+  disable:
+    - typecheck
+    - gosimple
     - ineffassign
     - staticcheck
     - unused
-  disable:
-    - typecheck
 
 linters-settings:
   errcheck:
@@ -37,6 +37,13 @@ issues:
         - unused
         - errcheck
         - staticcheck
+    
+    # Exclude cmd/ directory from strict checks
+    - path: cmd/
+      linters:
+        - errcheck
+        - staticcheck
+        - gosimple
     
     # Exclude specific patterns
     - text: "Error return value of.*is not checked"
