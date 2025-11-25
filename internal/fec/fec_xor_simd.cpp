@@ -209,7 +209,7 @@ void xor_packets_avx2(
 // AVX-512 Implementation (64-byte SIMD width, high-performance variant)
 // ============================================================================
 
-#ifdef __x86_64__
+#if defined(__x86_64__) && defined(__AVX512F__)
 void xor_packets_avx512(
     const uint8_t* packets[],
     size_t num_packets,
@@ -339,7 +339,7 @@ void xor_packets_avx512(
         }
     }
 }
-#endif  // __x86_64__
+#endif  // __x86_64__ && __AVX512F__
 
 // ============================================================================
 // ARM64 NEON Implementation (128-bit SIMD width)
