@@ -36,10 +36,6 @@ WORKDIR /app
 # Копирование собранного бинарника
 COPY --from=builder /app/dashboard ./
 
-# Копирование статических файлов
-COPY --from=builder /app/static/ ./static/
-COPY --from=builder /app/index.html ./
-
 # Установка прав доступа
 RUN chown -R dashboard:dashboard /app
 USER dashboard
