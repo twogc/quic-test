@@ -80,4 +80,4 @@ config/production.yaml
 references/
 
 # Coverage reports
-coverage/
+coverage/tui
