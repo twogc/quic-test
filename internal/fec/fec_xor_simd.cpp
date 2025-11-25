@@ -70,6 +70,7 @@ static CPUFeatures detect_cpu_features() {
 // ============================================================================
 
 #if defined(__x86_64__) && !defined(FEC_SCALAR_ONLY)
+__attribute__((target("avx2")))
 void xor_packets_avx2(
     const uint8_t* packets[],
     size_t num_packets,
@@ -208,6 +209,7 @@ void xor_packets_avx2(
 // ============================================================================
 
 #if defined(__x86_64__) && defined(__AVX512F__)
+__attribute__((target("avx512f,avx512bw")))
 void xor_packets_avx512(
     const uint8_t* packets[],
     size_t num_packets,
