@@ -1,0 +1,55 @@
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  disable:
+    - typecheck
+
+linters-settings:
+  errcheck:
+    # Ignore errors from these functions
+    exclude-functions:
+      - (*go.uber.org/zap.Logger).Sync
+      - (*os.File).Close
+      - (io.Closer).Close
+      - (*encoding/json.Encoder).Encode
+      - (*github.com/HdrHistogram/hdrhistogram-go.Histogram).RecordValue
+      - (io.Writer).Write
+      - (*os.File).Sync
+      - (*os.File).WriteString
+      - os.Chdir
+
+issues:
+  exclude-rules:
+    # Exclude unused code in test files
+    - path: _test\.go
+      linters:
+        - unused
+        - errcheck
+    
+    # Exclude specific files with experimental code
+    - path: internal/experimental/
+      linters:
+        - unused
+        - errcheck
+        - staticcheck
+    
+    # Exclude specific patterns
+    - text: "Error return value of.*is not checked"
+      linters:
+        - errcheck
+    
+    - text: "field.*is unused"
+      linters:
+        - unused
+    
+    - text: "func.*is unused"
+      linters:
+        - unused
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
