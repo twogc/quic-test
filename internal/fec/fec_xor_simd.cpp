@@ -71,7 +71,7 @@ static CPUFeatures detect_cpu_features() {
 // AVX2 Implementation (32-byte SIMD width, baseline for x86_64)
 // ============================================================================
 
-#ifdef __x86_64__
+#if defined(__x86_64__) && defined(__AVX2__)
 void xor_packets_avx2(
     const uint8_t* packets[],
     size_t num_packets,
@@ -203,7 +203,7 @@ void xor_packets_avx2(
         }
     }
 }
-#endif  // __x86_64__
+#endif  // __x86_64__ && __AVX2__
 
 // ============================================================================
 // AVX-512 Implementation (64-byte SIMD width, high-performance variant)
