@@ -194,6 +194,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libnuma-dev clang
 
+      - name: Build FEC library
+        run: |
+          cd internal/fec
+          make clean
+          make
+          cd ../..
+
       - name: Test compilation
         run: |
           echo "Testing that code compiles successfully..."
@@ -239,6 +246,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libnuma-dev clang
+
+      - name: Build FEC library
+        run: |
+          cd internal/fec
+          make clean
+          make
+          cd ../..
 
       - name: Read version from tag.txt
         id: version
