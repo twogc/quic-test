@@ -3,7 +3,7 @@
 package fec
 
 /*
-#cgo CFLAGS: -I.
+#cgo CFLAGS: -I. -mavx2 -mfma
 #cgo LDFLAGS: -L. -Wl,-rpath,.
 
 // Platform-specific LDFLAGS
