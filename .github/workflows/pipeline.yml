@@ -288,10 +288,10 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           go mod download
-          go build -ldflags="-X main.version=${VERSION} -X main.buildType=release" ./cmd/cloudbridge-client/
+          go build -v -o build/quic-test .
           echo "Testing binary with version ${VERSION}:"
-          ./cloudbridge-client version | grep "Version:"
-          rm cloudbridge-client
+          ./build/quic-test --version | grep "${VERSION}"
+          rm -rf build/
 
       - name: Create Git tag  
         if: steps.version.outputs.is_new_version == 'true' && github.ref == 'refs/heads/main'
