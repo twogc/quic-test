@@ -216,8 +216,8 @@ changelog:
 
 release:
   github:
-    owner: cloudbridge-relay-installer
-    name: quck-test
+    owner: twogc
+    name: quic-test
   draft: false
   prerelease: auto
   name_template: "v{{.Version}}"
@@ -290,8 +290,8 @@ dockers:
     build_flag_templates:
       - "--label=org.opencontainers.image.title=2GC CloudBridge QUIC testing"
       - "--label=org.opencontainers.image.description=QUIC performance testing tool"
-      - "--label=org.opencontainers.image.url=https://github.com/cloudbridge-relay-installer/quck-test"
-      - "--label=org.opencontainers.image.source=https://github.com/cloudbridge-relay-installer/quck-test"
+      - "--label=org.opencontainers.image.url=https://github.com/twogc/quic-test"
+      - "--label=org.opencontainers.image.source=https://github.com/twogc/quic-test"
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.created={{ .Date }}"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
@@ -304,8 +304,8 @@ dockers:
     build_flag_templates:
       - "--label=org.opencontainers.image.title=2GC CloudBridge Dashboard"
       - "--label=org.opencontainers.image.description=QUIC testing dashboard"
-      - "--label=org.opencontainers.image.url=https://github.com/cloudbridge-relay-installer/quck-test"
-      - "--label=org.opencontainers.image.source=https://github.com/cloudbridge-relay-installer/quck-test"
+      - "--label=org.opencontainers.image.url=https://github.com/twogc/quic-test"
+      - "--label=org.opencontainers.image.source=https://github.com/twogc/quic-test"
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.created={{ .Date }}"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
