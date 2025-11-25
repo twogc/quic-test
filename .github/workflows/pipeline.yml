@@ -454,7 +454,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/quic-test
+          images: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/quic-test
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -467,6 +467,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
