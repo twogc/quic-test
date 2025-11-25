@@ -1,9 +1,10 @@
+//go:build cgo
 // +build cgo
 
 package fec
 
 /*
-#cgo CFLAGS: -I. -mavx2 -mfma
+#cgo CFLAGS: -I. -mavx2
 #cgo LDFLAGS: -L. -Wl,-rpath,.
 
 // Platform-specific LDFLAGS
