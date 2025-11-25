@@ -8,7 +8,7 @@ package fec
 #cgo LDFLAGS: -L. -Wl,-rpath,.
 
 // Platform-specific LDFLAGS
-#cgo linux LDFLAGS: -lfec_avx2
+#cgo linux LDFLAGS: -lfec_avx2 -lnuma
 #cgo darwin LDFLAGS: -lfec_avx2
 
 #include "fec_xor_simd.h"
