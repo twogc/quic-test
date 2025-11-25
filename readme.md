@@ -64,13 +64,14 @@ quic-test provides real-time metrics that power machine learning models for inte
 1. **Metrics Export** - Go application exports real-time Prometheus metrics
 2. **Data Collection** - AI Routing Lab collector ingests metrics from quic-test instances
 3. **Predictive Models** - ML models analyze patterns and predict optimal routing
-4. **Feedback Loop** - Predictions validated against actual network performance
+4. **AI Consumer** - `quic-test` consumes predictions to simulate intelligent route switching
+5. **Feedback Loop** - Predictions validated against actual network performance
 
 **Quick Integration Example:**
 
 ```bash
-# Terminal 1: Start quic-test with Prometheus metrics
-./bin/quic-test --mode=server --addr=:9000 --prometheus-port 9090
+# Terminal 1: Start quic-test with Prometheus metrics and AI consumer
+./bin/quic-test --mode=server --addr=:9000 --prometheus-port 9090 --ai-enabled
 
 # Terminal 2: Collect metrics with AI Routing Lab
 python -m data.collectors.quic_test_collector \
