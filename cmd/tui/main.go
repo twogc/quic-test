@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"runtime"
 	"sort"
 	"strings"
 	"syscall"
@@ -314,6 +315,11 @@ func (d *TUIDashboard) processInput(scanner *bufio.Scanner) {
 	}
 }
 
+// isUnix проверяет, является ли текущая платформа Unix-подобной
+func isUnix() bool {
+	return runtime.GOOS != "windows"
+}
+
 func main() {
 	var (
 		demo = flag.Bool("demo", false, "Запустить демо режим")
@@ -332,9 +338,15 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	
-	// Обработка ресайза терминала
-	resizeChan := make(chan os.Signal, 1)
-	signal.Notify(resizeChan, syscall.SIGWINCH)
+	// Обработка ресайза терминала (только для Unix-систем)
+	var resizeChan chan os.Signal
+	if isUnix() {
+		resizeChan = make(chan os.Signal, 1)
+		signal.Notify(resizeChan, syscall.SIGWINCH)
+	} else {
+		// На Windows создаем пустой канал, который никогда не получит сигнал
+		resizeChan = make(chan os.Signal, 1)
+	}
 	
 	// Канал для остановки демо
 	stopChan := make(chan struct{})

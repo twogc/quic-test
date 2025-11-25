@@ -18,7 +18,10 @@ RUN go mod download
 COPY . .
 
 # Сборка всех компонентов
-RUN make build
+RUN go build -o bin/quic-test . && \
+    go build -o bin/quic-client ./cmd/quic-client && \
+    go build -o bin/quic-server ./cmd/quic-server && \
+    go build -o bin/dashboard ./cmd/dashboard
 
 # Этап 2: Runtime
 FROM alpine:3.20
@@ -34,15 +37,7 @@ RUN addgroup -g 1001 -S quic && \
 WORKDIR /app
 
 # Копирование собранных бинарников
-COPY --from=builder /app/build/ ./
-
-# Копирование статических файлов
-COPY --from=builder /app/static/ ./static/
-COPY --from=builder /app/index.html ./
-
-# Копирование документации
-COPY --from=builder /app/README.md ./
-COPY --from=builder /app/LICENSE ./
+COPY --from=builder /app/bin/ ./
 
 # Установка прав доступа
 RUN chown -R quic:quic /app
