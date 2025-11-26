@@ -165,8 +165,4 @@ MIT License. См. [LICENSE](LICENSE).
 
 - **GitHub:** [twogc/quic-test](https://github.com/twogc/quic-test)
 - **Блог:** [cloudbridge-research.ru](https://cloudbridge-research.ru)
-- **Email:** research@cloudbridge-research.ru
-
----
-
-**Примечание:** Проект находится в активной разработке. Для production использования рекомендуется дождаться релиза v1.0.0.
+- **Email:** info@cloudbridge-research.ru

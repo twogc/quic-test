@@ -166,9 +166,5 @@ MIT License. See [LICENSE](LICENSE).
 
 - **GitHub:** [twogc/quic-test](https://github.com/twogc/quic-test)
 - **Blog:** [cloudbridge-research.ru](https://cloudbridge-research.ru)
-- **Email:** research@cloudbridge-research.ru
+- **Email:** info@cloudbridge-research.ru
 - **Docker Hub:** [mlanies/quic-test](https://hub.docker.com/r/mlanies/quic-test)
-
----
-
-**Note:** Project is under active development. For production use, please wait for v1.0.0 release.
