@@ -86,7 +86,7 @@ quic-test/
 
 ## Features
 
-### ✅ Stable and Tested
+### Stable Features
 
 - QUIC client/server (based on quic-go)
 - RTT, jitter, throughput measurements
@@ -95,7 +95,7 @@ quic-test/
 - Prometheus export
 - BBRv2 congestion control
 
-### ⚗️ Experimental
+### Experimental Features
 
 - BBRv3 congestion control
 - Forward Error Correction (FEC) with AVX2
@@ -103,7 +103,7 @@ quic-test/
 - TCP-over-QUIC tunneling
 - ICE/STUN/TURN tests
 
-### 🛠 Planned (Roadmap)
+### Planned Features (Roadmap)
 
 - HTTP/3 load testing
 - Automatic anomaly detection
