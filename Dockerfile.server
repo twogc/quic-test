@@ -20,7 +20,7 @@ COPY . .
 RUN make build-server
 
 # Runtime образ
-FROM alpine:3.20
+FROM alpine:3.23
 
 # Установка зависимостей runtime
 RUN apk add --no-cache ca-certificates tzdata wget
