@@ -24,7 +24,7 @@ RUN go build -o bin/quic-test . && \
     go build -o bin/dashboard ./cmd/dashboard
 
 # Этап 2: Runtime
-FROM alpine:3.20
+FROM alpine:3.23
 
 # Установка зависимостей runtime
 RUN apk add --no-cache ca-certificates tzdata
